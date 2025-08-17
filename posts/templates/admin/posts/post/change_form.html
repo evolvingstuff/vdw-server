@@ -3,43 +3,28 @@
 
 {% block extrahead %}
 {{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'posts/css/markdown-content.css' %}">
 <style>
     .markdown-editor-container {
-        display: flex;
-        gap: 20px;
+        display: block;
         margin-top: 10px;
     }
     
     .markdown-input {
-        flex: 1;
-        min-height: 500px;
+        width: 100%;
+        margin-bottom: 20px;
     }
     
     .markdown-preview {
-        flex: 1;
-        min-height: 500px;
+        width: 100%;
+        min-height: 300px;
+        max-height: 600px;
         border: 1px solid #ddd;
         padding: 15px;
         background: white;
-        color: black;
         overflow-y: auto;
         border-radius: 4px;
     }
-    
-    .markdown-preview h1 { font-size: 2em; margin-top: 0; }
-    .markdown-preview h2 { font-size: 1.5em; }
-    .markdown-preview h3 { font-size: 1.3em; }
-    .markdown-preview h4 { font-size: 1.1em; }
-    .markdown-preview pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
-    .markdown-preview code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
-    .markdown-preview blockquote { border-left: 4px solid #ddd; margin-left: 0; padding-left: 15px; color: #666; }
-    .markdown-preview table { border-collapse: collapse; width: 100%; margin: 15px 0; }
-    .markdown-preview th, .markdown-preview td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    .markdown-preview th { background: #f4f4f4; font-weight: bold; }
-    .markdown-preview ul, .markdown-preview ol { margin-left: 20px; }
-    .markdown-preview li { margin: 5px 0; }
-    .markdown-preview hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
-    .markdown-preview a { color: #0066cc; text-decoration: underline; }
     
     .field-content_md .vLargeTextField {
         width: 100% !important;
@@ -58,11 +43,6 @@
         font-style: italic;
     }
     
-    @media (max-width: 1024px) {
-        .markdown-editor-container {
-            flex-direction: column;
-        }
-    }
 </style>
 
 <script>
@@ -80,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create preview pane
         const previewPane = document.createElement('div');
-        previewPane.innerHTML = '<div class="preview-label">Preview:</div><div class="markdown-preview"></div>';
+        previewPane.innerHTML = '<div class="preview-label">Preview:</div><div class="markdown-preview markdown-content"></div>';
         
         // Rearrange elements
         contentField.parentNode.insertBefore(previewContainer, contentField);
