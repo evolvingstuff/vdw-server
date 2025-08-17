@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from posts.views import preview_markdown
+from posts.views import preview_markdown, post_list, post_detail
 
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/', admin.site.urls),
+    path('posts/', post_list, name='post_list'),
+    path('posts/<slug:slug>/', post_detail, name='post_detail'),
     path('markdownx/', include('markdownx.urls')),
 ]
 

@@ -1,0 +1,33 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}{{ post.title }} - VDW Blog{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ post.title }}</h1>
+    
+    <div class="post-meta">
+        Published on {{ post.created_date|date:"F d, Y" }}
+        {% if post.modified_date != post.created_date %}
+            • Updated {{ post.modified_date|date:"F d, Y" }}
+        {% endif %}
+    </div>
+    
+    <div class="markdown-content">
+        {{ post.content_html|safe }}
+    </div>
+    
+    {% if post.tags.all %}
+    <div class="tags">
+        <strong>Tags:</strong>
+        {% for tag in post.tags.all %}
+        <a href="#" class="tag">{{ tag.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</article>
+
+<nav style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
+    <a href="{% url 'post_list' %}">← Back to all posts</a>
+</nav>
+{% endblock %}

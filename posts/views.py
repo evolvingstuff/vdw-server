@@ -1,8 +1,19 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Post
 import markdown2
 import json
+
+
+def post_list(request):
+    posts = Post.objects.filter(status='published').order_by('-created_date')
+    return render(request, 'posts/post_list.html', {'posts': posts})
+
+
+def post_detail(request, slug):
+    post = get_object_or_404(Post, slug=slug, status='published')
+    return render(request, 'posts/post_detail.html', {'post': post})
 
 
 @staff_member_required
