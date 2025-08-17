@@ -82,6 +82,24 @@ class Post(models.Model):
 - **Tags**: When tags are set, derived_tags automatically includes them plus ontology-implied tags
 - **Performance**: No markdown parsing on page views, just serve cached content_html
 
+### Live Markdown Preview Implementation
+- **Approach**: Server-side rendering via AJAX (no external JS libraries)
+- **Why server-side**:
+  - Ensures preview matches exactly what gets saved
+  - Avoids CDN dependencies and CSP issues
+  - Uses same markdown2 library as backend
+- **Components**:
+  1. Django view endpoint at `/admin/preview-markdown/`
+  2. Accepts POST with markdown text
+  3. Returns rendered HTML using markdown2
+  4. JavaScript in admin sends debounced AJAX requests
+  5. Updates preview pane with returned HTML
+- **Benefits**:
+  - No external dependencies
+  - Works within Django's security constraints
+  - Preview is 100% accurate to saved version
+  - Simple and maintainable
+
 ## Migration Path
 
 ### Phase 1: Proof of Concept (1 day)

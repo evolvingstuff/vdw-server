@@ -1,0 +1,152 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .markdown-editor-container {
+        display: flex;
+        gap: 20px;
+        margin-top: 10px;
+    }
+    
+    .markdown-input {
+        flex: 1;
+        min-height: 500px;
+    }
+    
+    .markdown-preview {
+        flex: 1;
+        min-height: 500px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        background: white;
+        color: black;
+        overflow-y: auto;
+        border-radius: 4px;
+    }
+    
+    .markdown-preview h1 { font-size: 2em; margin-top: 0; }
+    .markdown-preview h2 { font-size: 1.5em; }
+    .markdown-preview h3 { font-size: 1.3em; }
+    .markdown-preview h4 { font-size: 1.1em; }
+    .markdown-preview pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    .markdown-preview code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+    .markdown-preview blockquote { border-left: 4px solid #ddd; margin-left: 0; padding-left: 15px; color: #666; }
+    .markdown-preview table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+    .markdown-preview th, .markdown-preview td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .markdown-preview th { background: #f4f4f4; font-weight: bold; }
+    .markdown-preview ul, .markdown-preview ol { margin-left: 20px; }
+    .markdown-preview li { margin: 5px 0; }
+    .markdown-preview hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+    .markdown-preview a { color: #0066cc; text-decoration: underline; }
+    
+    .field-content_md .vLargeTextField {
+        width: 100% !important;
+        min-height: 500px;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .preview-label {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .preview-loading {
+        color: #999;
+        font-style: italic;
+    }
+    
+    @media (max-width: 1024px) {
+        .markdown-editor-container {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentField = document.querySelector('#id_content_md');
+    
+    if (contentField) {
+        // Create preview container
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'markdown-editor-container';
+        
+        // Wrap the textarea
+        const inputWrapper = document.createElement('div');
+        inputWrapper.className = 'markdown-input';
+        
+        // Create preview pane
+        const previewPane = document.createElement('div');
+        previewPane.innerHTML = '<div class="preview-label">Preview:</div><div class="markdown-preview"></div>';
+        
+        // Rearrange elements
+        contentField.parentNode.insertBefore(previewContainer, contentField);
+        inputWrapper.appendChild(contentField);
+        previewContainer.appendChild(inputWrapper);
+        previewContainer.appendChild(previewPane);
+        
+        const preview = previewPane.querySelector('.markdown-preview');
+        
+        // Debounce function
+        let debounceTimer;
+        function debounce(func, delay) {
+            return function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(func, delay);
+            };
+        }
+        
+        // Get CSRF token from Django's form
+        function getCSRFToken() {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            return csrfInput ? csrfInput.value : '';
+        }
+        
+        // Update preview function
+        function updatePreview() {
+            const markdownText = contentField.value;
+            
+            if (!markdownText) {
+                preview.innerHTML = '<em style="color: #999;">Preview will appear here...</em>';
+                return;
+            }
+            
+            preview.innerHTML = '<span class="preview-loading">Updating preview...</span>';
+            
+            fetch('/admin/preview-markdown/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ markdown: markdownText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    preview.innerHTML = data.html;
+                } else if (data.error) {
+                    preview.innerHTML = '<em style="color: red;">Error: ' + data.error + '</em>';
+                }
+            })
+            .catch(error => {
+                console.error('Preview error:', error);
+                preview.innerHTML = '<em style="color: red;">Failed to update preview</em>';
+            });
+        }
+        
+        // Initial preview
+        updatePreview();
+        
+        // Update preview on input with debounce
+        const debouncedUpdate = debounce(updatePreview, 300);
+        contentField.addEventListener('input', debouncedUpdate);
+        contentField.addEventListener('change', updatePreview);
+    }
+});
+</script>
+{% endblock %}
