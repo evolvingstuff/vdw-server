@@ -1,0 +1,19 @@
+[Unit]
+Description=Gunicorn daemon for VDW Server
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/var/www/vdw-server
+ExecStart=/var/www/vdw-server/venv/bin/gunicorn \
+          --workers 3 \
+          --bind 127.0.0.1:8000 \
+          vdw_server.wsgi:application \
+          --log-file /var/log/gunicorn/vdw-server.log \
+          --access-logfile /var/log/gunicorn/vdw-server-access.log
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
