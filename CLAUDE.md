@@ -12,12 +12,33 @@ feature description
 
 I can then test it and we can interactively try to fix any issues.
 
-If I say:
+## Testing and Commits
 
-COMMIT
+### If Testing Fails
+If I test your code and say it failed, you should:
+1. Suggest doing a `git reset --hard HEAD` to undo the changes
+2. Ask if I want to proceed with the reset before doing it
 
-I want you to commit the changes to that branch, merge the branch into main, and delete that feature branch
+### If Testing Succeeds
+If the code works, you should suggest doing a commit. There are two types:
 
+**COMMIT CHECKPOINT**
+- We aren't done with the feature yet
+- But we've made visible progress we want to capture
+- Commit to the feature branch but stay on it
+- Don't merge to main yet
+
+**COMMIT FEATURE**
+- The entire feature has been tested and is working as expected
+- Commit the changes to the feature branch
+- Merge the branch into main
+- Delete the feature branch
+
+**COMMIT** (without qualifier)
+- If I just say COMMIT, ask me to clarify:
+  - "Is this a checkpoint (partial progress) or is the feature complete?"
+
+### Rollback
 If I say:
 
 ROLLBACK
