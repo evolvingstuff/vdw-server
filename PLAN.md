@@ -5,6 +5,15 @@
 - ✅ Settings updated to always use S3 (no local storage)
 - ✅ S3 bucket structure exists with file type organization
 
+## User Workflow (Drag & Drop)
+**Ideal user experience:**
+1. User drags image/PDF directly into markdown editing area
+2. File automatically uploads to S3 in background
+3. Markdown gets CloudFront URL inserted: `![filename](https://cdn.example.com/DEV/attachments/jpg/my-image.jpg)`
+4. Live preview immediately shows the actual image
+5. Loading indicator prevents interaction during upload
+6. Error alerts if upload fails
+
 ## S3 Bucket Structure
 ```
 vitdwiki2/
@@ -39,23 +48,34 @@ Create a custom Django storage class that:
 - Final S3 path: `DEV/attachments/jpg/my-awesome-image.jpg`
 - If collision: `DEV/attachments/jpg/my-awesome-image-1.jpg`
 
-### 3. Model Updates
-Add media fields to Post model:
-- `featured_image` - ImageField for post thumbnail
-- Consider future: inline attachments, galleries, etc.
+### 3. Django Upload API
+Create Django view/endpoint for AJAX uploads:
+- Accept multipart file uploads
+- Use custom storage backend
+- Return JSON with CloudFront URL or error
+- File size limit: 10MB
+- CSRF protection
 
-### 4. Admin Interface
-Update Django admin to:
-- Show image upload field
-- Preview uploaded images
-- Display S3 URLs
+### 4. Frontend Drag & Drop
+Update markdown editor (both normal and fullscreen modes):
+- Handle drag/drop events on textareas
+- Show loading indicator during upload
+- Insert markdown syntax at cursor position
+- Block interaction until upload complete
+- Display error alerts on failure
 
-### 5. Testing Plan
-- Upload various file types (jpg, png, pdf, etc.)
-- Test filename collision handling
-- Verify files appear in correct S3 folders
-- Test image display in admin interface
-- Verify CloudFront delivery (if configured)
+### 5. Markdown Integration
+- Images: `![original-filename](cloudfront-url)`
+- Focus on images initially, expand to PDFs later
+- Live preview should immediately show uploaded images
+
+### 6. Testing Plan
+- Drag & drop various image formats (jpg, png, gif)
+- Test in both normal and fullscreen editor modes
+- Verify filename collision handling
+- Test file size limits and error handling
+- Confirm files appear in correct S3 folders
+- Verify CloudFront delivery and live preview
 
 ## File Type Mapping
 Extensions will be mapped to folders:
