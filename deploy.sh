@@ -1,11 +1,17 @@
 #!/bin/bash
-# Bitnami Django Deployment Script
-# Run this after pulling code updates
+# Lightsail Django Pre-configured Stack Deployment Script
+# Works for both initial deployment and updates
 
-echo "Setting up Django app on Bitnami..."
+echo "=== DEPLOYING DJANGO APP ON LIGHTSAIL DJANGO STACK ==="
 
-# Ensure we're in the right directory
 cd /opt/bitnami/apache/htdocs/django-app
+
+# Backup database if it exists
+if [ -f "db.sqlite3" ]; then
+    echo "Backing up existing database..."
+    cp db.sqlite3 db.sqlite3.backup.$(date +%Y%m%d_%H%M%S)
+    echo "Database backed up."
+fi
 
 # Pull latest code
 echo "Pulling latest code..."
@@ -15,11 +21,11 @@ git pull
 source venv/bin/activate
 
 # Install/update dependencies
-echo "Installing dependencies..."
+echo "Installing/updating dependencies..."
 pip install -r requirements.txt
 
 # Run migrations
-echo "Running migrations..."
+echo "Running database migrations..."
 python app.py migrate
 
 # Collect static files
@@ -32,7 +38,7 @@ sudo chown -R www-data:www-data /opt/bitnami/apache/htdocs/django-app
 sudo chmod -R 775 /opt/bitnami/apache/htdocs/django-app
 sudo chmod 664 db.sqlite3
 
-# Copy Apache config if it doesn't exist
+# Copy Apache config if it doesn't exist (first deployment)
 if [ ! -f /opt/bitnami/apache/conf/vhosts/django-app.conf ]; then
     echo "Installing Apache configuration..."
     sudo cp django-app.conf /opt/bitnami/apache/conf/vhosts/
@@ -42,5 +48,6 @@ fi
 echo "Restarting Apache..."
 sudo /opt/bitnami/ctlscript.sh restart apache
 
-echo "Deployment complete!"
+echo ""
+echo "=== DEPLOYMENT COMPLETE ==="
 echo "Your site should be available at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
