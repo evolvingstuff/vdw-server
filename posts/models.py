@@ -48,6 +48,9 @@ class Post(models.Model):
     # SEO/Display
     meta_description = models.TextField(blank=True)
     
+    # Internal notes (not displayed on frontend)
+    notes = models.TextField(blank=True, help_text="Internal notes about this post (not displayed publicly)")
+    
     # Migration fields (not editable in admin)
     original_page_id = models.IntegerField(null=True, blank=True, editable=False)
     aliases = models.TextField(blank=True, editable=False, help_text="Old URLs for redirects, one per line")
