@@ -24,9 +24,9 @@ ALLOWED_HOSTS=*
 EOF
 
 # Collect static files
-python manage.py collectstatic --noinput
+python app.py collectstatic --noinput
 
 # Run migrations
-python manage.py migrate
+python app.py migrate
 
 echo "Django application setup complete!"

@@ -30,9 +30,8 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files are stored on S3/CloudFront
+# Configuration is in storage_settings.py via USE_S3_STORAGE env var
 
 # Security settings for production
 SECURE_SSL_REDIRECT = False  # Set to True when you have SSL

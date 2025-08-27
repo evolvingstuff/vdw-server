@@ -120,8 +120,15 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Check if we should use S3 for media storage
+import os
+if os.environ.get('USE_S3_STORAGE', 'False').lower() == 'true':
+    # Import S3 storage settings
+    from .storage_settings import *
+else:
+    # Local storage for development
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
