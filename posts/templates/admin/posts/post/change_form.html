@@ -1,6 +1,29 @@
 {% extends "admin/change_form.html" %}
 {% load static %}
 
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Make the submit row sticky */
+    .submit-row {
+        position: sticky;
+        position: -webkit-sticky;
+        bottom: 0;
+        background: #f8f8f8;
+        border-top: 2px solid #ddd;
+        padding: 10px !important;
+        margin: 0 -20px -20px -20px !important;
+        z-index: 1000;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Ensure proper button styling in sticky row */
+    .submit-row input[type="submit"] {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
 {% block extrahead %}
 {{ block.super }}
 <link rel="stylesheet" type="text/css" href="{% static 'posts/css/markdown-content.css' %}">
