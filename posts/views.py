@@ -81,13 +81,13 @@ def upload_media(request):
         slug_name = f"image-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     
     # Build S3 path with proper structure
-    base_path = f"DEV/attachments/{folder}/{slug_name}{file_ext.lower()}"
+    base_path = f"public/attachments/{folder}/{slug_name}{file_ext.lower()}"
     
     # Handle collisions
     final_path = base_path
     counter = 1
     while default_storage.exists(final_path):
-        final_path = f"DEV/attachments/{folder}/{slug_name}-{counter}{file_ext.lower()}"
+        final_path = f"public/attachments/{folder}/{slug_name}-{counter}{file_ext.lower()}"
         counter += 1
     
     # Verify we're using S3 storage (S3Storage or S3Boto3Storage are both valid)
@@ -105,6 +105,8 @@ def upload_media(request):
         raise Exception(f"UPLOAD FAILED: File does not exist in S3 after save: {saved_path}")
     
     file_url = default_storage.url(saved_path)
+    # Remove 'public/' from the URL since CloudFront adds it automatically
+    file_url = file_url.replace('/public/', '/')
     
     return JsonResponse({
         'success': True,
