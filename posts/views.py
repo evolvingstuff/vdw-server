@@ -1,4 +1,5 @@
 import os
+import re
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -22,6 +23,75 @@ def post_detail(request, slug):
     return render(request, 'posts/post_detail.html', {'post': post})
 
 
+def add_file_icons_to_html(html):
+    """Add emoji icons to file links based on file extension"""
+    
+    # Map file extensions to emoji icons
+    icon_map = {
+        # Documents
+        'pdf': '📄',
+        'doc': '📝',
+        'docx': '📝',
+        'txt': '📃',
+        'rtf': '📝',
+        # Spreadsheets
+        'xls': '📊',
+        'xlsx': '📊',
+        'csv': '📊',
+        # Presentations  
+        'ppt': '📊',
+        'pptx': '📊',
+        # Code/Data
+        'json': '📋',
+        'xml': '📋',
+        'html': '🌐',
+        'css': '🎨',
+        'js': '💻',
+        'py': '🐍',
+        # Archives
+        'zip': '📦',
+        'rar': '📦',
+        'tar': '📦',
+        'gz': '📦',
+        '7z': '📦',
+        # Media
+        'mp4': '🎬',
+        'mov': '🎬',
+        'avi': '🎬',
+        'mkv': '🎬',
+        'mp3': '🎵',
+        'wav': '🎵',
+        'm4a': '🎵',
+        'flac': '🎵',
+        # Default - no icon for unknown types
+        'default': ''
+    }
+    
+    # Pattern to match links: <a href="url">text</a>
+    pattern = r'<a href="([^"]+)">([^<]+)</a>'
+    
+    def add_icon(match):
+        url = match.group(1)
+        text = match.group(2)
+        
+        # Only process attachment links
+        if '/attachments/' not in url:
+            return match.group(0)
+        
+        # Extract extension from URL
+        ext = ''
+        if '.' in url:
+            ext = url.split('.')[-1].lower().split('?')[0]
+        
+        if ext in icon_map:
+            icon = icon_map[ext]
+        else:
+            icon = icon_map['default']
+        return f'<a href="{url}">{icon} {text}</a>'
+    
+    return re.sub(pattern, add_icon, html)
+
+
 @staff_member_required
 def preview_markdown(request):
     if request.method == 'POST':
@@ -33,6 +103,9 @@ def preview_markdown(request):
             markdown_text,
             extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
         )
+        
+        # Add file type icons to attachment links
+        html = add_file_icons_to_html(html)
         
         return JsonResponse({'html': html})
     

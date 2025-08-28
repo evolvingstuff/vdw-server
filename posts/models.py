@@ -72,6 +72,10 @@ class Post(models.Model):
             extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
         )
         
+        # Add file type icons to attachment links
+        from .views import add_file_icons_to_html
+        self.content_html = add_file_icons_to_html(self.content_html)
+        
         # Extract plain text for search
         # Remove HTML tags
         text = re.sub(r'<[^>]+>', '', self.content_html)
