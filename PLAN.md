@@ -1,104 +1,83 @@
-# Media Upload Implementation Plan
+# Media Upload - Extended File Support Plan
 
 ## Current Status
-- ✅ S3 storage settings configured
-- ✅ Settings updated to always use S3 (no local storage)
-- ✅ S3 bucket structure exists with file type organization
-- ✅ Upload endpoint implemented at `/admin/upload-media/`
-- ✅ Copy & paste image upload working (replaced drag & drop)
-- 🔧 IN PROGRESS: Fixing path structure and filename handling
+- ✅ Copy & paste image upload working
+- ✅ S3 storage with CloudFront CDN configured
+- ✅ Files organized by type in S3: `public/attachments/{type}/`
+- ✅ Images display correctly in markdown preview
+- 🔧 TODO: Extend to support non-image files (PDFs, docs, etc.)
 
-## User Workflow (Copy & Paste)
-**Current user experience:**
-1. User copies image (from Finder, screenshot, etc.)
-2. Places cursor in markdown editor where image should go
+## Current Limitations
+1. **Frontend only accepts images**: `item.type.indexOf('image')` check ignores other files
+2. **Markdown syntax hardcoded for images**: Always uses `![name](url)` 
+3. **Backend validates against images only**: Limited content-type mapping
+
+## Implementation Plan for Non-Image Files
+
+### 1. Frontend Changes
+**File: `posts/templates/admin/posts/post/change_form.html`**
+- Remove image-only filter in paste handler
+- Accept any file type from clipboard
+- Detect file type to choose correct markdown syntax:
+  - Images: `![filename](url)` - embeds image
+  - Others: `[filename](url)` - creates download link
+
+### 2. Backend Changes  
+**File: `posts/views.py`**
+- Expand `content_type_map` to include:
+  - `application/pdf` → `pdf/`
+  - `application/msword` → `doc/`
+  - `application/vnd.openxmlformats-officedocument.wordprocessingml.document` → `docx/`
+  - `application/vnd.ms-excel` → `xls/`
+  - `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` → `xlsx/`
+  - `text/plain` → `txt/`
+  - `application/zip` → `zip/`
+  - `video/mp4` → `mp4/`
+  - `audio/mpeg` → `mp3/`
+
+### 3. Markdown Syntax by File Type
+```javascript
+// Determine markdown syntax based on file type
+if (file.type.startsWith('image/')) {
+    markdown = `![${fileName}](${url})`;  // Embed image
+} else {
+    markdown = `[${fileName}](${url})`;    // Download link
+}
+```
+
+### 4. User Experience
+1. User copies any file (image, PDF, document, etc.)
+2. Places cursor in markdown editor
 3. Pastes with Cmd+V
-4. File automatically uploads to S3 in background
-5. Markdown gets CloudFront URL inserted: `![filename](https://cdn.example.com/DEV/attachments/jpg/my-image.jpg)`
-6. Live preview immediately shows the actual image
-7. Loading placeholder shown during upload
-8. Error alerts if upload fails
+4. File uploads to S3 with progress indicator
+5. Appropriate markdown inserted:
+   - Images show inline in preview
+   - Documents show as clickable links
 
-## S3 Bucket Structure
+### 5. Testing Plan
+- [ ] Copy & paste PDF from Finder
+- [ ] Copy & paste Word document
+- [ ] Copy & paste text file
+- [ ] Copy & paste video file
+- [ ] Verify correct markdown syntax for each type
+- [ ] Confirm files upload to correct S3 folders
+- [ ] Test file size limits (10MB)
+- [ ] Verify error handling for unsupported types
+
+## S3 Final Structure
 ```
 vitdwiki2/
-├── DEV/
-│   └── attachments/
-│       ├── jpg/
-│       ├── png/
-│       ├── pdf/
-│       ├── doc/
-│       ├── docx/
-│       ├── gif/
-│       ├── bmp/
-│       ├── mp3/
-│       ├── mp4/
-│       ├── webp/
-│       ├── zip/
-│       └── [other file type folders]
+└── public/
+    └── attachments/
+        ├── jpg/
+        ├── png/
+        ├── gif/
+        ├── pdf/
+        ├── doc/
+        ├── docx/
+        ├── txt/
+        ├── zip/
+        ├── mp4/
+        ├── mp3/
+        └── [other types as needed]
 ```
-
-## Implementation Plan
-
-### 1. ~~Custom Storage Backend~~ Direct Upload Handler
-Upload view that:
-- Detects file extension/type from uploaded file
-- Routes files to appropriate subfolder: `DEV/attachments/{file_type}/`
-- Converts filenames to URL-friendly slugs (when available from clipboard)
-- For clipboard images without names: uses timestamp-based names
-- Handles collisions with counter appending (filename-1.ext, filename-2.ext, etc.)
-
-### 2. File Processing Logic
-- Original filename: `My Awesome Image!.jpg`
-- Slugified: `my-awesome-image.jpg`
-- Final S3 path: `DEV/attachments/jpg/my-awesome-image.jpg`
-- If collision: `DEV/attachments/jpg/my-awesome-image-1.jpg`
-
-### 3. Django Upload API
-Create Django view/endpoint for AJAX uploads:
-- Accept multipart file uploads
-- Use custom storage backend
-- Return JSON with CloudFront URL or error
-- File size limit: 10MB
-- CSRF protection
-
-### 4. Frontend Copy & Paste
-Update markdown editor (both normal and fullscreen modes):
-- Handle paste events on textareas
-- Detect images in clipboard
-- Show loading placeholder during upload  
-- Insert markdown syntax at cursor position
-- Replace placeholder with final URL when complete
-- Display error alerts on failure
-
-### 5. Markdown Integration
-- Images: `![original-filename](cloudfront-url)`
-- Focus on images initially, expand to PDFs later
-- Live preview should immediately show uploaded images
-
-### 6. Testing Plan
-- Copy & paste various image formats (jpg, png, gif)
-- Test screenshots (Cmd+Ctrl+Shift+4)
-- Test copying from Preview app, Finder, web browser
-- Test in both normal and fullscreen editor modes
-- Verify filename collision handling
-- Test file size limits and error handling
-- Confirm files appear in correct S3 folders with proper structure
-- Verify CloudFront delivery and live preview
-
-## File Type Mapping
-Extensions will be mapped to folders:
-- `.jpg`, `.jpeg` → `jpg/`
-- `.png` → `png/`
-- `.pdf` → `pdf/`
-- `.doc` → `doc/`
-- `.docx` → `docx/`
-- `.gif` → `gif/`
-- And so on...
-
-## Benefits
-- ✅ No local file storage (robust deployment)
-- ✅ Organized by file type (easy S3 management)
-- ✅ URL-friendly filenames (SEO, readability)
-- ✅ Collision handling (no overwrites)
-- ✅ CloudFront-ready (fast delivery)
