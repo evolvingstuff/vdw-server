@@ -360,31 +360,42 @@ document.addEventListener('DOMContentLoaded', function() {
             syncFromFullscreen();
         });
         
-        // Setup paste upload for images
+        // Setup paste upload for all file types
         function setupPasteUpload(textarea) {
             textarea.addEventListener('paste', async (e) => {
-                // Check if clipboard contains files/images
+                // Check if clipboard contains any files
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                let imageFile = null;
+                let file = null;
                 
                 for (let item of items) {
-                    if (item.type.indexOf('image') !== -1) {
-                        imageFile = item.getAsFile();
+                    // Accept any file type, not just images
+                    if (item.kind === 'file') {
+                        file = item.getAsFile();
                         break;
                     }
                 }
                 
-                if (!imageFile) return; // No image in clipboard, let normal paste happen
+                if (!file) return; // No file in clipboard, let normal paste happen
                 
-                e.preventDefault(); // Prevent default paste for images
+                e.preventDefault(); // Prevent default paste for files
                 
-                console.log('Pasting image:', imageFile.name || 'image.png');
+                console.log('Pasting file:', file.name || 'file', 'Type:', file.type);
                 
                 // Generate filename if not present
-                const fileName = imageFile.name || `pasted-image-${Date.now()}.png`;
+                let fileName = file.name;
+                if (!fileName) {
+                    // Generate name based on file type
+                    const ext = file.type.split('/')[1] || 'bin';
+                    const prefix = file.type.startsWith('image/') ? 'pasted-image' : 'pasted-file';
+                    fileName = `${prefix}-${Date.now()}.${ext}`;
+                }
                 
-                // Insert loading placeholder at cursor position
-                const loadingText = `![Uploading ${fileName}...](uploading)`;
+                // Choose markdown syntax based on file type
+                const isImage = file.type.startsWith('image/');
+                const loadingText = isImage 
+                    ? `![Uploading ${fileName}...](uploading)`
+                    : `[Uploading ${fileName}...](uploading)`;
+                    
                 const startPos = textarea.selectionStart;
                 const endPos = textarea.selectionEnd;
                 textarea.value = textarea.value.slice(0, startPos) + loadingText + textarea.value.slice(endPos);
@@ -395,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Upload file
                 const formData = new FormData();
-                formData.append('file', imageFile, fileName);
+                formData.append('file', file, fileName);
                 
                 try {
                     const response = await fetch('/admin/upload-media/', {
@@ -407,9 +418,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Upload response:', data);
                     
                     if (data.success && data.url) {
-                        // Replace loading text with actual URL
-                        const markdownImage = `![${fileName}](${data.url})`;
-                        textarea.value = textarea.value.replace(loadingText, markdownImage);
+                        // Replace loading text with actual URL using appropriate markdown syntax
+                        const markdown = isImage 
+                            ? `![${fileName}](${data.url})`
+                            : `[${fileName}](${data.url})`;
+                        textarea.value = textarea.value.replace(loadingText, markdown);
                         
                         // Update preview
                         if (textarea === contentField) {

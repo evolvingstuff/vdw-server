@@ -56,12 +56,40 @@ def upload_media(request):
     
     # Validate and map file type to folder
     content_type_map = {
+        # Images
         'image/jpeg': 'jpg',
         'image/png': 'png',
         'image/gif': 'gif',
         'image/webp': 'webp',
         'image/svg+xml': 'svg',
         'image/bmp': 'bmp',
+        # Documents
+        'application/pdf': 'pdf',
+        'application/msword': 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.ms-excel': 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'application/vnd.ms-powerpoint': 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+        # Text
+        'text/plain': 'txt',
+        'text/csv': 'csv',
+        'text/html': 'html',
+        'text/css': 'css',
+        'application/json': 'json',
+        'application/xml': 'xml',
+        # Archives
+        'application/zip': 'zip',
+        'application/x-rar-compressed': 'rar',
+        'application/x-tar': 'tar',
+        'application/gzip': 'gz',
+        # Media
+        'video/mp4': 'mp4',
+        'video/quicktime': 'mov',
+        'video/x-msvideo': 'avi',
+        'audio/mpeg': 'mp3',
+        'audio/wav': 'wav',
+        'audio/x-m4a': 'm4a',
     }
     
     if uploaded_file.content_type not in content_type_map:
@@ -78,7 +106,11 @@ def upload_media(request):
     # Slugify the filename
     slug_name = slugify(name_part)
     if not slug_name:  # If slugify returns empty (e.g., for clipboard pastes)
-        slug_name = f"image-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        # Use appropriate prefix based on file type
+        if uploaded_file.content_type.startswith('image/'):
+            slug_name = f"image-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        else:
+            slug_name = f"file-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     
     # Build S3 path with proper structure
     base_path = f"public/attachments/{folder}/{slug_name}{file_ext.lower()}"
