@@ -20,6 +20,10 @@ def post_list(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
+    
+    # Add icons to the HTML content before displaying
+    post.content_html = add_file_icons_to_html(post.content_html)
+    
     return render(request, 'posts/post_detail.html', {'post': post})
 
 
