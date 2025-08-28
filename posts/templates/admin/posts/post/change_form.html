@@ -359,6 +359,83 @@ document.addEventListener('DOMContentLoaded', function() {
         fullscreenTextarea.addEventListener('change', () => {
             syncFromFullscreen();
         });
+        
+        // Setup paste upload for images
+        function setupPasteUpload(textarea) {
+            textarea.addEventListener('paste', async (e) => {
+                // Check if clipboard contains files/images
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                let imageFile = null;
+                
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        imageFile = item.getAsFile();
+                        break;
+                    }
+                }
+                
+                if (!imageFile) return; // No image in clipboard, let normal paste happen
+                
+                e.preventDefault(); // Prevent default paste for images
+                
+                console.log('Pasting image:', imageFile.name || 'image.png');
+                
+                // Generate filename if not present
+                const fileName = imageFile.name || `pasted-image-${Date.now()}.png`;
+                
+                // Insert loading placeholder at cursor position
+                const loadingText = `![Uploading ${fileName}...](uploading)`;
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                textarea.value = textarea.value.slice(0, startPos) + loadingText + textarea.value.slice(endPos);
+                
+                // Move cursor after the inserted text
+                textarea.selectionStart = startPos + loadingText.length;
+                textarea.selectionEnd = startPos + loadingText.length;
+                
+                // Upload file
+                const formData = new FormData();
+                formData.append('file', imageFile, fileName);
+                
+                try {
+                    const response = await fetch('/admin/upload-media/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    console.log('Upload response:', data);
+                    
+                    if (data.success && data.url) {
+                        // Replace loading text with actual URL
+                        const markdownImage = `![${fileName}](${data.url})`;
+                        textarea.value = textarea.value.replace(loadingText, markdownImage);
+                        
+                        // Update preview
+                        if (textarea === contentField) {
+                            updatePreview();
+                        } else {
+                            syncFromFullscreen();
+                        }
+                    } else {
+                        // Remove loading text and show error
+                        textarea.value = textarea.value.replace(loadingText, '');
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        console.error('Upload error:', data);
+                    }
+                } catch (error) {
+                    // Remove loading text and show error
+                    textarea.value = textarea.value.replace(loadingText, '');
+                    alert('Upload failed: ' + error.message);
+                    console.error('Upload error:', error);
+                }
+            });
+        }
+        
+        // Setup paste upload for main editor
+        setupPasteUpload(contentField);
+        // Setup paste upload for fullscreen editor
+        setupPasteUpload(fullscreenTextarea);
     }
 });
 </script>

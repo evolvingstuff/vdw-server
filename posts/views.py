@@ -1,6 +1,12 @@
+import os
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.utils.text import slugify
 from .models import Post
 import markdown2
 import json
@@ -19,18 +25,90 @@ def post_detail(request, slug):
 @staff_member_required
 def preview_markdown(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            markdown_text = data.get('markdown', '')
-            
-            # Use same markdown settings as the model
-            html = markdown2.markdown(
-                markdown_text,
-                extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
-            )
-            
-            return JsonResponse({'html': html})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+        data = json.loads(request.body)
+        markdown_text = data['markdown']  # Will crash if missing - good!
+        
+        # Use same markdown settings as the model
+        html = markdown2.markdown(
+            markdown_text,
+            extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
+        )
+        
+        return JsonResponse({'html': html})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@staff_member_required
+def upload_media(request):
+    """Handle drag-and-drop media uploads to S3"""
+    
+    if 'file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file provided'}, status=400)
+    
+    uploaded_file = request.FILES['file']
+    
+    # Validate file size (10MB limit)
+    if uploaded_file.size > 10 * 1024 * 1024:
+        return JsonResponse({'success': False, 'error': 'File too large (max 10MB)'}, status=400)
+    
+    # Validate and map file type to folder
+    content_type_map = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'image/svg+xml': 'svg',
+        'image/bmp': 'bmp',
+    }
+    
+    if uploaded_file.content_type not in content_type_map:
+        return JsonResponse({'success': False, 'error': f'Invalid file type: {uploaded_file.content_type}'}, status=400)
+    
+    folder = content_type_map[uploaded_file.content_type]
+    
+    # Generate filename - use original name if available, otherwise timestamp
+    import uuid
+    from datetime import datetime
+    original_name = uploaded_file.name
+    name_part, file_ext = os.path.splitext(original_name)
+    
+    # Slugify the filename
+    slug_name = slugify(name_part)
+    if not slug_name:  # If slugify returns empty (e.g., for clipboard pastes)
+        slug_name = f"image-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    
+    # Build S3 path with proper structure
+    base_path = f"DEV/attachments/{folder}/{slug_name}{file_ext.lower()}"
+    
+    # Handle collisions
+    final_path = base_path
+    counter = 1
+    while default_storage.exists(final_path):
+        final_path = f"DEV/attachments/{folder}/{slug_name}-{counter}{file_ext.lower()}"
+        counter += 1
+    
+    # Verify we're using S3 storage (S3Storage or S3Boto3Storage are both valid)
+    storage_class = default_storage.__class__.__name__
+    if 'S3' not in storage_class:
+        raise Exception(f"WRONG STORAGE BACKEND: Using {storage_class} - not an S3 storage backend!")
+    
+    # Save to S3 via Django's default storage - MUST SUCCEED OR CRASH
+    saved_path = default_storage.save(final_path, uploaded_file)
+    if saved_path != final_path:
+        raise Exception(f"S3 PATH MISMATCH: Requested '{final_path}' but got '{saved_path}'")
+    
+    # Verify the file actually exists in S3
+    if not default_storage.exists(saved_path):
+        raise Exception(f"UPLOAD FAILED: File does not exist in S3 after save: {saved_path}")
+    
+    file_url = default_storage.url(saved_path)
+    
+    return JsonResponse({
+        'success': True,
+        'url': file_url,
+        'filename': uploaded_file.name,
+        'size': uploaded_file.size
+    })

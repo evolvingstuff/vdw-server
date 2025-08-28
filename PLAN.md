@@ -4,15 +4,20 @@
 - ✅ S3 storage settings configured
 - ✅ Settings updated to always use S3 (no local storage)
 - ✅ S3 bucket structure exists with file type organization
+- ✅ Upload endpoint implemented at `/admin/upload-media/`
+- ✅ Copy & paste image upload working (replaced drag & drop)
+- 🔧 IN PROGRESS: Fixing path structure and filename handling
 
-## User Workflow (Drag & Drop)
-**Ideal user experience:**
-1. User drags image/PDF directly into markdown editing area
-2. File automatically uploads to S3 in background
-3. Markdown gets CloudFront URL inserted: `![filename](https://cdn.example.com/DEV/attachments/jpg/my-image.jpg)`
-4. Live preview immediately shows the actual image
-5. Loading indicator prevents interaction during upload
-6. Error alerts if upload fails
+## User Workflow (Copy & Paste)
+**Current user experience:**
+1. User copies image (from Finder, screenshot, etc.)
+2. Places cursor in markdown editor where image should go
+3. Pastes with Cmd+V
+4. File automatically uploads to S3 in background
+5. Markdown gets CloudFront URL inserted: `![filename](https://cdn.example.com/DEV/attachments/jpg/my-image.jpg)`
+6. Live preview immediately shows the actual image
+7. Loading placeholder shown during upload
+8. Error alerts if upload fails
 
 ## S3 Bucket Structure
 ```
@@ -35,11 +40,12 @@ vitdwiki2/
 
 ## Implementation Plan
 
-### 1. Custom Storage Backend
-Create a custom Django storage class that:
+### 1. ~~Custom Storage Backend~~ Direct Upload Handler
+Upload view that:
 - Detects file extension/type from uploaded file
 - Routes files to appropriate subfolder: `DEV/attachments/{file_type}/`
-- Converts filenames to URL-friendly slugs
+- Converts filenames to URL-friendly slugs (when available from clipboard)
+- For clipboard images without names: uses timestamp-based names
 - Handles collisions with counter appending (filename-1.ext, filename-2.ext, etc.)
 
 ### 2. File Processing Logic
@@ -56,12 +62,13 @@ Create Django view/endpoint for AJAX uploads:
 - File size limit: 10MB
 - CSRF protection
 
-### 4. Frontend Drag & Drop
+### 4. Frontend Copy & Paste
 Update markdown editor (both normal and fullscreen modes):
-- Handle drag/drop events on textareas
-- Show loading indicator during upload
+- Handle paste events on textareas
+- Detect images in clipboard
+- Show loading placeholder during upload  
 - Insert markdown syntax at cursor position
-- Block interaction until upload complete
+- Replace placeholder with final URL when complete
 - Display error alerts on failure
 
 ### 5. Markdown Integration
@@ -70,11 +77,13 @@ Update markdown editor (both normal and fullscreen modes):
 - Live preview should immediately show uploaded images
 
 ### 6. Testing Plan
-- Drag & drop various image formats (jpg, png, gif)
+- Copy & paste various image formats (jpg, png, gif)
+- Test screenshots (Cmd+Ctrl+Shift+4)
+- Test copying from Preview app, Finder, web browser
 - Test in both normal and fullscreen editor modes
 - Verify filename collision handling
 - Test file size limits and error handling
-- Confirm files appear in correct S3 folders
+- Confirm files appear in correct S3 folders with proper structure
 - Verify CloudFront delivery and live preview
 
 ## File Type Mapping

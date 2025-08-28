@@ -84,6 +84,16 @@ BEFORE using Optional[T], you MUST:
 
 Default assumption: If a field might be missing, that's a BUG that should crash immediately, not be handled gracefully with Optional.
 
+# MANDATORY: Check for Error Handling After Every Code Change
+
+After EVERY file edit that contains Python code, you MUST run:
+```
+python check_errors.py
+```
+
+If this finds any soft error handling, FIX IT IMMEDIATELY before proceeding.
+DO NOT continue with other tasks until all error handling is removed.
+
 # Testing Philosophy
 
 NEVER commit untested code. Always wait for user confirmation that changes have been tested and work correctly before committing. If I ask to commit, ask me first: "Have you tested these changes?"
