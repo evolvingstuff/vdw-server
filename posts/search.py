@@ -16,11 +16,11 @@ def initialize_search_index():
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
     
-    # Configure searchable attributes - only search on plain text content
+    # Configure searchable attributes - positional ranking only
     index.update_searchable_attributes([
         'title',
-        'content',  # Plain text version for searching
-        'tags'
+        'tags',
+        'content'  # Plain text version for searching
     ])
     
     # Configure filterable attributes
