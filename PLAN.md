@@ -1,83 +1,85 @@
-# Media Upload - Extended File Support Plan
+# Markdown to Database Conversion Plan
 
-## Current Status
-- ✅ Copy & paste image upload working
-- ✅ S3 storage with CloudFront CDN configured
-- ✅ Files organized by type in S3: `public/attachments/{type}/`
-- ✅ Images display correctly in markdown preview
-- 🔧 TODO: Extend to support non-image files (PDFs, docs, etc.)
+## Overview
+Import all markdown posts from `../vdw-conversion/posts/` into the SQLite database, extracting frontmatter metadata and preserving the markdown content.
 
-## Current Limitations
-1. **Frontend only accepts images**: `item.type.indexOf('image')` check ignores other files
-2. **Markdown syntax hardcoded for images**: Always uses `![name](url)` 
-3. **Backend validates against images only**: Limited content-type mapping
+## Data Mapping
 
-## Implementation Plan for Non-Image Files
+### From Frontmatter (JSON):
+- `title` -> Post.title
+- `slug` -> Post.slug  
+- `date` -> Post.created_date
+- `tags` -> Create/link Tag objects via Post.tags (ManyToMany)
+- `categories` -> Also add as tags (categories are just tags in our schema)
+- `tiki_page_id` -> Post.original_page_id
+- `aliases` -> Post.aliases (newline-separated)
+- Full JSON frontmatter -> Post.front_matter (for debugging)
 
-### 1. Frontend Changes
-**File: `posts/templates/admin/posts/post/change_form.html`**
-- Remove image-only filter in paste handler
-- Accept any file type from clipboard
-- Detect file type to choose correct markdown syntax:
-  - Images: `![filename](url)` - embeds image
-  - Others: `[filename](url)` - creates download link
+### From File Content:
+- Markdown content (after frontmatter) -> Post.content_md
+- Auto-generated from content_md -> Post.content_html (using same markdown2 method as admin preview)
+- Auto-generated from content_html -> Post.content_text (stripped HTML, same as admin save)
 
-### 2. Backend Changes  
-**File: `posts/views.py`**
-- Expand `content_type_map` to include:
-  - `application/pdf` → `pdf/`
-  - `application/msword` → `doc/`
-  - `application/vnd.openxmlformats-officedocument.wordprocessingml.document` → `docx/`
-  - `application/vnd.ms-excel` → `xls/`
-  - `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` → `xlsx/`
-  - `text/plain` → `txt/`
-  - `application/zip` → `zip/`
-  - `video/mp4` → `mp4/`
-  - `audio/mpeg` → `mp3/`
+### Default Values:
+- Post.status -> 'published' (all imported posts are published)
+- Post.modified_date -> auto_now (Django handles this)
+- Post.meta_description -> empty (can be populated later)
+- Post.notes -> empty
+- Post.derived_tags -> copied from tags (until ontology implemented)
 
-### 3. Markdown Syntax by File Type
-```javascript
-// Determine markdown syntax based on file type
-if (file.type.startsWith('image/')) {
-    markdown = `![${fileName}](${url})`;  // Embed image
-} else {
-    markdown = `[${fileName}](${url})`;    // Download link
-}
-```
+## Schema Changes Required
 
-### 4. User Experience
-1. User copies any file (image, PDF, document, etc.)
-2. Places cursor in markdown editor
-3. Pastes with Cmd+V
-4. File uploads to S3 with progress indicator
-5. Appropriate markdown inserted:
-   - Images show inline in preview
-   - Documents show as clickable links
+1. **Add front_matter field to Post model**
+   - Add `front_matter = models.TextField(blank=True, null=True, editable=False)` 
+   - No migration needed - database will be deleted and recreated
 
-### 5. Testing Plan
-- [ ] Copy & paste PDF from Finder
-- [ ] Copy & paste Word document
-- [ ] Copy & paste text file
-- [ ] Copy & paste video file
-- [ ] Verify correct markdown syntax for each type
-- [ ] Confirm files upload to correct S3 folders
-- [ ] Test file size limits (10MB)
-- [ ] Verify error handling for unsupported types
+## Implementation Steps
 
-## S3 Final Structure
-```
-vitdwiki2/
-└── public/
-    └── attachments/
-        ├── jpg/
-        ├── png/
-        ├── gif/
-        ├── pdf/
-        ├── doc/
-        ├── docx/
-        ├── txt/
-        ├── zip/
-        ├── mp4/
-        ├── mp3/
-        └── [other types as needed]
-```
+1. **Setup Django Environment**
+   - Import Django settings
+   - Setup Django ORM
+   - Import Post and Tag models
+
+2. **Clear Existing Data**
+   - Delete existing SQLite database file (db.sqlite3)
+   - Run Django migrations to recreate fresh database from scratch
+
+3. **Parse Markdown Files**
+   - Iterate through all `.md` files in `../vdw-conversion/posts/`
+   - For each file:
+     - Read file content
+     - Extract JSON frontmatter (between first `{` and `}` block)
+     - Extract markdown content (everything after frontmatter)
+     - Remove any Hugo shortcodes like `{{< toc >}}`
+
+4. **Clean Markdown Content**
+   - Remove Hugo shortcodes (e.g., `{{< toc >}}`)
+   - Decode Unicode escape sequences
+   - Clean up any unwanted HTML spans/styling
+
+5. **Process Tags**
+   - For each unique tag from both `tags` and `categories`:
+     - Create or get Tag object
+     - Auto-generate slug from tag name
+
+6. **Create Post Objects**
+   - Create Post instance with mapped fields
+   - Save post (triggers auto-generation of HTML and text)
+   - Link tags via ManyToMany relationship
+
+7. **Error Handling**
+   - FAIL FAST AND LOUD principle:
+     - No try/except blocks
+     - Let any errors crash immediately
+     - Clear error messages for debugging
+
+8. **Validation**
+   - Count imported posts
+   - Verify all files processed
+   - Report summary statistics
+
+## Notes
+- Frontmatter format is JSON (not YAML)
+- Some posts may have HTML/styling in markdown (preserve as-is)
+- Hugo shortcodes should be removed or handled appropriately
+- All imported posts are considered 'published' status
