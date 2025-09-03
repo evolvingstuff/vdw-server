@@ -8,3 +8,4 @@ sqlparse==0.5.3
 django-storages==1.14.2
 boto3==1.34.23
 python-dotenv==1.0.0
+meilisearch==0.31.8

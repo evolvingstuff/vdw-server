@@ -29,8 +29,9 @@ def setup_django():
     from posts.models import Post, Tag
     from django.utils import timezone
     from django.utils.text import slugify
+    from posts.search import initialize_search_index, clear_search_index, bulk_index_posts
     
-    return execute_from_command_line, Post, Tag, timezone, slugify
+    return execute_from_command_line, Post, Tag, timezone, slugify, initialize_search_index, clear_search_index, bulk_index_posts
 
 def run_migrations(execute_from_command_line):
     """Run Django migrations to create fresh database"""
@@ -126,12 +127,17 @@ def main():
     delete_database()
     
     # Step 2: Setup Django AFTER database is deleted
-    execute_from_command_line, Post, Tag, timezone, slugify = setup_django()
+    execute_from_command_line, Post, Tag, timezone, slugify, initialize_search_index, clear_search_index, bulk_index_posts = setup_django()
     
     # Step 3: Run migrations 
     run_migrations(execute_from_command_line)
     
-    # Step 4: Find all markdown files
+    # Step 4: Setup MeiliSearch
+    print("Initializing MeiliSearch index...")
+    clear_search_index()  # Start fresh
+    initialize_search_index()
+    
+    # Step 5: Find all markdown files
     posts_dir = Path('../vdw-conversion/posts')
     markdown_files = list(posts_dir.glob('*.md'))
     
@@ -197,6 +203,12 @@ def main():
         print(f"\nSkipped {len(skipped_files)} files with no frontmatter:")
         for skipped_file in skipped_files:
             print(f"  - {skipped_file}")
+    
+    # Step 6: Index all posts in MeiliSearch
+    print(f"\nIndexing {created_posts} posts in MeiliSearch...")
+    published_posts = Post.objects.filter(status='published')
+    bulk_index_posts(published_posts)
+    print("MeiliSearch indexing complete!")
 
 if __name__ == '__main__':
     main()

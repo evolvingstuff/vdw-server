@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Posts - VDW</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        #search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #search-input:focus {
+            border-color: #007bff;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .result-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .result-title a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .result-title a:hover {
+            text-decoration: underline;
+        }
+        .result-snippet {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .result-url {
+            color: #5f6368;
+            font-size: 14px;
+        }
+        .no-results {
+            text-align: center;
+            color: #666;
+            padding: 40px 0;
+        }
+        .search-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .highlight {
+            background-color: #fff59d;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search Posts</h1>
+        
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search posts..." autocomplete="off" />
+        </div>
+        
+        <div class="loading" id="loading">Searching...</div>
+        
+        <div class="search-info" id="search-info" style="display: none;"></div>
+        
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const loading = document.getElementById('loading');
+        const searchInfo = document.getElementById('search-info');
+        const results = document.getElementById('results');
+        
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                results.innerHTML = '';
+                searchInfo.style.display = 'none';
+                loading.style.display = 'none';
+                return;
+            }
+            
+            // Show loading
+            loading.style.display = 'block';
+            searchInfo.style.display = 'none';
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+        
+        async function performSearch(query) {
+            try {
+                const response = await fetch(`/search/api/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                displayResults(data, query);
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                results.innerHTML = '<div class="no-results">Search error. Please try again.</div>';
+                console.error('Search error:', error);
+            }
+        }
+        
+        function displayResults(data, query) {
+            const hits = data.hits || [];
+            
+            if (hits.length === 0) {
+                searchInfo.style.display = 'none';
+                results.innerHTML = '<div class="no-results">No results found for "' + escapeHtml(query) + '"</div>';
+                return;
+            }
+            
+            // Show search info
+            const processingTime = data.processingTime || 0;
+            searchInfo.innerHTML = `Found ${hits.length} result${hits.length !== 1 ? 's' : ''} (${processingTime}ms)`;
+            searchInfo.style.display = 'block';
+            
+            // Display results
+            let html = '';
+            hits.forEach(hit => {
+                const title = hit._formatted?.title || hit.title;
+                const content = hit._formatted?.content || hit.content;
+                const snippet = content.substring(0, 200) + (content.length > 200 ? '...' : '');
+                
+                html += `
+                    <div class="result-item">
+                        <div class="result-title">
+                            <a href="/posts/${hit.slug}/">${title}</a>
+                        </div>
+                        <div class="result-snippet">${snippet}</div>
+                        <div class="result-url">/posts/${hit.slug}/</div>
+                    </div>
+                `;
+            });
+            
+            results.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Focus search input on page load
+        searchInput.focus();
+    </script>
+</body>
+</html>
