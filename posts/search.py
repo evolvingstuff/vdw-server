@@ -16,10 +16,10 @@ def initialize_search_index():
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
     
-    # Configure searchable attributes (with weights)
+    # Configure searchable attributes - only search on plain text content
     index.update_searchable_attributes([
         'title',
-        'content', 
+        'content',  # Plain text version for searching
         'tags'
     ])
     
@@ -29,6 +29,13 @@ def initialize_search_index():
         'created_date',
         'tags'
     ])
+    
+    # TODO: Disable typo tolerance to prevent "Metallica" matching "metallic"
+    # The update_typo_tolerance() method is breaking search functionality
+    # Need to find correct MeiliSearch Python client API for typo tolerance
+    # index.update_typo_tolerance({
+    #     'enabled': False
+    # })
     
     # Configure ranking rules (default is good for now)
     # Words, Typo, Proximity, Attribute, Sort, Exactness
@@ -49,7 +56,8 @@ def format_post_for_search(post):
         'id': post.pk,
         'title': post.title,
         'slug': post.slug,
-        'content': post.content_md,
+        'content': post.content_text,  # Plain text for searching
+        'content_html': post.content_html,  # HTML for display in results
         'tags': [tag.name for tag in post.tags.all()],
         'status': post.status,
         'created_date': post.created_date.isoformat()

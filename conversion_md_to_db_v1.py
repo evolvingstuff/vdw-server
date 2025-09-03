@@ -38,6 +38,32 @@ def run_migrations(execute_from_command_line):
     print("Running migrations to create fresh database...")
     execute_from_command_line(['manage.py', 'migrate'])
 
+
+def create_superuser():
+    """Create superuser from environment variables"""
+    import os
+    from django.contrib.auth import get_user_model
+    
+    User = get_user_model()
+    
+    # Get superuser details from environment
+    username = os.environ.get('DJANGO_SUPERUSER_NAME')
+    email = os.environ.get('DJANGO_SUPERUSER_EMAIL') 
+    password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+    
+    if not all([username, email, password]):
+        raise ValueError("Missing superuser environment variables: DJANGO_SUPERUSER_NAME, DJANGO_SUPERUSER_EMAIL, DJANGO_SUPERUSER_PASSWORD")
+    
+    # Delete existing superuser if exists
+    User.objects.filter(username=username).delete()
+    
+    print(f"Creating superuser: {username}")
+    User.objects.create_superuser(
+        username=username,
+        email=email, 
+        password=password
+    )
+
 def extract_frontmatter_and_content(file_content):
     """Extract JSON frontmatter and markdown content from file"""
     # Find the first { and matching }
@@ -132,7 +158,10 @@ def main():
     # Step 3: Run migrations 
     run_migrations(execute_from_command_line)
     
-    # Step 4: Setup MeiliSearch
+    # Step 4: Create superuser
+    create_superuser()
+    
+    # Step 5: Setup MeiliSearch
     print("Initializing MeiliSearch index...")
     clear_search_index()  # Start fresh
     initialize_search_index()

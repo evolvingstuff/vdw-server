@@ -173,7 +173,7 @@
             let html = '';
             hits.forEach(hit => {
                 const title = hit._formatted?.title || hit.title;
-                const content = hit._formatted?.content || hit.content;
+                const content = hit._formatted?.content_html || hit.content_html;
                 const snippet = content.substring(0, 200) + (content.length > 200 ? '...' : '');
                 
                 html += `
