@@ -71,8 +71,17 @@ def clean_markdown_content(content):
     # Remove Hugo shortcodes like {{< toc >}}
     content = re.sub(r'\{\{<.*?>\}\}', '', content)
     
-    # Remove any remaining empty lines at the start
+    # Remove leading --- separators and empty lines
     content = content.lstrip()
+    if content.startswith('---'):
+        # Remove the --- line and any following empty lines
+        lines = content.split('\n')
+        # Skip the first --- line
+        lines = lines[1:]
+        # Skip any empty lines after the ---
+        while lines and not lines[0].strip():
+            lines = lines[1:]
+        content = '\n'.join(lines)
     
     return content
 
