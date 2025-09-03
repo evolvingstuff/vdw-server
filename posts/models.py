@@ -54,6 +54,7 @@ class Post(models.Model):
     # Migration fields (not editable in admin)
     original_page_id = models.IntegerField(null=True, blank=True, editable=False)
     aliases = models.TextField(blank=True, editable=False, help_text="Old URLs for redirects, one per line")
+    front_matter = models.TextField(blank=True, null=True, editable=False, help_text="Original frontmatter JSON for debugging")
     
     def save(self, *args, **kwargs):
         # Auto-generate slug if not provided

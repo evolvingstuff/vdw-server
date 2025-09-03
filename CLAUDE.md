@@ -84,6 +84,26 @@ BEFORE using Optional[T], you MUST:
 
 Default assumption: If a field might be missing, that's a BUG that should crash immediately, not be handled gracefully with Optional.
 
+# Code Style Requirements
+
+## Import Organization
+ALL imports must be at the top of Python files. Never put imports inside functions or methods unless there is an exceptional technical reason (like avoiding circular imports).
+
+Bad:
+```python
+def my_function():
+    import os  # WRONG
+    return os.getcwd()
+```
+
+Good:
+```python
+import os
+
+def my_function():
+    return os.getcwd()
+```
+
 # MANDATORY: Check for Error Handling After Every Code Change
 
 After EVERY file edit that contains Python code, you MUST run:

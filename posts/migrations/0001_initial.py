@@ -38,6 +38,7 @@ class Migration(migrations.Migration):
                 ('meta_description', models.TextField(blank=True)),
                 ('original_page_id', models.IntegerField(blank=True, editable=False, null=True)),
                 ('aliases', models.TextField(blank=True, editable=False, help_text='Old URLs for redirects, one per line')),
+                ('front_matter', models.TextField(blank=True, editable=False, help_text='Original frontmatter JSON for debugging', null=True)),
                 ('derived_tags', models.ManyToManyField(blank=True, editable=False, related_name='derived_posts', to='posts.tag')),
                 ('tags', models.ManyToManyField(blank=True, related_name='posts', to='posts.tag')),
             ],

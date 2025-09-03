@@ -10,6 +10,8 @@ BANNED_PATTERNS = [
     (r'Optional\[', 'Optional type'),
     (r'\.get\([^,]+,[^)]+\)', '.get() with default value'),
     (r'if not .+:\s*\n?\s*\w+\s*=', 'fallback assignment'),
+    (r'^[ ]{4,}import\s+\w+', 'import statement inside function (should be at top)'),
+    (r'^[ ]{4,}from\s+\w+', 'from import statement inside function (should be at top)'),
 ]
 
 # ALLOWED EXCEPTIONS - Add specific file:line combinations that are approved
