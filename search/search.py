@@ -37,8 +37,21 @@ def initialize_search_index():
     #     'enabled': False
     # })
     
-    # Configure ranking rules (default is good for now)
-    # Words, Typo, Proximity, Attribute, Sort, Exactness
+    # Configure ranking rules - prioritize attribute over proximity/exactness
+    # Default Meilisearch order: words, typo, proximity, attribute, sort, exactness
+    # We move 'attribute' before 'proximity' and 'exactness' to ensure that WHERE
+    # matches occur (title > tags > content) takes priority over HOW close words
+    # are to each other or how exact the matches are. This fixes issues where
+    # posts with partial title matches ranked higher than posts with complete
+    # title matches due to proximity/exactness factors.
+    index.update_ranking_rules([
+        'words',      # Most important: number of matched terms
+        'typo',       # Fewer typos = better
+        'attribute',  # Where matches occur (title > tags > content) - MOVED UP
+        'proximity',  # How close terms are to each other
+        'sort',       # Custom sort criteria
+        'exactness'   # Exact matches vs partial
+    ])
     
     return index
 

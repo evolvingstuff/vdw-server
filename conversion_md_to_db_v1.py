@@ -29,7 +29,7 @@ def setup_django():
     from posts.models import Post, Tag
     from django.utils import timezone
     from django.utils.text import slugify
-    from posts.search import initialize_search_index, clear_search_index, bulk_index_posts
+    from search.search import initialize_search_index, clear_search_index, bulk_index_posts
     
     return execute_from_command_line, Post, Tag, timezone, slugify, initialize_search_index, clear_search_index, bulk_index_posts
 
