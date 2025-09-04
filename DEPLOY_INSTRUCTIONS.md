@@ -1,158 +1,188 @@
-# Deploy Django Blog to AWS Lightsail - Step by Step
+# VDW Server Docker Deployment Guide
 
-Open your browser-based SSH terminal in Lightsail and run these commands in order.
+**Simple, automated deployment using Docker containers - no more server configuration nightmares!**
 
-## Step 1: Check Python Version (Should Already Be Installed)
+## Prerequisites
+
+1. **AWS EC2 Instance** (Ubuntu 24.04 LTS recommended)
+2. **Local .env file** configured with deployment settings
+3. **AWS CLI configured** (for security group management)
+
+## Quick Start
+
+### Step 1: Configure Environment Variables
+
+Create/update your `.env` file with these settings:
+
 ```bash
-python3 --version
-# Should show Python 3.x.x
+# EC2 Instance Configuration
+EC2_INSTANCE_ID=i-1234567890abcdef0
+DEPLOY_HOST=your-ec2-public-ip
+DEPLOY_USER=ubuntu
+DEPLOY_PORT=22
+DEPLOY_KEY_FILE=~/.ssh/your-key.pem
+DEPLOY_APP_PATH=/app
+DEPLOY_LOCAL_DB=./db.sqlite3
+DJANGO_PORT=8000
+
+# AWS Configuration (for S3 storage)
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_DEFAULT_REGION=us-west-2
+AWS_STORAGE_BUCKET_NAME=your-bucket
+
+# Meilisearch Configuration
+MEILISEARCH_URL=http://localhost:7700
+MEILISEARCH_MASTER_KEY=your_master_key
+MEILISEARCH_INDEX_NAME=posts
 ```
 
-## Step 2: Update Server and Install Required Software
+### Step 2: Deploy to Fresh Server
+
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-pip python3-venv nginx git
+# Run the deployment script
+python deploy-docker.py
+
+# Select Option 0: Provision Server (first time only)
+# This will:
+# - Configure security groups
+# - Install Docker
+# - Upload your code
+# - Set up environment
+
+# Then select Option 3: Full Deploy
+# This will:
+# - Deploy your code
+# - Upload database
+# - Start all services
+# - Rebuild search index
 ```
 
-## Step 3: Create Application Directory
+### Step 3: Access Your Site
+
+Your application will be available at:
+- **Main site**: `http://YOUR_EC2_IP:8000`
+- **Admin panel**: `http://YOUR_EC2_IP:8000/admin`
+- **Meilisearch**: `http://YOUR_EC2_IP:7700`
+
+## Deployment Options
+
+The `deploy-docker.py` script provides these options:
+
+- **0. Provision Server** - Initial server setup (install Docker, upload code, configure)
+- **1. Deploy Code** - Upload code and rebuild containers
+- **2. Deploy Database** - Upload database and reindex search  
+- **3. Full Deploy** - Deploy both code and database
+- **4. Reindex Search** - Rebuild search index only
+- **5. Show Status** - View container status and logs
+- **6. Exit**
+
+## Typical Workflows
+
+### Fresh Deployment
+```
+Option 0 (Provision Server) → Option 3 (Full Deploy)
+```
+
+### Code Updates
+```
+Option 1 (Deploy Code)
+```
+
+### Database Updates
+```
+Option 2 (Deploy Database)
+```
+
+### Both Code and Database Updates
+```
+Option 3 (Full Deploy)
+```
+
+## Development Workflows
+
+For local development, use the `dev.py` script:
+
+### Hybrid Development (PyCharm Debugging)
 ```bash
-sudo mkdir -p /var/www/vdw-server
-sudo chown $USER:$USER /var/www/vdw-server
-cd /var/www/vdw-server
+# Start only Meilisearch in Docker
+python dev.py venv-meilisearch
+
+# Run Django in your local venv for debugging
+python manage.py runserver
 ```
 
-## Step 4: Get Your Code onto the Server
-
-### Option A: Use Git (Easiest)
-First, push your code to GitHub from your local machine, then:
+### Full Docker Development
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git .
+# Start complete stack
+python dev.py docker-build
+
+# View logs
+python dev.py docker-logs
+
+# Stop everything
+python dev.py docker-stop
 ```
 
-### Option B: Create Files Manually
-Create each file using nano:
+## Troubleshooting
+
+### View Container Logs
 ```bash
-nano manage.py
-# Paste content, then Ctrl+X, Y, Enter to save
+python deploy-docker.py
+# Select Option 5 (Show Status)
 ```
-Repeat for all project files.
 
-## Step 5: Create Python Virtual Environment
+### Manual SSH Access
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+ssh -i ~/.ssh/your-key.pem ubuntu@YOUR_EC2_IP
+
+# Check containers
+cd /app
+docker compose ps
+docker compose logs django
+docker compose logs meilisearch
 ```
 
-## Step 6: Install Python Packages
-```bash
-pip install --upgrade pip
-pip install Django==5.2.5
-pip install django-markdownx==4.0.9
-pip install Markdown==3.8.2
-pip install markdown2==2.5.4
-pip install pillow==11.3.0
-pip install sqlparse==0.5.3
-pip install gunicorn
+### Common Issues
+
+**Connection Refused**
+- Check that security groups include ports 8000 and 7700
+- Verify containers are running: `docker compose ps`
+- Check Django logs for crashes
+
+**Database Permission Errors**
+- Run Option 2 (Deploy Database) to fix permissions
+- Verify database file exists and has correct ownership
+
+**Search Not Working**
+- Run Option 4 (Reindex Search) to rebuild search index
+- Check Meilisearch is accessible at port 7700
+
+## Architecture
+
+- **Django** (port 8000): Main web application
+- **Meilisearch** (port 7700): Search engine
+- **SQLite**: Database (mounted as Docker volume)
+- **AWS S3**: Static file storage
+
+## Security Notes
+
+- Database and .env files are never committed to git
+- SSH keys are required for server access
+- Security groups restrict access to necessary ports only
+- All services run in isolated Docker containers
+
+## File Structure
+
+```
+/app/                    # Application root on server
+├── docker-compose.yml   # Container orchestration
+├── Dockerfile          # Django container definition
+├── .env                # Environment variables (uploaded)
+├── db.sqlite3          # Database file (uploaded)
+├── manage.py           # Django management
+├── requirements.txt    # Python dependencies
+└── ...                # Application code
 ```
 
-## Step 7: Set Up Django for Production
-```bash
-# Generate a secret key
-python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())' > secret.txt
-
-# Create the database
-python manage.py migrate
-
-# Collect static files
-python manage.py collectstatic --noinput
-
-# Create admin user (optional)
-python manage.py createsuperuser
-```
-
-## Step 8: Create Gunicorn Service File
-```bash
-sudo nano /etc/systemd/system/gunicorn.service
-```
-
-Paste this content:
-```
-[Unit]
-Description=gunicorn daemon
-After=network.target
-
-[Service]
-User=ubuntu
-Group=www-data
-WorkingDirectory=/var/www/vdw-server
-ExecStart=/var/www/vdw-server/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 vdw_server.wsgi:application
-
-[Install]
-WantedBy=multi-user.target
-```
-Save with Ctrl+X, Y, Enter
-
-## Step 9: Start Gunicorn
-```bash
-sudo systemctl daemon-reload
-sudo systemctl start gunicorn
-sudo systemctl enable gunicorn
-sudo systemctl status gunicorn
-```
-
-## Step 10: Configure Nginx
-```bash
-sudo nano /etc/nginx/sites-available/vdw-server
-```
-
-Paste this content:
-```
-server {
-    listen 80;
-    server_name _;
-    
-    location /static/ {
-        alias /var/www/vdw-server/static/;
-    }
-    
-    location /media/ {
-        alias /var/www/vdw-server/media/;
-    }
-    
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-Save with Ctrl+X, Y, Enter
-
-## Step 11: Enable Nginx Site
-```bash
-sudo ln -s /etc/nginx/sites-available/vdw-server /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-## Step 12: Test Your Site
-1. Go to AWS Lightsail console
-2. Find your instance's public IP address
-3. Open a browser and go to: http://YOUR_IP_ADDRESS
-4. Admin panel: http://YOUR_IP_ADDRESS/admin
-
-## If Something Goes Wrong
-Check the logs:
-```bash
-# Gunicorn logs
-sudo journalctl -u gunicorn -n 50
-
-# Nginx logs  
-sudo tail -f /var/log/nginx/error.log
-
-# Restart services
-sudo systemctl restart gunicorn
-sudo systemctl restart nginx
-```
+This Docker-based approach eliminates server configuration complexity while providing consistent, reproducible deployments.
