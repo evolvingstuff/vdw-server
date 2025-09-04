@@ -1,85 +1,115 @@
-# Markdown to Database Conversion Plan
+# Search Refactoring and Global Search Bar Plan
 
 ## Overview
-Import all markdown posts from `../vdw-conversion/posts/` into the SQLite database, extracting frontmatter metadata and preserving the markdown content.
+First refactor search functionality out of the `posts` app into a dedicated `search` app, then implement a global search bar that works across all page types.
 
-## Data Mapping
+## Phase 1: Extract Search from Posts App
 
-### From Frontmatter (JSON):
-- `title` -> Post.title
-- `slug` -> Post.slug  
-- `date` -> Post.created_date
-- `tags` -> Create/link Tag objects via Post.tags (ManyToMany)
-- `categories` -> Also add as tags (categories are just tags in our schema)
-- `tiki_page_id` -> Post.original_page_id
-- `aliases` -> Post.aliases (newline-separated)
-- Full JSON frontmatter -> Post.front_matter (for debugging)
+### Why Refactor First
+- Search will be used across multiple content types (posts, tags, future content)
+- Homepage and other non-post pages need search functionality
+- Search is a distinct feature that shouldn't be tied to posts
+- Moving it later will be more complex as the codebase grows
 
-### From File Content:
-- Markdown content (after frontmatter) -> Post.content_md
-- Auto-generated from content_md -> Post.content_html (using same markdown2 method as admin preview)
-- Auto-generated from content_html -> Post.content_text (stripped HTML, same as admin save)
+### Implementation Steps
 
-### Default Values:
-- Post.status -> 'published' (all imported posts are published)
-- Post.modified_date -> auto_now (Django handles this)
-- Post.meta_description -> empty (can be populated later)
-- Post.notes -> empty
-- Post.derived_tags -> copied from tags (until ontology implemented)
+#### 1. Create Search App
+- Run `python manage.py startapp search`
+- Add `'search'` to `INSTALLED_APPS` in settings
+- Create `search/templates/search/` directory structure
 
-## Schema Changes Required
+#### 2. Move Search Logic
+- Move `posts/search.py` → `search/search.py`
+- Move search views from `posts/views.py` → `search/views.py`
+- Update imports in moved files
+- Update any references to search functions
 
-1. **Add front_matter field to Post model**
-   - Add `front_matter = models.TextField(blank=True, null=True, editable=False)` 
-   - No migration needed - database will be deleted and recreated
+#### 3. Move Templates
+- Move `posts/templates/posts/search.html` → `search/templates/search/search.html`
+- Update template extends/includes if needed
+- Ensure template still works with new location
 
-## Implementation Steps
+#### 4. Update URL Configuration
+- Move search URL patterns from posts to search app
+- Create `search/urls.py` with search patterns
+- Include search URLs in main `vdw_server/urls.py`
+- Update any hardcoded URL references
 
-1. **Setup Django Environment**
-   - Import Django settings
-   - Setup Django ORM
-   - Import Post and Tag models
+#### 5. Test Existing Search
+- Verify `/search/` page still works
+- Verify `/search/api/` endpoint still works
+- Verify search results display correctly
+- Fix any broken imports or references
 
-2. **Clear Existing Data**
-   - Delete existing SQLite database file (db.sqlite3)
-   - Run Django migrations to recreate fresh database from scratch
+## Phase 2: Global Search Bar Implementation
 
-3. **Parse Markdown Files**
-   - Iterate through all `.md` files in `../vdw-conversion/posts/`
-   - For each file:
-     - Read file content
-     - Extract JSON frontmatter (between first `{` and `}` block)
-     - Extract markdown content (everything after frontmatter)
-     - Remove any Hugo shortcodes like `{{< toc >}}`
+### Requirements
+- Fixed/sticky positioning at top of all pages
+- Real-time search with dropdown results
+- Reuse refactored search API
+- Generic component for all page types
+- Keep existing search page intact
 
-4. **Clean Markdown Content**
-   - Remove Hugo shortcodes (e.g., `{{< toc >}}`)
-   - Decode Unicode escape sequences
-   - Clean up any unwanted HTML spans/styling
+### Implementation Steps
 
-5. **Process Tags**
-   - For each unique tag from both `tags` and `categories`:
-     - Create or get Tag object
-     - Auto-generate slug from tag name
+#### 1. Create Base Template Structure
+- Create project-level `templates/` directory
+- Create `templates/base.html` as main base template
+- Move common styles and structure from `posts/templates/posts/base.html`
+- Update existing templates to extend new base
 
-6. **Create Post Objects**
-   - Create Post instance with mapped fields
-   - Save post (triggers auto-generation of HTML and text)
-   - Link tags via ManyToMany relationship
+#### 2. Create Global Search Component
+- Create `templates/components/global_search_bar.html`
+- Include search input and dropdown container
+- Add component to main base template
 
-7. **Error Handling**
-   - FAIL FAST AND LOUD principle:
-     - No try/except blocks
-     - Let any errors crash immediately
-     - Clear error messages for debugging
+#### 3. Add Fixed Positioning CSS
+- Position: fixed, top: 0, full width
+- High z-index, consistent styling
+- Add body padding-top to account for fixed bar
+- Responsive design for mobile
 
-8. **Validation**
-   - Count imported posts
-   - Verify all files processed
-   - Report summary statistics
+#### 4. Implement Dropdown Functionality
+- JavaScript for real-time search
+- Debounced input handling
+- Fetch from refactored search API
+- Dropdown results display
+- Keyboard navigation (arrows, enter, escape)
+- Click outside to close
 
-## Notes
-- Frontmatter format is JSON (not YAML)
-- Some posts may have HTML/styling in markdown (preserve as-is)
-- Hugo shortcodes should be removed or handled appropriately
-- All imported posts are considered 'published' status
+#### 5. Integration Testing
+- Test on post list pages
+- Test on post detail pages
+- Test on future tag pages
+- Test on existing search page (no conflicts)
+- Test mobile responsiveness
+- Test accessibility
+
+## File Structure After Refactoring
+
+```
+search/
+├── __init__.py
+├── apps.py
+├── search.py           # Moved from posts/search.py
+├── views.py           # Search views moved from posts/views.py
+└── templates/search/
+    └── search.html    # Moved from posts/templates/posts/search.html
+
+templates/              # New project-level templates
+├── base.html          # Main base template
+└── components/
+    └── global_search_bar.html
+
+posts/templates/posts/
+├── base.html          # Updated to extend main base.html
+├── post_list.html
+└── post_detail.html
+```
+
+## Benefits of This Approach
+1. **Clean separation**: Search logic separated from posts
+2. **Scalability**: Easy to extend search to other content types
+3. **Maintainability**: Search changes don't affect posts app
+4. **Reusability**: Global search bar can be used anywhere
+5. **Future-proof**: Foundation for tags, categories, homepage search
