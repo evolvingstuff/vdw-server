@@ -183,32 +183,67 @@ Description=Meilisearch
 After=network.target
 
 [Service]
-Type=simple
+Type=exec
 User=bitnami
 Group=bitnami
+WorkingDirectory=/home/bitnami
 Environment=MEILI_MASTER_KEY={master_key}
-ExecStart=/usr/local/bin/meilisearch --env production --db-path /var/lib/meilisearch --http-addr 127.0.0.1:7700
+Environment=HOME=/home/bitnami
+ExecStart=/usr/local/bin/meilisearch --env production --db-path /home/bitnami/meilisearch-data --http-addr 127.0.0.1:7700
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target"""
             
-            # Write service file
+            # Completely remove old service file and recreate
+            self.execute_command("sudo rm -f /etc/systemd/system/meilisearch.service", show_output=False)
+            self.execute_command("sudo systemctl daemon-reload", show_output=False)
+            
+            # Write new service file
+            print("  📝 Creating new service file...")
             self.execute_command(
-                f"echo '{service_content}' | sudo tee /etc/systemd/system/meilisearch.service",
-                show_output=False
+                f"echo '{service_content}' | sudo tee /etc/systemd/system/meilisearch.service"
             )
             
             # Enable and start service
             print("\n🚀 Starting Meilisearch service...")
-            # Stop any existing service first
+            # Stop and disable any existing service first
             self.execute_command("sudo systemctl stop meilisearch", show_output=False)
+            self.execute_command("sudo systemctl disable meilisearch", show_output=False)
+            
+            # Verify the service file was written correctly
+            print("  🔍 Verifying service file...")
+            status, output, _ = self.execute_command("grep 'meilisearch-data' /etc/systemd/system/meilisearch.service")
+            if status != 0:
+                print("  ❌ Service file not updated correctly!")
+                return False
+            print("  ✅ Service file contains correct data path")
+            
+            # Aggressive reload
             self.execute_command("sudo systemctl daemon-reload")
+            self.execute_command("sudo systemctl reset-failed meilisearch", show_output=False)
             self.execute_command("sudo systemctl enable meilisearch")
-            # Fix permissions one more time before starting
-            self.execute_command("sudo chown -R bitnami:bitnami /var/lib/meilisearch", show_output=False)
-            self.execute_command("sudo chmod -R 755 /var/lib/meilisearch", show_output=False)
+            
+            # Create data directory
+            print("  📁 Creating Meilisearch data directory...")
+            self.execute_command("mkdir -p /home/bitnami/meilisearch-data", show_output=False)
+            self.execute_command("chown bitnami:bitnami /home/bitnami/meilisearch-data", show_output=False)
+            self.execute_command("chmod 755 /home/bitnami/meilisearch-data", show_output=False)
+            
+            # Test running Meilisearch directly first (not as service)
+            print("  🧪 Testing Meilisearch directly...")
+            status, output, error = self.execute_command(
+                f"timeout 3 bash -c 'MEILI_MASTER_KEY={master_key} /usr/local/bin/meilisearch --env production --db-path /home/bitnami/meilisearch-data --http-addr 127.0.0.1:7700'"
+            )
+            if "listening on: 127.0.0.1:7700" in error or "starting service" in error:
+                print("  ✅ Meilisearch can run directly!")
+            else:
+                print(f"  ❌ Meilisearch failed to run directly. Output: {output}")
+                print(f"  Error: {error}")
+                return False
+            
+            # Now try systemd service
             self.execute_command("sudo systemctl start meilisearch")
             
             # Check service status
