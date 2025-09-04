@@ -143,9 +143,10 @@ class DeploymentManager:
                 # Make it executable
                 "sudo chmod +x /usr/local/bin/meilisearch",
                 
-                # Create data directory
+                # Create data directory with proper permissions
                 "sudo mkdir -p /var/lib/meilisearch",
-                "sudo chown $USER:$USER /var/lib/meilisearch",
+                "sudo chown bitnami:bitnami /var/lib/meilisearch",
+                "sudo chmod 755 /var/lib/meilisearch",
             ]
             
             for cmd in commands:
@@ -154,9 +155,30 @@ class DeploymentManager:
                 if status != 0 and "already exists" not in error:
                     print(f"⚠️  Command failed: {error}")
             
+            # Read master key from local .env file
+            print("\n🔑 Reading master key from local .env file...")
+            local_env = CONFIG['paths']['local_env']
+            master_key = None
+            
+            try:
+                with open(local_env, 'r') as f:
+                    for line in f:
+                        if line.startswith('MEILISEARCH_MASTER_KEY='):
+                            master_key = line.split('=', 1)[1].strip()
+                            break
+                
+                if not master_key:
+                    raise ValueError("MEILISEARCH_MASTER_KEY not found in .env file")
+                    
+                print("  ✅ Master key found in .env file")
+                
+            except Exception as e:
+                print(f"  ❌ Could not read master key from .env: {e}")
+                return False
+
             # Create systemd service file
             print("\n⚙️  Setting up Meilisearch as a service...")
-            service_content = """[Unit]
+            service_content = f"""[Unit]
 Description=Meilisearch
 After=network.target
 
@@ -164,6 +186,7 @@ After=network.target
 Type=simple
 User=bitnami
 Group=bitnami
+Environment=MEILI_MASTER_KEY={master_key}
 ExecStart=/usr/local/bin/meilisearch --env production --db-path /var/lib/meilisearch --http-addr 127.0.0.1:7700
 Restart=on-failure
 RestartSec=10
@@ -179,9 +202,14 @@ WantedBy=multi-user.target"""
             
             # Enable and start service
             print("\n🚀 Starting Meilisearch service...")
+            # Stop any existing service first
+            self.execute_command("sudo systemctl stop meilisearch", show_output=False)
             self.execute_command("sudo systemctl daemon-reload")
             self.execute_command("sudo systemctl enable meilisearch")
-            self.execute_command("sudo systemctl restart meilisearch")
+            # Fix permissions one more time before starting
+            self.execute_command("sudo chown -R bitnami:bitnami /var/lib/meilisearch", show_output=False)
+            self.execute_command("sudo chmod -R 755 /var/lib/meilisearch", show_output=False)
+            self.execute_command("sudo systemctl start meilisearch")
             
             # Check service status
             print("\n✅ Checking Meilisearch status...")
@@ -196,16 +224,55 @@ WantedBy=multi-user.target"""
             else:
                 print("⚠️  Meilisearch may not be running properly")
             
-            # Get and display master key
-            print("\n🔑 Generating master key for .env file...")
-            import secrets
-            master_key = secrets.token_urlsafe(32)
-            print(f"\n📋 Add these to your .env file:")
+            # Display configuration info
+            print(f"\n📋 Your .env file should have:")
             print(f"MEILISEARCH_URL=http://localhost:7700")
             print(f"MEILISEARCH_MASTER_KEY={master_key}")
             print(f"MEILISEARCH_INDEX_NAME=posts")
             
             print("\n✅ Meilisearch installation completed!")
+            
+            # Post-flight check: Verify installation is working
+            print("\n🔍 Post-flight check: Verifying Meilisearch installation...")
+            
+            # Check if service is active
+            print("  📋 Checking service status...")
+            status, output, _ = self.execute_command("sudo systemctl is-active meilisearch", show_output=False)
+            if status == 0:
+                print("  ✅ Meilisearch service is running")
+            else:
+                print("  ❌ Meilisearch service is not running")
+                print("  📋 Service logs (last 15 lines):")
+                status, output, _ = self.execute_command("sudo journalctl -u meilisearch --no-pager -n 15", show_output=False)
+                if output:
+                    for line in output.strip().split('\n'):
+                        print(f"    {line}")
+                
+                print("  ⚠️  Common fixes:")
+                print("    - Check if port 7700 is already in use")
+                print("    - Verify /var/lib/meilisearch permissions")
+                print("    - Check master key configuration")
+                return False
+            
+            # Check if responding to HTTP requests
+            print("  🌐 Testing HTTP connection...")
+            import time
+            time.sleep(2)  # Give service a moment to be ready
+            status, output, _ = self.execute_command("curl -s http://localhost:7700/health", show_output=False)
+            if status == 0:
+                print("  ✅ Meilisearch is responding on port 7700")
+            else:
+                print("  ❌ Meilisearch is not responding on port 7700")
+                print("  ⚠️  Check firewall settings and service logs")
+                return False
+            
+            # Check version
+            print("  🔢 Checking version...")
+            status, output, _ = self.execute_command("curl -s http://localhost:7700/version", show_output=False)
+            if status == 0 and output:
+                print(f"  ✅ Meilisearch version info: {output.strip()}")
+            
+            print("\n🎉 Meilisearch is fully operational!")
             print("\n⚠️  Remember to:")
             print("  1. Add the Meilisearch settings to your server's .env file")
             print("  2. Restart your Django application")
@@ -384,6 +451,47 @@ WantedBy=multi-user.target"""
         if not self.connect():
             return False
         
+        # Check Meilisearch first - don't waste time uploading if it will fail later
+        print("\n🔍 Pre-flight check: Verifying Meilisearch...")
+        status, output, _ = self.execute_command("sudo systemctl is-active meilisearch", show_output=False)
+        
+        if status != 0:
+            print("  ⚠️  Meilisearch service not found or not running")
+            print("  🔍 Checking if Meilisearch is installed...")
+            status, _, _ = self.execute_command("which meilisearch", show_output=False)
+            
+            if status != 0:
+                print("  ❌ Meilisearch not installed. Please run option 4 to install Meilisearch first.")
+                print("  🚫 Database deployment cancelled to avoid wasted upload time.")
+                return False
+            else:
+                print("  🔄 Attempting to start Meilisearch service...")
+                status, _, error = self.execute_command("sudo systemctl start meilisearch")
+                if status != 0:
+                    print(f"  ❌ Failed to start Meilisearch: {error}")
+                    print("  🚫 Database deployment cancelled. Please fix Meilisearch first.")
+                    return False
+                
+                # Wait and verify it's actually stable (not crashing immediately)
+                print("  ⏳ Waiting to verify service stability...")
+                import time
+                time.sleep(3)
+                
+                status, _, _ = self.execute_command("sudo systemctl is-active meilisearch", show_output=False)
+                if status != 0:
+                    print("  💥 Meilisearch service crashed immediately after starting!")
+                    print("  📋 Service logs (last 10 lines):")
+                    status, output, _ = self.execute_command("sudo journalctl -u meilisearch --no-pager -n 10", show_output=False)
+                    if output:
+                        for line in output.strip().split('\n'):
+                            print(f"    {line}")
+                    print("  🚫 Database deployment cancelled. Please fix Meilisearch first.")
+                    return False
+                    
+                print("  ✅ Meilisearch service started and is stable")
+        else:
+            print("  ✅ Meilisearch is running")
+        
         try:
             project_path = CONFIG['paths']['remote_project']
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -426,6 +534,25 @@ WantedBy=multi-user.target"""
             print("\n🔍 Rebuilding Meilisearch index (required after database update)...")
             venv_path = CONFIG['paths']['remote_venv']
             
+            # Check if Meilisearch is installed and running
+            print("  🔍 Checking Meilisearch status...")
+            status, output, _ = self.execute_command("sudo systemctl is-active meilisearch", show_output=False)
+            
+            if status != 0:
+                print("  ⚠️  Meilisearch service not found or not running")
+                print("  🔍 Checking if Meilisearch is installed...")
+                status, _, _ = self.execute_command("which meilisearch", show_output=False)
+                
+                if status != 0:
+                    print("  ❌ Meilisearch not installed. Please run option 4 to install Meilisearch first.")
+                    return True  # Don't fail the database deployment for this
+                else:
+                    print("  🔄 Starting Meilisearch service...")
+                    status, _, error = self.execute_command("sudo systemctl start meilisearch")
+                    if status != 0:
+                        print(f"  ❌ Failed to start Meilisearch: {error}")
+                        return True  # Don't fail the database deployment for this
+            
             # First clear the Meilisearch data completely
             print("  🧹 Clearing Meilisearch data...")
             self.execute_command(
@@ -444,19 +571,50 @@ WantedBy=multi-user.target"""
             # Wait for Meilisearch to be ready
             print("  ⏳ Waiting for Meilisearch to restart...")
             import time
-            time.sleep(3)
+            time.sleep(5)
+            
+            # Verify Meilisearch is responding
+            print("  🔍 Verifying Meilisearch connection...")
+            status, _, _ = self.execute_command("curl -s http://localhost:7700/health", show_output=False)
+            if status != 0:
+                print("  ❌ Meilisearch is not responding. Checking service status...")
+                
+                # Check if service crashed
+                status, output, _ = self.execute_command("sudo systemctl is-active meilisearch", show_output=False)
+                if status != 0:
+                    print("  💥 Meilisearch service has crashed!")
+                    
+                    # Show service logs for debugging
+                    print("  📋 Service logs (last 10 lines):")
+                    status, output, _ = self.execute_command("sudo journalctl -u meilisearch --no-pager -n 10", show_output=False)
+                    if output:
+                        for line in output.strip().split('\n'):
+                            print(f"    {line}")
+                    
+                    print("  ⚠️  Common fixes:")
+                    print("    - Check if port 7700 is already in use")
+                    print("    - Verify /var/lib/meilisearch permissions")
+                    print("    - Check systemd service configuration")
+                
+                print("  ⚠️  Search functionality may not work.")
+                return True  # Don't fail the database deployment for this
             
             # Now rebuild the index
             print("  📝 Re-indexing all posts...")
-            self.execute_command(
+            status, output, error = self.execute_command(
                 f"cd {project_path} && source {venv_path}/bin/activate && "
-                f"python -c \"from search.search import clear_search_index, initialize_search_index, bulk_index_posts; "
+                f"python manage.py shell -c \"from search.search import clear_search_index, initialize_search_index, bulk_index_posts; "
                 f"from posts.models import Post; "
                 f"clear_search_index(); initialize_search_index(); "
                 f"bulk_index_posts(Post.objects.filter(status='published'))\"",
                 show_output=True
             )
-            print("✅ Search index rebuilt!")
+            
+            if status == 0:
+                print("✅ Search index rebuilt!")
+            else:
+                print(f"  ❌ Failed to rebuild search index: {error}")
+                print("  ⚠️  Database deployment successful, but search indexing failed.")
             
             print("\n✅ Database deployment completed successfully!")
             return True
