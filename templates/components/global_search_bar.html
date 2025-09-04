@@ -113,6 +113,24 @@
     font-style: italic;
 }
 
+.view-all-results {
+    border-top: 1px solid #e1e5e9;
+    padding: 12px 16px;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.view-all-link {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.view-all-link:hover {
+    text-decoration: underline;
+}
+
 /* Add top padding to body to account for fixed search bar */
 body {
     padding-top: 70px !important;
@@ -155,7 +173,10 @@ body {
         
         showLoading();
         
-        fetch(`/search/api/?q=${encodeURIComponent(query)}`)
+        // TODO: There's a visual bug with limit > 20 where results get progressively
+        // more indented in blocks of ~20. The indentation seems to correlate with 
+        // <em> highlight tags in the results. Issue needs investigation.
+        fetch(`/search/api/?q=${encodeURIComponent(query)}&limit=20`)
             .then(response => response.json())
             .then(data => {
                 hideLoading();
@@ -188,20 +209,15 @@ body {
             return;
         }
         
-        // Limit to top 8 results for dropdown
-        const limitedHits = hits.slice(0, 8);
-        
-        const html = limitedHits.map(hit => {
+        const html = hits.map(hit => {
             const title = hit._formatted?.title || hit.title;
             const content = hit._formatted?.content || hit.content || '';
             const snippet = content.substring(0, 120) + (content.length > 120 ? '...' : '');
             
-            return `
-                <div class="search-result-item" data-url="/posts/${hit.slug}/">
-                    <div class="result-title">${title}</div>
-                    <div class="result-snippet">${snippet}</div>
-                </div>
-            `;
+            return `<div class="search-result-item" data-url="/posts/${hit.slug}/">
+    <div class="result-title">${title}</div>
+    <div class="result-snippet">${snippet}</div>
+</div>`;
         }).join('');
         
         results.innerHTML = html;

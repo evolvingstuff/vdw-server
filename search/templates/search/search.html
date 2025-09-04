@@ -1,202 +1,88 @@
 {% extends 'base.html' %}
 
-{% block title %}Search Posts - VDW{% endblock %}
+{% block title %}
+{% if query %}Search: {{ query }} - VDW{% else %}Search Posts - VDW{% endif %}
+{% endblock %}
 
-{% block extra_css %}
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .search-box {
-            position: relative;
-            margin-bottom: 30px;
-        }
-        #search-input {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 6px;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        #search-input:focus {
-            border-color: #007bff;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            color: #666;
-            margin: 20px 0;
-        }
-        .results {
-            margin-top: 20px;
-        }
-        .result-item {
-            border-bottom: 1px solid #eee;
-            padding: 20px 0;
-        }
-        .result-item:last-child {
-            border-bottom: none;
-        }
-        .result-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .result-title a {
-            color: #1a73e8;
-            text-decoration: none;
-        }
-        .result-title a:hover {
-            text-decoration: underline;
-        }
-        .result-snippet {
-            color: #666;
-            line-height: 1.5;
-            margin-bottom: 8px;
-        }
-        .result-url {
-            color: #5f6368;
-            font-size: 14px;
-        }
-        .no-results {
-            text-align: center;
-            color: #666;
-            padding: 40px 0;
-        }
-        .search-info {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        .highlight {
-            background-color: #fff59d;
-            font-weight: 600;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Search Posts</h1>
-        
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="Search posts..." autocomplete="off" />
-        </div>
-        
-        <div class="loading" id="loading">Searching...</div>
-        
-        <div class="search-info" id="search-info" style="display: none;"></div>
-        
-        <div class="results" id="results"></div>
-    </div>
-
-    <script>
-        const searchInput = document.getElementById('search-input');
-        const loading = document.getElementById('loading');
-        const searchInfo = document.getElementById('search-info');
-        const results = document.getElementById('results');
-        
-        let searchTimeout;
-        
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim();
+{% block content %}
+<div class="search-page-content">
+    {% if query %}
+        <h1>Search Results for "{{ query }}"</h1>
+        {% if results %}
+            <p class="search-info">Found {{ result_count }} result{{ result_count|pluralize }}</p>
             
-            // Clear previous timeout
-            clearTimeout(searchTimeout);
-            
-            if (query.length < 2) {
-                results.innerHTML = '';
-                searchInfo.style.display = 'none';
-                loading.style.display = 'none';
-                return;
-            }
-            
-            // Show loading
-            loading.style.display = 'block';
-            searchInfo.style.display = 'none';
-            
-            // Debounce search
-            searchTimeout = setTimeout(() => {
-                performSearch(query);
-            }, 300);
-        });
-        
-        async function performSearch(query) {
-            try {
-                const response = await fetch(`/search/api/?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                loading.style.display = 'none';
-                displayResults(data, query);
-                
-            } catch (error) {
-                loading.style.display = 'none';
-                results.innerHTML = '<div class="no-results">Search error. Please try again.</div>';
-                console.error('Search error:', error);
-            }
-        }
-        
-        function displayResults(data, query) {
-            const hits = data.hits || [];
-            
-            if (hits.length === 0) {
-                searchInfo.style.display = 'none';
-                results.innerHTML = '<div class="no-results">No results found for "' + escapeHtml(query) + '"</div>';
-                return;
-            }
-            
-            // Show search info
-            const processingTime = data.processingTime || 0;
-            searchInfo.innerHTML = `Found ${hits.length} result${hits.length !== 1 ? 's' : ''} (${processingTime}ms)`;
-            searchInfo.style.display = 'block';
-            
-            // Display results
-            let html = '';
-            hits.forEach(hit => {
-                const title = hit._formatted?.title || hit.title;
-                const content = hit._formatted?.content_html || hit.content_html;
-                const snippet = content.substring(0, 200) + (content.length > 200 ? '...' : '');
-                
-                html += `
-                    <div class="result-item">
-                        <div class="result-title">
-                            <a href="/posts/${hit.slug}/">${title}</a>
+            <div class="search-results">
+                {% for result in results %}
+                    <div class="search-result-item">
+                        <h3><a href="/posts/{{ result.slug }}/">{{ result.title }}</a></h3>
+                        <div class="result-snippet">
+                            {{ result.content|truncatechars:300 }}
                         </div>
-                        <div class="result-snippet">${snippet}</div>
-                        <div class="result-url">/posts/${hit.slug}/</div>
+                        <div class="result-url">/posts/{{ result.slug }}/</div>
                     </div>
-                `;
-            });
-            
-            results.innerHTML = html;
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Focus search input on page load
-        searchInput.focus();
-    </script>
-</body>
-</html>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <h2>No results found for "{{ query }}"</h2>
+                <p>Try searching for something else.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <h1>Search Posts</h1>
+        <p>Enter a search term in the search bar above to find posts.</p>
+    {% endif %}
+</div>
+
+<style>
+.search-page-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.search-info {
+    color: #666;
+    margin-bottom: 2em;
+}
+
+.search-result-item {
+    margin-bottom: 2em;
+    padding-bottom: 1.5em;
+    border-bottom: 1px solid #eee;
+}
+
+.search-result-item h3 {
+    margin: 0 0 0.5em 0;
+}
+
+.search-result-item h3 a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.search-result-item h3 a:hover {
+    text-decoration: underline;
+}
+
+.result-snippet {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 0.5em;
+}
+
+.result-url {
+    color: #5f6368;
+    font-size: 0.9em;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3em 0;
+}
+
+.no-results h2 {
+    color: #666;
+    margin-bottom: 1em;
+}
+</style>
+{% endblock %}
