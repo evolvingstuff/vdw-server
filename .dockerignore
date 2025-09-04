@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Database (will be mounted as volume)
+db.sqlite3
+*.sqlite3
+
+# Environment files
+.env
+
+# Development files
+.DS_Store
+*.log
+.pytest_cache
+.coverage
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Deployment scripts (not needed in container)
+deploy.py
+conversion_md_to_db_v1.py
+
+# Documentation
+README.md
+PLAN.md
+
+# Static files (will be collected in container)
+static/

@@ -146,6 +146,7 @@ MARKDOWNX_MARKDOWN_EXTENSIONS = [
 MARKDOWNX_EDITOR_RESIZABLE = True
 
 # MeiliSearch settings
-MEILISEARCH_URL = os.getenv('MEILISEARCH_URL')
+# Auto-detect environment: Docker uses service name, venv uses localhost
+MEILISEARCH_URL = os.getenv('MEILISEARCH_URL', 'http://localhost:7700')
 MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY')
-MEILISEARCH_INDEX_NAME = 'posts'
+MEILISEARCH_INDEX_NAME = os.getenv('MEILISEARCH_INDEX_NAME', 'posts')
