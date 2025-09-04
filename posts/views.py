@@ -1,6 +1,7 @@
 import os
 import re
 from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
@@ -14,7 +15,13 @@ import json
 
 
 def post_list(request):
-    posts = Post.objects.filter(status='published').order_by('-created_date')
+    posts_list = Post.objects.filter(status='published').order_by('-created_date')
+    
+    # Add pagination - 20 posts per page
+    paginator = Paginator(posts_list, 20)
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+    
     return render(request, 'posts/post_list.html', {'posts': posts})
 
 

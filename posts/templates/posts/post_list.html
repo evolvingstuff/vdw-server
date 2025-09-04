@@ -34,4 +34,28 @@
     <p>No published posts yet.</p>
     {% endfor %}
 </div>
+
+<!-- Pagination controls -->
+{% if posts.has_other_pages %}
+<div class="pagination" style="text-align: center; margin-top: 3em; padding-top: 2em; border-top: 1px solid #eee;">
+    <span class="page-links">
+        {% if posts.has_previous %}
+            <a href="?page=1" style="margin: 0 5px;">« First</a>
+            <a href="?page={{ posts.previous_page_number }}" style="margin: 0 5px;">‹ Previous</a>
+        {% endif %}
+        
+        <span style="margin: 0 10px;">
+            Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+        </span>
+        
+        {% if posts.has_next %}
+            <a href="?page={{ posts.next_page_number }}" style="margin: 0 5px;">Next ›</a>
+            <a href="?page={{ posts.paginator.num_pages }}" style="margin: 0 5px;">Last »</a>
+        {% endif %}
+    </span>
+    <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+        Total posts: {{ posts.paginator.count }}
+    </div>
+</div>
+{% endif %}
 {% endblock %}
