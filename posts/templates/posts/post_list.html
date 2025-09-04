@@ -35,24 +35,41 @@
 
 <!-- Pagination controls -->
 {% if posts.has_other_pages %}
-<div class="pagination" style="text-align: center; margin-top: 3em; padding-top: 2em; border-top: 1px solid #eee;">
-    <span class="page-links">
+<div class="pagination-container">
+    <div class="pagination">
+        <!-- First/Previous buttons -->
         {% if posts.has_previous %}
-            <a href="?page=1" style="margin: 0 5px;">« First</a>
-            <a href="?page={{ posts.previous_page_number }}" style="margin: 0 5px;">‹ Previous</a>
+            <a href="?page=1">« <span class="page-text">First</span></a>
+            <a href="?page={{ posts.previous_page_number }}">‹ <span class="page-text">Prev</span></a>
+        {% else %}
+            <span class="disabled">« <span class="page-text">First</span></span>
+            <span class="disabled">‹ <span class="page-text">Prev</span></span>
         {% endif %}
         
-        <span style="margin: 0 10px;">
-            Page {{ posts.number }} of {{ posts.paginator.num_pages }}
-        </span>
+        <!-- Page numbers -->
+        {% for page_num in posts.paginator.page_range %}
+            {% if page_num == posts.number %}
+                <span class="current-page">{{ page_num }}</span>
+            {% elif page_num >= posts.number|add:"-3" and page_num <= posts.number|add:"3" %}
+                <a href="?page={{ page_num }}">{{ page_num }}</a>
+            {% elif page_num == 1 or page_num == posts.paginator.num_pages %}
+                <a href="?page={{ page_num }}">{{ page_num }}</a>
+            {% elif page_num == posts.number|add:"-4" or page_num == posts.number|add:"4" %}
+                <span class="ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
         
+        <!-- Next/Last buttons -->
         {% if posts.has_next %}
-            <a href="?page={{ posts.next_page_number }}" style="margin: 0 5px;">Next ›</a>
-            <a href="?page={{ posts.paginator.num_pages }}" style="margin: 0 5px;">Last »</a>
+            <a href="?page={{ posts.next_page_number }}"><span class="page-text">Next</span> ›</a>
+            <a href="?page={{ posts.paginator.num_pages }}"><span class="page-text">Last</span> »</a>
+        {% else %}
+            <span class="disabled"><span class="page-text">Next</span> ›</span>
+            <span class="disabled"><span class="page-text">Last</span> »</span>
         {% endif %}
-    </span>
-    <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
-        Total posts: {{ posts.paginator.count }}
+    </div>
+    <div class="pagination-info">
+        Showing page {{ posts.number }} of {{ posts.paginator.num_pages }} ({{ posts.paginator.count }} total posts)
     </div>
 </div>
 {% endif %}

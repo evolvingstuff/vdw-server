@@ -81,6 +81,94 @@
             background: #bdc3c7;
         }
 
+        /* Prettier Pagination Styles */
+        .pagination-container {
+            text-align: center;
+            margin-top: 3em;
+            padding-top: 2em;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .pagination {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .pagination a,
+        .pagination .current-page {
+            display: inline-block;
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            color: #3498db;
+            background: white;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .pagination a:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+            color: #2980b9;
+        }
+
+        .pagination .current-page {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+            cursor: default;
+        }
+
+        .pagination .disabled {
+            color: #bdc3c7;
+            border-color: #e1e5e9;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+
+        .pagination .disabled:hover {
+            background: #f8f9fa;
+            border-color: #e1e5e9;
+            color: #bdc3c7;
+        }
+
+        .pagination .ellipsis {
+            padding: 8px 4px;
+            color: #95a5a6;
+            border: none;
+            background: none;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* Mobile responsive pagination */
+        @media (max-width: 768px) {
+            .pagination {
+                gap: 4px;
+            }
+            
+            .pagination a,
+            .pagination .current-page {
+                padding: 6px 8px;
+                font-size: 13px;
+                min-width: 32px;
+            }
+            
+            .pagination .page-text {
+                display: none;
+            }
+        }
+
         /* Additional styles can be added by child templates */
         {% block extra_css %}{% endblock %}
     </style>
