@@ -14,7 +14,7 @@ First refactor search functionality out of the `posts` app into a dedicated `sea
 ### Implementation Steps
 
 #### 1. Create Search App
-- Run `python manage.py startapp search`
+- Run `python app.py startapp search`
 - Add `'search'` to `INSTALLED_APPS` in settings
 - Create `search/templates/search/` directory structure
 

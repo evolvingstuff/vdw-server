@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 from .models import Post
-from .search import index_post, remove_post_from_search
+from search.search import index_post, remove_post_from_search
 
 
 @receiver(post_save, sender=Post)

@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from .models import Post
-from .search import search_posts
 import markdown2
 import json
 
@@ -226,22 +225,3 @@ def upload_media(request):
     })
 
 
-def search_page(request):
-    """Render the search page with search interface"""
-    return render(request, 'posts/search.html')
-
-
-@require_http_methods(["GET"])
-def search_api(request):
-    """API endpoint for search queries"""
-    query = request.GET.get('q', '').strip()
-    
-    if not query:
-        return JsonResponse({'hits': [], 'query': query, 'processingTime': 0})
-    
-    if len(query) < 2:
-        return JsonResponse({'hits': [], 'query': query, 'processingTime': 0})
-    
-    results = search_posts(query)
-    
-    return JsonResponse(results)

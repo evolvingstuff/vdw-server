@@ -1,6 +1,6 @@
 import meilisearch
 from django.conf import settings
-from .models import Post
+from posts.models import Post
 
 
 def get_search_client():
