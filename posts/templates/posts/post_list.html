@@ -9,9 +9,6 @@
         <h2><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h2>
         <div class="post-meta">
             Published on {{ post.created_date|date:"F d, Y" }}
-            {% if post.modified_date != post.created_date %}
-                • Updated {{ post.modified_date|date:"F d, Y" }}
-            {% endif %}
         </div>
         
         {% if post.meta_description %}
