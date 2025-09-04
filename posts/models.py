@@ -7,7 +7,7 @@ import re
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=200)
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -29,7 +29,7 @@ class Post(models.Model):
     
     # Core fields
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(unique=True, blank=True, max_length=200)
     
     # Content fields (cached for performance)
     content_md = models.TextField(verbose_name="Content (Markdown)")
