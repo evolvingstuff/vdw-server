@@ -1,219 +1,162 @@
-# Automated Deployment Script Plan
+# Docker Deployment Plan
 
 ## Overview
-Create a Python script that automates deployment tasks via SSH, providing a menu-driven interface for different deployment scenarios.
+Move from the Bitnami/systemd nightmare to a clean Docker-based deployment that:
+- Runs consistently in development (venv OR docker) and production (docker)
+- Eliminates server permission/configuration hell
+- Provides clean deployment automation
+- Supports operational tasks (database updates, search reindexing)
 
-## Deployment Options
+## Phase 1: Local Docker Setup
 
-### 1. Full Deploy (From Scratch) - NOT IMPLEMENTED YET
-- **Status**: Placeholder only, throws NotImplementedError
-- **Future scope**:
-  - Provision fresh server
-  - Install system dependencies (Python, nginx, etc.)
-  - Clone repository
-  - Setup virtual environment
-  - Install Python dependencies
-  - Configure systemd services
-  - Setup nginx configuration
-  - Initialize database
-  - Configure environment variables
+### 1.1 Development Environment Support
+**Goal**: App works in both environments for maximum flexibility
+- **PyCharm debugging**: Run in venv with local Meilisearch
+- **Production parity**: Run in Docker containers
 
-### 2. Update Code
-- **Purpose**: Pull latest code from GitHub and restart services
-- **Steps**:
-  1. SSH into server
-  2. Navigate to project directory
-  3. Git pull latest changes from main branch
-  4. Restart Django application service (systemd/supervisor)
-  5. Verify service is running
-  6. Optional: Run collectstatic for static files
-  
-### 3. Update Database
-- **Purpose**: Upload local SQLite database to server and restart
-- **Steps**:
-  1. Create backup of current server database
-  2. SCP/SFTP local db.sqlite3 to server
-  3. Set appropriate permissions on database file
-  4. Restart Django application service
-  5. Verify service is running
-  6. Optional: Clear and rebuild search index
+**Implementation**:
+- Environment detection in settings
+- Docker compose for full stack
+- Documentation for both workflows
 
-## Script Structure
-
-### Main Components
-
+### 1.2 Management Commands
+Add operational commands to manage.py:
 ```python
-deploy.py
-├── Configuration Section
-│   ├── Server details (host, user, port)
-│   ├── Project paths (local and remote)
-│   └── Service names
-├── SSH Connection Manager
-│   ├── Connection establishment
-│   ├── Command execution
-│   └── File transfer (SCP/SFTP)
-├── Deployment Functions
-│   ├── deploy_full() - NotImplementedError
-│   ├── deploy_code_update()
-│   └── deploy_database_update()
-├── Utility Functions
-│   ├── create_backup()
-│   ├── verify_service_status()
-│   └── rollback_on_error()
-└── Main Menu Interface
-    └── Interactive option selection
+python manage.py reindex_search  # Clear and rebuild Meilisearch index
 ```
 
-### User Interface
+### 1.3 Docker Configuration
+**Dockerfile**:
+- Python 3.12 base image
+- Install dependencies from requirements.txt
+- Copy application code
+- Expose port 8000
 
+**docker-compose.yml**:
+- Django app service
+- Meilisearch service (with master key)
+- Volume mounts for:
+  - Database file (persistent)
+  - Static files
+  - Media files (if any)
+
+### 1.4 Environment Configuration
+**.env structure**:
 ```
-========================================
-    VDW Server Deployment Script
-========================================
+# Database
+DATABASE_URL=sqlite:///db.sqlite3
 
-Select deployment option:
+# Meilisearch
+MEILISEARCH_URL=http://meilisearch:7700  # Docker service name
+MEILISEARCH_MASTER_KEY=your-key
+MEILISEARCH_INDEX_NAME=posts
 
-1. Full Deploy (from scratch) - NOT IMPLEMENTED
-2. Update Code (pull from GitHub)
-3. Update Database (upload local SQLite)
-4. Exit
-
-Enter choice [1-4]: 
+# Development overrides
+MEILISEARCH_URL=http://localhost:7700    # When running in venv
 ```
 
-## Configuration Management
+## Phase 2: Production Deployment
 
-### Environment Variables (.env file)
-All configuration stored in `.env` file (gitignored) for consistency with rest of project.
+### 2.1 Platform Choice
+**Target**: EC2 instance with plain Ubuntu (no Bitnami)
+- Clean permissions
+- Standard Docker installation
+- Predictable environment
 
-### Required .env variables:
+### 2.2 Deployment Workflow
+**Code Updates**:
 ```bash
-# SSH Configuration
-DEPLOY_HOST=your-server.com
-DEPLOY_USER=deploy
-DEPLOY_PORT=22
-DEPLOY_KEY_FILE=~/.ssh/id_rsa  # Optional, uses system default if not set
-
-# Remote Paths
-DEPLOY_REMOTE_PROJECT=/var/www/vdw-server
-DEPLOY_REMOTE_VENV=/var/www/vdw-server/venv
-DEPLOY_BACKUP_DIR=/var/backups/vdw-server
-
-# Local Paths
-DEPLOY_LOCAL_DB=./db.sqlite3
-
-# Service Names
-DEPLOY_APP_SERVICE=vdw-server  # systemd service name
-DEPLOY_WEB_SERVER=nginx
-
-# Optional
-DEPLOY_BRANCH=main  # Git branch to pull from
-DEPLOY_PYTHON_BIN=python3  # Python binary on server
+# On EC2 instance
+git pull
+docker-compose up --build -d
 ```
 
-### Loading configuration:
-```python
-from dotenv import load_dotenv
-import os
+**Database Updates**:
+```bash
+# Local to EC2
+scp ./db.sqlite3 user@server:/app/db.sqlite3
 
-load_dotenv()
-
-CONFIG = {
-    'server': {
-        'host': os.getenv('DEPLOY_HOST'),
-        'user': os.getenv('DEPLOY_USER'),
-        'port': int(os.getenv('DEPLOY_PORT', 22)),
-        'key_file': os.getenv('DEPLOY_KEY_FILE')  # None if not set
-    },
-    'paths': {
-        'remote_project': os.getenv('DEPLOY_REMOTE_PROJECT'),
-        'remote_venv': os.getenv('DEPLOY_REMOTE_VENV'),
-        'local_db': os.getenv('DEPLOY_LOCAL_DB', './db.sqlite3'),
-        'backup_dir': os.getenv('DEPLOY_BACKUP_DIR')
-    },
-    'services': {
-        'app_service': os.getenv('DEPLOY_APP_SERVICE'),
-        'web_server': os.getenv('DEPLOY_WEB_SERVER', 'nginx')
-    },
-    'git': {
-        'branch': os.getenv('DEPLOY_BRANCH', 'main')
-    }
-}
+# On EC2
+docker-compose stop django
+docker-compose start django
+docker-compose exec django python manage.py reindex_search
 ```
 
-## Error Handling
+### 2.3 Deployment Script
+Create `deploy.py` (Docker version):
+- **Option 1**: Deploy code (git pull + rebuild)
+- **Option 2**: Deploy database (scp + reindex)  
+- **Option 3**: Full deploy (both)
+- **Option 4**: Reindex search only
+- **Option 5**: View logs/status
 
-### Rollback Strategy
-- For code updates: Git reset to previous commit
-- For database updates: Restore from backup
-- Always verify service status after operations
-- Log all operations with timestamps
+### 2.4 Server Setup (One-time)
+```bash
+# EC2 Ubuntu setup
+sudo apt update
+sudo apt install docker.io docker-compose git
+sudo usermod -aG docker ubuntu
 
-### Safety Checks
-- Confirm destructive operations
-- Verify SSH connection before operations
-- Check disk space before database upload
-- Verify git status before pull
+# Clone repo and set up
+git clone your-repo /app
+cd /app
+cp .env.example .env  # Edit with production values
+docker-compose up -d
+```
 
-## Dependencies
+## Phase 3: Operational Benefits
 
-### Python Packages
-- `paramiko` - SSH connections and commands
-- `scp` or `paramiko.SFTPClient` - File transfers
-- `click` or `argparse` - CLI interface (optional)
-- `colorama` or `rich` - Colored output (optional)
+### 3.1 Eliminated Problems
+- ❌ Permission conflicts between bitnami/www-data
+- ❌ systemd service configuration
+- ❌ Manual dependency management  
+- ❌ Server-specific environment issues
+- ❌ SSH debugging sessions
 
-### System Requirements
-- SSH access to server
-- Sudo privileges for service restart (or appropriate permissions)
-- Git configured on server
-- Python 3.x on both local and server
+### 3.2 New Capabilities
+- ✅ Consistent dev/prod environments
+- ✅ Easy rollbacks (`git checkout previous-commit && docker-compose up --build`)
+- ✅ Isolated services (Django, Meilisearch)
+- ✅ Simple scaling (add more containers)
+- ✅ Clear deployment process
 
-## Testing Plan
+### 3.3 Development Workflow
+**Daily development** (PyCharm):
+```bash
+# Start Meilisearch only
+docker-compose up meilisearch -d
+# Run Django in venv for debugging
+python manage.py runserver
+```
 
-### Local Testing
-1. Test SSH connection establishment
-2. Test command execution (non-destructive commands)
-3. Test file transfer with small test file
-4. Verify menu system and input validation
+**Integration testing** (Docker):
+```bash
+# Full stack
+docker-compose up --build
+```
 
-### Staging Testing
-1. Test on staging server first if available
-2. Test rollback procedures
-3. Verify service restart commands
-4. Test database backup and restore
+**Production deployment**:
+```bash
+# Test locally first
+docker-compose up --build
+# Then deploy to server
+./deploy.py  # Option 1: Deploy code
+```
 
-### Production Deployment
-1. Always backup before deployment
-2. Test in low-traffic period initially
-3. Monitor logs after deployment
-4. Have rollback plan ready
+## Implementation Order
+1. ✅ Create management command for search reindexing
+2. ✅ Create Dockerfile
+3. ✅ Create docker-compose.yml  
+4. ✅ Test hybrid development setup
+5. ✅ Create deployment script
+6. ✅ Test full workflow locally
+7. ✅ Deploy to clean EC2 instance
+8. ✅ Document the process
 
-## Future Enhancements
-
-### Phase 1 (Current)
-- Basic menu-driven deployment
-- Code and database updates
-- Simple error handling
-
-### Phase 2
-- Implement full deployment from scratch
-- Add health checks (HTTP endpoint verification)
-- Automated backup retention policy
-- Deployment history logging
-
-### Phase 3
-- Multiple environment support (staging, production)
-- Blue-green deployment option
-- Database migration management
-- Automated rollback on health check failure
-- Integration with CI/CD pipeline
-
-## Security Considerations
-
-- Never commit sensitive credentials
-- Use SSH keys instead of passwords
-- Implement confirmation prompts for production
-- Log all deployment activities
-- Restrict deployment script access
-- Consider using deployment user with limited privileges
+## Success Criteria
+- App runs identically in venv and Docker
+- Deployment is single command
+- Database updates work reliably
+- Search reindexing works correctly
+- No more SSH debugging sessions
+- Server crashes don't require complex recovery
