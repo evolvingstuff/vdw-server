@@ -7,6 +7,7 @@ Clean, simple deployment without the Bitnami nightmare
 import os
 import sys
 import subprocess
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 import paramiko
@@ -18,18 +19,22 @@ load_dotenv()
 class DockerDeployment:
     def __init__(self):
         self.config = {
+            'instance_id': os.getenv('EC2_INSTANCE_ID'),
             'host': os.getenv('DEPLOY_HOST'),
-            'user': os.getenv('DEPLOY_USER', 'ubuntu'),
-            'port': int(os.getenv('DEPLOY_PORT', 22)),
+            'user': os.getenv('DEPLOY_USER'),
+            'port': int(os.getenv('DEPLOY_PORT')),
             'key_file': os.getenv('DEPLOY_KEY_FILE'),
-            'app_path': os.getenv('DEPLOY_APP_PATH', '/app'),
-            'local_db': os.getenv('DEPLOY_LOCAL_DB', './db.sqlite3'),
+            'app_path': os.getenv('DEPLOY_APP_PATH'),
+            'local_db': os.getenv('DEPLOY_LOCAL_DB'),
+            'django_port': os.getenv('DJANGO_PORT'),
         }
         
-        # Validate required config
-        if not self.config['host']:
-            print("❌ DEPLOY_HOST not set in .env file")
-            sys.exit(1)
+        # Validate required config (instance_id only required for provisioning)
+        required_fields = ['host', 'user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
+        for field in required_fields:
+            if not self.config[field]:
+                print(f"❌ {field.upper().replace('_', '_')} not set in .env file")
+                sys.exit(1)
         
         self.ssh_client = None
     
@@ -156,7 +161,7 @@ class DockerDeployment:
             )
             
             print("✅ Code deployment completed successfully!")
-            print(f"🌐 Site should be available at: http://{self.config['host']}")
+            print(f"🌐 Site should be available at: http://{self.config['host']}:{self.config['django_port']}")
             return True
             
         except Exception as e:
@@ -321,6 +326,197 @@ class DockerDeployment:
         
         finally:
             self.disconnect()
+    
+    def run_aws_command(self, command, silent_on_error=False):
+        """Run AWS CLI command"""
+        try:
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                if not silent_on_error:
+                    print(f"❌ AWS command failed: {result.stderr}")
+                return False, result.stderr
+            return True, result.stdout.strip()
+        except Exception as e:
+            if not silent_on_error:
+                print(f"❌ AWS command error: {e}")
+            return False, str(e)
+    
+    def wait_for_instance(self):
+        """Wait for EC2 instance to be running"""
+        print(f"⏳ Waiting for instance {self.config['instance_id']} to be running...")
+        
+        max_attempts = 30
+        for attempt in range(max_attempts):
+            success, output = self.run_aws_command(
+                f"aws ec2 describe-instances --instance-ids {self.config['instance_id']} "
+                "--query 'Reservations[0].Instances[0].State.Name' --output text"
+            )
+            
+            if success and output == "running":
+                print("✅ Instance is running!")
+                return True
+            
+            if success:
+                print(f"   Instance state: {output}")
+            
+            time.sleep(10)
+        
+        print(f"❌ Instance didn't start within {max_attempts * 10} seconds")
+        return False
+    
+    def configure_security_group(self):
+        """Add ports to security group"""
+        print("🔒 Configuring security group...")
+        
+        # Get security group ID
+        success, sg_id = self.run_aws_command(
+            f"aws ec2 describe-instances --instance-ids {self.config['instance_id']} "
+            "--query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text"
+        )
+        
+        if not success:
+            print(f"❌ Failed to get security group ID: {sg_id}")
+            return False
+        
+        print(f"   Security Group ID: {sg_id}")
+        
+        # Add Django port
+        django_port = self.config['django_port']
+        print(f"   Adding port {django_port} (Django)...")
+        success, output = self.run_aws_command(
+            f"aws ec2 authorize-security-group-ingress --group-id {sg_id} "
+            f"--protocol tcp --port {django_port} --cidr 0.0.0.0/0",
+            silent_on_error=True
+        )
+        
+        if not success:
+            if "already exists" in output:
+                print(f"   Port {django_port} already configured ✓")
+            else:
+                print(f"❌ Failed to add port {django_port}: {output}")
+                return False
+        else:
+            print(f"   Port {django_port} added ✓")
+        
+        # Add port 7700 (Meilisearch)
+        print("   Adding port 7700 (Meilisearch)...")
+        success, output = self.run_aws_command(
+            f"aws ec2 authorize-security-group-ingress --group-id {sg_id} "
+            "--protocol tcp --port 7700 --cidr 0.0.0.0/0",
+            silent_on_error=True
+        )
+        
+        if not success:
+            if "already exists" in output:
+                print("   Port 7700 already configured ✓")
+            else:
+                print(f"❌ Failed to add port 7700: {output}")
+                return False
+        else:
+            print("   Port 7700 added ✓")
+        
+        print("✅ Security group configured!")
+        return True
+    
+    def install_docker(self):
+        """Install Docker and Docker Compose on the server"""
+        print("🐳 Installing Docker...")
+        
+        # Check if Docker is already installed
+        success, output, error = self.execute_command("docker --version", show_output=False)
+        if success:
+            print("✅ Docker already installed, skipping installation")
+            return True
+        
+        commands = [
+            "sudo apt-get update",
+            "sudo apt-get install -y ca-certificates curl gnupg lsb-release",
+            "sudo mkdir -p /etc/apt/keyrings",
+            "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/docker.gpg",
+            'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null',
+            "sudo apt-get update",
+            "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin",
+            "sudo usermod -aG docker $USER",
+        ]
+        
+        for cmd in commands:
+            print(f"   Running: {cmd}")
+            success, output, error = self.execute_command(cmd, show_output=False)
+            if not success:
+                print(f"❌ Command failed: {error}")
+                return False
+        
+        print("✅ Docker installed successfully!")
+        return True
+    
+    def setup_environment(self):
+        """Set up environment variables"""
+        print("🔧 Setting up environment...")
+        
+        # Check if local .env exists
+        local_env = Path('.env')
+        if not local_env.exists():
+            print("❌ Local .env file not found. Please create one with your configuration.")
+            return False
+        
+        # Upload .env file
+        print("   Uploading .env file...")
+        try:
+            with SCPClient(self.ssh_client.get_transport()) as scp:
+                scp.put(str(local_env), f"{self.config['app_path']}/.env")
+            print("✅ Environment file uploaded!")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to upload .env: {e}")
+            return False
+    
+    def provision_server(self):
+        """Complete server provisioning"""
+        print("\n🚀 Starting server provisioning...\n")
+        
+        # Check for EC2 instance ID
+        if not self.config['instance_id']:
+            raise ValueError("EC2_INSTANCE_ID not set in .env file (required for provisioning)")
+        
+        # Step 1: Wait for instance to be running
+        if not self.wait_for_instance():
+            return False
+        
+        # Step 2: Configure security group
+        if not self.configure_security_group():
+            return False
+        
+        # Step 3: Connect via SSH
+        if not self.connect():
+            return False
+        
+        try:
+            # Step 4: Install Docker
+            if not self.install_docker():
+                return False
+            
+            # Step 5: Upload application code
+            if not self.upload_code():
+                return False
+            
+            # Step 6: Set up environment
+            if not self.setup_environment():
+                return False
+            
+            print("\n🎉 Server provisioning completed successfully!")
+            print(f"🌐 Server ready at: {self.config['host']}:{self.config['django_port']}")
+            print("📋 Next steps:")
+            print("   1. Wait ~30 seconds for Docker group changes to take effect")
+            print("   2. Use option 3 (Full Deploy) to deploy your application")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Provisioning failed: {e}")
+            return False
+        
+        finally:
+            self.disconnect()
 
 def print_header():
     """Print script header"""
@@ -334,7 +530,8 @@ def print_menu():
     print(f"📁 App path: {os.getenv('DEPLOY_APP_PATH', '/app')}\n")
     
     print("Select deployment option:\n")
-    print("1. Deploy Code (git pull + rebuild containers)")
+    print("0. Provision Server (initial setup: install Docker, upload code, configure)")
+    print("1. Deploy Code (upload code + rebuild containers)")
     print("2. Deploy Database (upload + reindex search)")
     print("3. Full Deploy (code + database)")
     print("4. Reindex Search (rebuild search index only)")
@@ -361,9 +558,23 @@ def main():
     
     while True:
         print_menu()
-        choice = input("Enter choice [1-6]: ").strip()
+        choice = input("Enter choice [0-6]: ").strip()
         
-        if choice == '1':
+        if choice == '0':
+            print("\n" + "=" * 50)
+            print("SERVER PROVISIONING")
+            print("=" * 50)
+            print("This will:")
+            print("  • Wait for EC2 instance to be running")
+            print("  • Configure security group ports")
+            print("  • Install Docker and Docker Compose")
+            print("  • Upload application code")
+            print("  • Set up environment variables")
+            
+            if input("\nProceed? (y/n): ").lower() == 'y':
+                deployer.provision_server()
+        
+        elif choice == '1':
             print("\n" + "=" * 50)
             print("CODE DEPLOYMENT")
             print("=" * 50)
