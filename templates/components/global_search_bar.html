@@ -1,0 +1,300 @@
+<div class="global-search-bar" id="global-search-bar">
+    <div class="search-container">
+        <input 
+            type="text" 
+            id="global-search-input" 
+            placeholder="Search posts..." 
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+        />
+        <div class="search-dropdown" id="search-dropdown">
+            <div class="search-loading" id="search-loading" style="display: none;">Searching...</div>
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.global-search-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border-bottom: 1px solid #e1e5e9;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-container {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+#global-search-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#global-search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1001;
+}
+
+.search-dropdown.show {
+    display: block;
+}
+
+.search-loading {
+    padding: 16px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.search-result-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-result-item:hover,
+.search-result-item.highlighted {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.result-title {
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.result-snippet {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.no-results {
+    padding: 16px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Add top padding to body to account for fixed search bar */
+body {
+    padding-top: 70px !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .global-search-bar {
+        padding: 8px 16px;
+    }
+    
+    #global-search-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 10px 12px;
+    }
+    
+    body {
+        padding-top: 60px !important;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const searchInput = document.getElementById('global-search-input');
+    const dropdown = document.getElementById('search-dropdown');
+    const loading = document.getElementById('search-loading');
+    const results = document.getElementById('search-results');
+    
+    let searchTimeout;
+    let currentHighlight = -1;
+    let currentResults = [];
+    
+    // Debounced search function
+    function performSearch(query) {
+        if (!query || query.length < 2) {
+            hideDropdown();
+            return;
+        }
+        
+        showLoading();
+        
+        fetch(`/search/api/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                displayResults(data.hits || []);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Search error:', error);
+                showError();
+            });
+    }
+    
+    function showLoading() {
+        loading.style.display = 'block';
+        results.innerHTML = '';
+        dropdown.classList.add('show');
+    }
+    
+    function hideLoading() {
+        loading.style.display = 'none';
+    }
+    
+    function displayResults(hits) {
+        currentResults = hits;
+        currentHighlight = -1;
+        
+        if (hits.length === 0) {
+            results.innerHTML = '<div class="no-results">No results found</div>';
+            dropdown.classList.add('show');
+            return;
+        }
+        
+        // Limit to top 8 results for dropdown
+        const limitedHits = hits.slice(0, 8);
+        
+        const html = limitedHits.map(hit => {
+            const title = hit._formatted?.title || hit.title;
+            const content = hit._formatted?.content || hit.content || '';
+            const snippet = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+            
+            return `
+                <div class="search-result-item" data-url="/posts/${hit.slug}/">
+                    <div class="result-title">${title}</div>
+                    <div class="result-snippet">${snippet}</div>
+                </div>
+            `;
+        }).join('');
+        
+        results.innerHTML = html;
+        dropdown.classList.add('show');
+        
+        // Add click handlers
+        results.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                window.location.href = item.dataset.url;
+            });
+        });
+    }
+    
+    function showError() {
+        results.innerHTML = '<div class="no-results">Search error. Please try again.</div>';
+        dropdown.classList.add('show');
+    }
+    
+    function hideDropdown() {
+        dropdown.classList.remove('show');
+        currentHighlight = -1;
+    }
+    
+    function highlightResult(index) {
+        const items = results.querySelectorAll('.search-result-item');
+        items.forEach(item => item.classList.remove('highlighted'));
+        
+        if (index >= 0 && index < items.length) {
+            items[index].classList.add('highlighted');
+            currentHighlight = index;
+        }
+    }
+    
+    // Event listeners
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            hideDropdown();
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+    
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', function(e) {
+        const items = results.querySelectorAll('.search-result-item');
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                currentHighlight = Math.min(currentHighlight + 1, items.length - 1);
+                highlightResult(currentHighlight);
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                currentHighlight = Math.max(currentHighlight - 1, -1);
+                highlightResult(currentHighlight);
+                break;
+                
+            case 'Enter':
+                e.preventDefault();
+                if (currentHighlight >= 0 && items[currentHighlight]) {
+                    window.location.href = items[currentHighlight].dataset.url;
+                }
+                break;
+                
+            case 'Escape':
+                hideDropdown();
+                this.blur();
+                break;
+        }
+    });
+    
+    // Click outside to close
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('global-search-bar').contains(e.target)) {
+            hideDropdown();
+        }
+    });
+    
+    // Focus search with Ctrl+K or Cmd+K
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
+})();
+</script>
