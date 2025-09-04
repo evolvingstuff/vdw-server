@@ -93,6 +93,16 @@ def extract_frontmatter_and_content(file_content):
     
     return frontmatter, markdown_content, frontmatter_json
 
+def search_and_replace(content):
+    """Apply search and replace operations to fix common content issues"""
+    # Fix attachment path inconsistencies: attachments/jpeg/ -> attachments/jpg/
+    content = content.replace('attachments/jpeg/', 'attachments/jpg/')
+    
+    # Add more search/replace operations here as needed
+    # content = content.replace('old_pattern', 'new_pattern')
+    
+    return content
+
 def clean_markdown_content(content):
     """Clean markdown content by removing Hugo shortcodes and unwanted elements"""
     # Remove Hugo shortcodes like {{< toc >}}
@@ -109,6 +119,9 @@ def clean_markdown_content(content):
         while lines and not lines[0].strip():
             lines = lines[1:]
         content = '\n'.join(lines)
+    
+    # Apply search and replace operations
+    content = search_and_replace(content)
     
     return content
 
