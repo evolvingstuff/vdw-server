@@ -86,17 +86,8 @@
     </style>
 </head>
 <body>
-    <!-- Global Search Bar -->
+    <!-- Global Search Bar with Integrated Navigation -->
     {% include 'components/global_search_bar.html' %}
-    
-    <!-- Main Header -->
-    <div class="header">
-        <h1><a href="{% url 'post_list' %}" style="text-decoration: none; color: inherit;">VDW Blog</a></h1>
-        <nav>
-            <a href="{% url 'post_list' %}">All Posts</a>
-            <a href="/admin/">Admin</a>
-        </nav>
-    </div>
     
     <!-- Main Content -->
     <main>

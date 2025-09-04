@@ -1,4 +1,12 @@
 <div class="global-search-bar" id="global-search-bar">
+    <!-- Left Navigation -->
+    <div class="nav-left">
+        <a href="{% url 'homepage' %}" class="nav-brand">VDW Blog</a>
+        <a href="{% url 'homepage' %}" class="nav-link">Home</a>
+        <a href="{% url 'post_list' %}" class="nav-link">All Posts</a>
+    </div>
+    
+    <!-- Center Search -->
     <div class="search-container">
         <input 
             type="text" 
@@ -13,6 +21,11 @@
             <div class="search-results" id="search-results"></div>
         </div>
     </div>
+    
+    <!-- Right Navigation -->
+    <div class="nav-right">
+        <a href="/admin/" class="nav-link">Admin</a>
+    </div>
 </div>
 
 <style>
@@ -26,12 +39,51 @@
     border-bottom: 1px solid #e1e5e9;
     padding: 10px 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
+/* Left Navigation */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-brand {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+    padding-right: 10px;
+    border-right: 1px solid #e1e5e9;
+    margin-right: 10px;
+}
+
+.nav-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #2580d0;
+    text-decoration: underline;
+}
+
+/* Center Search */
 .search-container {
-    max-width: 600px;
-    margin: 0 auto;
+    flex: 0 1 600px;
     position: relative;
+    margin: 0 20px;
+}
+
+/* Right Navigation */
+.nav-right {
+    display: flex;
+    align-items: center;
 }
 
 #global-search-input {
@@ -139,7 +191,33 @@ body {
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .global-search-bar {
-        padding: 8px 16px;
+        padding: 8px 12px;
+        flex-wrap: wrap;
+    }
+    
+    .nav-left {
+        gap: 15px;
+        flex: 1;
+    }
+    
+    .nav-brand {
+        font-size: 16px;
+        padding-right: 8px;
+        margin-right: 8px;
+    }
+    
+    .nav-link {
+        font-size: 13px;
+    }
+    
+    .search-container {
+        order: 3;
+        flex: 1 1 100%;
+        margin: 10px 0 0 0;
+    }
+    
+    .nav-right {
+        order: 2;
     }
     
     #global-search-input {
@@ -148,7 +226,17 @@ body {
     }
     
     body {
-        padding-top: 60px !important;
+        padding-top: 100px !important; /* More space for wrapped search */
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-link {
+        font-size: 12px;
+    }
+    
+    .nav-left {
+        gap: 10px;
     }
 }
 </style>
