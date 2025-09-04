@@ -45,7 +45,7 @@ class DockerDeployment:
                     hostname=self.config['host'],
                     username=self.config['user'],
                     port=self.config['port'],
-                    key_filename=self.config['key_file']
+                    key_filename=os.path.expanduser(self.config['key_file'])
                 )
             else:
                 self.ssh_client.connect(
@@ -91,8 +91,42 @@ class DockerDeployment:
             print(f"❌ Command execution failed: {e}")
             return False, "", str(e)
     
+    def upload_code(self):
+        """Upload application code via SCP"""
+        print("📤 Uploading application code...")
+        
+        app_path = self.config['app_path']
+        
+        try:
+            with SCPClient(self.ssh_client.get_transport()) as scp:
+                # Upload all important files
+                for pattern in ['*.py', '*.txt', '*.yml', '*.yaml', 'Dockerfile', '.dockerignore']:
+                    for file_path in Path('.').glob(pattern):
+                        if file_path.name not in ['.env', 'db.sqlite3']:
+                            print(f"   Uploading {file_path}...")
+                            scp.put(str(file_path), f"{app_path}/{file_path.name}")
+                
+                # Upload directories (posts, templates, static, etc.)
+                for dir_path in Path('.').iterdir():
+                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode']:
+                        print(f"   Uploading directory {dir_path}...")
+                        scp.put(str(dir_path), app_path, recursive=True)
+            
+            # Set ownership
+            success, output, error = self.execute_command(f"sudo chown -R {self.config['user']}:{self.config['user']} {app_path}")
+            if not success:
+                print(f"❌ Failed to set ownership: {error}")
+                return False
+            
+            print("✅ Code uploaded successfully!")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Code upload failed: {e}")
+            return False
+    
     def deploy_code(self):
-        """Deploy code updates via git pull + docker rebuild"""
+        """Deploy code updates via SCP upload + docker rebuild"""
         print("\n🚀 Starting code deployment...")
         
         if not self.connect():
@@ -101,17 +135,15 @@ class DockerDeployment:
         try:
             app_path = self.config['app_path']
             
-            # Pull latest code
-            print("📥 Pulling latest code from git...")
-            success, output, error = self.execute_command(f"cd {app_path} && git pull")
-            if not success:
-                print(f"❌ Git pull failed: {error}")
+            # Upload fresh code from local machine
+            print("📦 Uploading fresh code from local machine...")
+            if not self.upload_code():
                 return False
             
             # Rebuild and restart containers
             print("🐳 Rebuilding Docker containers...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker-compose up --build -d"
+                f"cd {app_path} && docker compose up --build -d"
             )
             if not success:
                 print(f"❌ Docker rebuild failed: {error}")
@@ -120,7 +152,7 @@ class DockerDeployment:
             # Check container status
             print("🔍 Checking container status...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker-compose ps"
+                f"cd {app_path} && docker compose ps"
             )
             
             print("✅ Code deployment completed successfully!")
@@ -159,18 +191,38 @@ class DockerDeployment:
             
             # Stop Django container to avoid database locks
             print("🛑 Stopping Django container...")
-            self.execute_command(f"cd {app_path} && docker-compose stop django")
+            self.execute_command(f"cd {app_path} && docker compose stop django")
             
-            # Upload database
+            # Remove existing database file/directory
             print("📤 Uploading database...")
+            self.execute_command(f"sudo rm -rf {app_path}/db.sqlite3")
+            
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 scp.put(str(local_db), f"{app_path}/db.sqlite3")
             print("✅ Database uploaded successfully!")
             
+            # Fix database permissions for Docker container (root access)
+            print("🔧 Setting database permissions...")
+            success, output, error = self.execute_command(f"sudo chown root:root {app_path}/db.sqlite3")
+            if not success:
+                print(f"❌ Failed to set database ownership: {error}")
+                return False
+            
+            success, output, error = self.execute_command(f"sudo chmod 644 {app_path}/db.sqlite3")
+            if not success:
+                print(f"❌ Failed to set database permissions: {error}")
+                return False
+            
+            # Fix directory permissions so SQLite can create temp files  
+            success, output, error = self.execute_command(f"sudo chown root:root {app_path}")
+            if not success:
+                print(f"❌ Failed to set directory ownership: {error}")
+                return False
+            
             # Start Django container
             print("🚀 Starting Django container...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker-compose start django"
+                f"cd {app_path} && docker compose start django"
             )
             if not success:
                 print(f"❌ Failed to start Django container: {error}")
@@ -184,7 +236,7 @@ class DockerDeployment:
             # Reindex search
             print("🔍 Rebuilding search index...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker-compose exec -T django python manage.py reindex_search"
+                f"cd {app_path} && docker compose exec -T django python manage.py reindex_search"
             )
             if not success:
                 print(f"⚠️  Search reindexing may have failed: {error}")
@@ -228,7 +280,7 @@ class DockerDeployment:
         try:
             app_path = self.config['app_path']
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker-compose exec -T django python manage.py reindex_search"
+                f"cd {app_path} && docker compose exec -T django python manage.py reindex_search"
             )
             
             if success:
@@ -256,10 +308,10 @@ class DockerDeployment:
             app_path = self.config['app_path']
             
             print("🐳 Container status:")
-            self.execute_command(f"cd {app_path} && docker-compose ps")
+            self.execute_command(f"cd {app_path} && docker compose ps")
             
             print("\n📋 Recent logs (last 20 lines):")
-            self.execute_command(f"cd {app_path} && docker-compose logs --tail=20")
+            self.execute_command(f"cd {app_path} && docker compose logs --tail=20")
             
             return True
             
