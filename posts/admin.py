@@ -71,7 +71,7 @@ class PostAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Content', {
-            'fields': ('title', 'slug', 'content_md', 'notes', 'status', 'live_link')
+            'fields': ('title', 'slug', 'status', 'live_link', 'content_md', 'notes')
         }),
         ('Tags', {
             'fields': ('tags',)
