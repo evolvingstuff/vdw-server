@@ -310,14 +310,28 @@ WantedBy=multi-user.target"""
             except Exception as e:
                 raise RuntimeError(f"Failed to copy .env file to server: {e}")
             
+            # Fix virtual environment permissions
+            print("\n🔧 Fixing virtual environment permissions...")
+            venv_path = CONFIG['paths']['remote_venv']
+            status, _, _ = self.execute_command(f"sudo chown -R bitnami:bitnami {venv_path}")
+            if status != 0:
+                print("⚠️  Warning: Could not fix venv permissions")
+            
             # Activate virtual environment and install dependencies
             print("\n📦 Installing/updating dependencies...")
-            venv_path = CONFIG['paths']['remote_venv']
             status, output, error = self.execute_command(
                 f"cd {project_path} && source {venv_path}/bin/activate && pip install -r requirements.txt"
             )
             if status != 0:
                 raise RuntimeError(f"Failed to install dependencies. Django will not work without them.\n{error}")
+            
+            # Fix database permissions before migrations
+            print("\n🔧 Fixing database permissions...")
+            status, _, _ = self.execute_command(f"sudo chown bitnami:bitnami {project_path}/db.sqlite3")
+            status, _, _ = self.execute_command(f"sudo chmod 664 {project_path}/db.sqlite3")
+            # SQLite also needs write access to the directory
+            status, _, _ = self.execute_command(f"sudo chown bitnami:bitnami {project_path}")
+            status, _, _ = self.execute_command(f"sudo chmod 775 {project_path}")
             
             # Run migrations
             print("\n🗄️  Running database migrations...")
@@ -326,6 +340,11 @@ WantedBy=multi-user.target"""
             )
             if status != 0:
                 print("⚠️  Warning: Migrations may have failed")
+            
+            # Fix static files permissions before collecting
+            print("\n🔧 Fixing static files permissions...")
+            status, _, _ = self.execute_command(f"sudo chown -R bitnami:bitnami {project_path}/static")
+            status, _, _ = self.execute_command(f"sudo chmod -R 775 {project_path}/static")
             
             # Collect static files
             print("\n📁 Collecting static files...")
@@ -373,16 +392,26 @@ WantedBy=multi-user.target"""
             print("\n💾 Backing up current database...")
             backup_file = f"db.sqlite3.backup.{timestamp}"
             status, _, _ = self.execute_command(
-                f"cd {project_path} && [ -f db.sqlite3 ] && cp db.sqlite3 {backup_file}"
+                f"cd {project_path} && [ -f db.sqlite3 ] && sudo cp db.sqlite3 {backup_file}"
             )
             if status == 0:
                 print(f"✅ Backup created: {backup_file}")
             
-            # Upload new database
+            # Upload new database (copy to temp first, then move)
             print(f"\n📤 Uploading database from {local_db}...")
+            temp_db_path = f"/tmp/db_upload_{timestamp}.sqlite3"
             with SCPClient(self.ssh_client.get_transport()) as scp:
-                remote_db_path = f"{project_path}/db.sqlite3"
-                scp.put(local_db, remote_db_path)
+                scp.put(local_db, temp_db_path)
+            
+            # Move from temp to final location with proper permissions
+            remote_db_path = f"{project_path}/db.sqlite3"
+            status, _, error = self.execute_command(f"sudo mv {temp_db_path} {remote_db_path}")
+            if status != 0:
+                raise RuntimeError(f"Failed to move database to final location: {error}")
+            
+            # Fix database permissions
+            self.execute_command(f"sudo chown bitnami:bitnami {remote_db_path}")
+            self.execute_command(f"sudo chmod 664 {remote_db_path}")
             print("✅ Database uploaded successfully!")
             
             # Set permissions
