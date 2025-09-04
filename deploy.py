@@ -29,6 +29,7 @@ CONFIG = {
         'remote_project': os.getenv('DEPLOY_REMOTE_PROJECT', '/opt/bitnami/apache/htdocs/django-app'),
         'remote_venv': os.getenv('DEPLOY_REMOTE_VENV', '/opt/bitnami/apache/htdocs/django-app/venv'),
         'local_db': os.getenv('DEPLOY_LOCAL_DB', './db.sqlite3'),
+        'local_env': os.getenv('DEPLOY_LOCAL_ENV', './.env'),
         'backup_dir': os.getenv('DEPLOY_BACKUP_DIR', '/opt/bitnami/apache/htdocs/django-app')
     },
     'services': {
@@ -109,8 +110,115 @@ class DeploymentManager:
         """Full deployment from scratch - NOT IMPLEMENTED"""
         raise NotImplementedError(
             "Full deployment from scratch is not implemented yet.\n"
-            "Please use option 2 (Update Code) or 3 (Update Database) instead."
+            "Please use other options instead."
         )
+    
+    def install_meilisearch(self):
+        """Install and configure Meilisearch on the server"""
+        print("\n🔍 Starting Meilisearch installation...")
+        
+        if not self.connect():
+            return False
+        
+        try:
+            # Check if Meilisearch is already installed
+            print("\n📋 Checking if Meilisearch is already installed...")
+            status, output, _ = self.execute_command("which meilisearch")
+            if status == 0:
+                print("✅ Meilisearch is already installed at:", output.strip())
+                if input("\n🔄 Reinstall/Update Meilisearch? (y/n): ").lower() != 'y':
+                    return True
+            
+            # Install Meilisearch
+            print("\n📦 Installing Meilisearch...")
+            
+            # Download and install latest Meilisearch
+            commands = [
+                # Download Meilisearch binary
+                "curl -L https://install.meilisearch.com | sh",
+                
+                # Move to system location
+                "sudo mv ./meilisearch /usr/local/bin/",
+                
+                # Make it executable
+                "sudo chmod +x /usr/local/bin/meilisearch",
+                
+                # Create data directory
+                "sudo mkdir -p /var/lib/meilisearch",
+                "sudo chown $USER:$USER /var/lib/meilisearch",
+            ]
+            
+            for cmd in commands:
+                print(f"\n  Running: {cmd}")
+                status, output, error = self.execute_command(cmd)
+                if status != 0 and "already exists" not in error:
+                    print(f"⚠️  Command failed: {error}")
+            
+            # Create systemd service file
+            print("\n⚙️  Setting up Meilisearch as a service...")
+            service_content = """[Unit]
+Description=Meilisearch
+After=network.target
+
+[Service]
+Type=simple
+User=bitnami
+Group=bitnami
+ExecStart=/usr/local/bin/meilisearch --env production --db-path /var/lib/meilisearch --http-addr 127.0.0.1:7700
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target"""
+            
+            # Write service file
+            self.execute_command(
+                f"echo '{service_content}' | sudo tee /etc/systemd/system/meilisearch.service",
+                show_output=False
+            )
+            
+            # Enable and start service
+            print("\n🚀 Starting Meilisearch service...")
+            self.execute_command("sudo systemctl daemon-reload")
+            self.execute_command("sudo systemctl enable meilisearch")
+            self.execute_command("sudo systemctl restart meilisearch")
+            
+            # Check service status
+            print("\n✅ Checking Meilisearch status...")
+            status, output, _ = self.execute_command("sudo systemctl status meilisearch --no-pager")
+            print(output)
+            
+            # Test Meilisearch connection
+            print("\n🔍 Testing Meilisearch connection...")
+            status, output, _ = self.execute_command("curl -s http://localhost:7700/health")
+            if "available" in output.lower():
+                print("✅ Meilisearch is running and healthy!")
+            else:
+                print("⚠️  Meilisearch may not be running properly")
+            
+            # Get and display master key
+            print("\n🔑 Generating master key for .env file...")
+            import secrets
+            master_key = secrets.token_urlsafe(32)
+            print(f"\n📋 Add these to your .env file:")
+            print(f"MEILISEARCH_URL=http://localhost:7700")
+            print(f"MEILISEARCH_MASTER_KEY={master_key}")
+            print(f"MEILISEARCH_INDEX_NAME=posts")
+            
+            print("\n✅ Meilisearch installation completed!")
+            print("\n⚠️  Remember to:")
+            print("  1. Add the Meilisearch settings to your server's .env file")
+            print("  2. Restart your Django application")
+            print("  3. Run index initialization in Django shell or script")
+            
+            return True
+            
+        except Exception as e:
+            print(f"\n❌ Meilisearch installation failed: {e}")
+            return False
+        
+        finally:
+            self.disconnect()
     
     def deploy_code_update(self):
         """Update code from GitHub and restart services"""
@@ -178,14 +286,38 @@ class DeploymentManager:
             if status != 0:
                 raise RuntimeError(f"Git pull failed: {error}")
             
+            # Copy .env file from local to server
+            print("\n📄 Copying .env file to server...")
+            local_env = CONFIG['paths'].get('local_env', './.env')
+            if not Path(local_env).exists():
+                raise RuntimeError(f"Local .env file not found at {local_env}. Cannot deploy without environment configuration!")
+            
+            try:
+                with SCPClient(self.ssh_client.get_transport()) as scp:
+                    # Copy to temp location first (bitnami home directory)
+                    temp_env_path = "/tmp/.env"
+                    scp.put(local_env, temp_env_path)
+                    print(f"✅ .env file uploaded to temporary location")
+                    
+                    # Move to project directory with sudo
+                    remote_env_path = f"{project_path}/.env"
+                    self.execute_command(f"sudo mv {temp_env_path} {remote_env_path}")
+                    
+                    # Set proper permissions
+                    self.execute_command(f"sudo chown {CONFIG['server']['user']}:{CONFIG['server']['user']} {remote_env_path}")
+                    self.execute_command(f"sudo chmod 600 {remote_env_path}")  # Secure permissions for .env
+                    print(f"✅ .env file moved to {remote_env_path} with secure permissions")
+            except Exception as e:
+                raise RuntimeError(f"Failed to copy .env file to server: {e}")
+            
             # Activate virtual environment and install dependencies
             print("\n📦 Installing/updating dependencies...")
             venv_path = CONFIG['paths']['remote_venv']
-            status, _, _ = self.execute_command(
+            status, output, error = self.execute_command(
                 f"cd {project_path} && source {venv_path}/bin/activate && pip install -r requirements.txt"
             )
             if status != 0:
-                print("⚠️  Warning: Failed to update dependencies")
+                raise RuntimeError(f"Failed to install dependencies. Django will not work without them.\n{error}")
             
             # Run migrations
             print("\n🗄️  Running database migrations...")
@@ -261,18 +393,41 @@ class DeploymentManager:
             # Restart services
             self.restart_services()
             
-            # Optionally rebuild search index
-            if input("\n🔍 Rebuild search index? (y/n): ").lower() == 'y':
-                print("🔍 Rebuilding search index...")
-                venv_path = CONFIG['paths']['remote_venv']
-                self.execute_command(
-                    f"cd {project_path} && source {venv_path}/bin/activate && "
-                    f"python -c \"from search.search import clear_search_index, initialize_search_index, bulk_index_posts; "
-                    f"from posts.models import Post; "
-                    f"clear_search_index(); initialize_search_index(); "
-                    f"bulk_index_posts(Post.objects.filter(status='published'))\""
-                )
-                print("✅ Search index rebuilt!")
+            # Always rebuild search index when database is updated
+            print("\n🔍 Rebuilding Meilisearch index (required after database update)...")
+            venv_path = CONFIG['paths']['remote_venv']
+            
+            # First clear the Meilisearch data completely
+            print("  🧹 Clearing Meilisearch data...")
+            self.execute_command(
+                "sudo systemctl stop meilisearch",
+                show_output=False
+            )
+            self.execute_command(
+                "sudo rm -rf /var/lib/meilisearch/*",
+                show_output=False
+            )
+            self.execute_command(
+                "sudo systemctl start meilisearch",
+                show_output=False
+            )
+            
+            # Wait for Meilisearch to be ready
+            print("  ⏳ Waiting for Meilisearch to restart...")
+            import time
+            time.sleep(3)
+            
+            # Now rebuild the index
+            print("  📝 Re-indexing all posts...")
+            self.execute_command(
+                f"cd {project_path} && source {venv_path}/bin/activate && "
+                f"python -c \"from search.search import clear_search_index, initialize_search_index, bulk_index_posts; "
+                f"from posts.models import Post; "
+                f"clear_search_index(); initialize_search_index(); "
+                f"bulk_index_posts(Post.objects.filter(status='published'))\"",
+                show_output=True
+            )
+            print("✅ Search index rebuilt!")
             
             print("\n✅ Database deployment completed successfully!")
             return True
@@ -332,7 +487,8 @@ def print_menu():
     print("1. Full Deploy (from scratch) - NOT IMPLEMENTED")
     print("2. Update Code (pull from GitHub)")
     print("3. Update Database (upload local SQLite)")
-    print("4. Exit")
+    print("4. Install/Configure Meilisearch")
+    print("5. Exit")
     print()
 
 
@@ -354,7 +510,7 @@ def main():
     
     while True:
         print_menu()
-        choice = input("Enter choice [1-4]: ").strip()
+        choice = input("Enter choice [1-5]: ").strip()
         
         if choice == '1':
             try:
@@ -370,6 +526,7 @@ def main():
             # Show what will be done
             print("\nThis will:")
             print("  • Pull latest code from GitHub")
+            print("  • Copy local .env file to server")
             print("  • Install/update dependencies")
             print("  • Run database migrations")
             print("  • Collect static files")
@@ -397,17 +554,31 @@ def main():
             print("  • Upload local database to server")
             print("  • Set appropriate permissions")
             print("  • Restart services")
-            print("  • Optionally rebuild search index")
+            print("  • Clear and rebuild Meilisearch index (required)")
             
             if input("\n⚠️  This will replace the server database! Proceed? (y/n): ").lower() == 'y':
                 deployer.deploy_database_update()
         
         elif choice == '4':
+            print("\n" + "=" * 50)
+            print("MEILISEARCH INSTALLATION")
+            print("=" * 50)
+            
+            print("\nThis will:")
+            print("  • Download and install Meilisearch binary")
+            print("  • Set up Meilisearch as a systemd service")
+            print("  • Configure it to run on localhost:7700")
+            print("  • Generate configuration for your .env file")
+            
+            if input("\nProceed? (y/n): ").lower() == 'y':
+                deployer.install_meilisearch()
+        
+        elif choice == '5':
             print("\n👋 Exiting deployment script")
             break
         
         else:
-            print("\n❌ Invalid choice. Please enter 1-4.")
+            print("\n❌ Invalid choice. Please enter 1-5.")
     
     sys.exit(0)
 
