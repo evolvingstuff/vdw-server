@@ -26,11 +26,11 @@ pip install -r requirements.txt
 
 # Run migrations
 echo "Running database migrations..."
-python app.py migrate
+python manage.py migrate
 
 # Collect static files
 echo "Collecting static files..."
-python app.py collectstatic --noinput
+python manage.py collectstatic --noinput
 
 # Fix permissions for Apache/www-data
 echo "Setting permissions..."
