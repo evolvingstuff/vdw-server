@@ -227,6 +227,7 @@ def main():
             content_md=markdown_content,
             status='published',
             created_date=created_date,
+            modified_date=created_date,  # Set modified_date to same as created_date
             original_page_id=frontmatter.get('tiki_page_id'),
             aliases='\n'.join(frontmatter.get('aliases', [])),
             front_matter=frontmatter_json
@@ -234,6 +235,10 @@ def main():
         
         # Add tags
         post.tags.set(tags)
+        
+        # Fix modified_date after tags are set (tags.set() triggers another save)
+        # Use direct database update to bypass auto_now=True
+        Post.objects.filter(pk=post.pk).update(modified_date=created_date)
         
         created_posts += 1
     
