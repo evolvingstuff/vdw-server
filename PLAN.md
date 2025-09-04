@@ -15,6 +15,11 @@ Integrate the site navigation into the fixed top bar with the search functionali
 - Simple "Home Page W.I.P." placeholder for now
 - Will be the default landing page at root URL (`/`)
 
+### All Posts Page
+- Currently exists at `/posts/`
+- Need to ensure it's accessible and properly linked
+- May need to update styling to match new integrated design
+
 ## Implementation Steps
 
 ### 1. Create Core/Home App

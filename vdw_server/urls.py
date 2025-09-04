@@ -18,10 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.views import homepage
 from posts.views import preview_markdown, post_list, post_detail, upload_media
 from search.views import search_api
 
 urlpatterns = [
+    path('', homepage, name='homepage'),  # Root URL for homepage
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/upload-media/', upload_media, name='upload_media'),
     path('admin/', admin.site.urls),
