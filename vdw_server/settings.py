@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'core',
     'posts',
     'search',
+    'tags',
     'markdownx',
 ]
 

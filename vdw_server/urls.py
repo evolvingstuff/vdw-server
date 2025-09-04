@@ -30,6 +30,7 @@ urlpatterns = [
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
     path('posts/', post_list, name='post_list'),
     path('posts/<slug:slug>/', post_detail, name='post_detail'),
+    path('tags/', include('tags.urls')),  # Tags filtering
     path('markdownx/', include('markdownx.urls')),
 ]
 

@@ -1,9 +1,9 @@
-{% extends 'posts/base.html' %}
+{% extends 'base.html' %}
 
-{% block title %}All Posts - VDW Blog{% endblock %}
+{% block title %}Posts tagged with "{{ tag.name }}" - VDW Blog{% endblock %}
 
 {% block content %}
-<h1>All Posts</h1>
+<h1>Posts tagged with "{{ tag.name }}"</h1>
 <div class="post-list">
     {% for post in posts %}
     <article class="post">
@@ -29,7 +29,7 @@
         {% endif %}
     </article>
     {% empty %}
-    <p>No published posts yet.</p>
+    <p>No published posts with this tag yet.</p>
     {% endfor %}
 </div>
 
