@@ -5,3 +5,4 @@ db.sqlite3
 .env
 conversion/
 data.ms/
+CLAUDE.md
