@@ -1,0 +1,38 @@
+/* 
+ * markdown-hacks.css
+ * 
+ * This file contains CSS workarounds for markdown rendering issues
+ * caused by the markdown2 Python library.
+ */
+
+/* 
+ * Fix for markdown2 wrapping list item content in <p> tags
+ * when there are blank lines between list items.
+ * 
+ * Issue: When markdown has blank lines between list items like:
+ *   * Item 1
+ *   
+ *   * Item 2
+ * 
+ * markdown2 generates: <li><p>Item content</p></li>
+ * instead of: <li>Item content</li>
+ * 
+ * This causes the bullet to appear on a separate line from the text.
+ * This CSS makes the paragraph inline to fix the display issue.
+ */
+li > p {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure first paragraph in list item has proper spacing */
+li > p:first-child {
+    display: inline;
+}
+
+/* Handle multiple paragraphs within a list item (keep subsequent ones as blocks) */
+li > p:not(:first-child) {
+    display: block;
+    margin-top: 0.5em;
+}
