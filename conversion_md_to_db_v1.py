@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 from datetime import datetime
 from tqdm import tqdm
+from helper_functions.meilisearch import *
 
 def delete_database():
     """Delete existing SQLite database"""
@@ -176,7 +177,7 @@ def main():
     # Step 5: Setup MeiliSearch (will be done after posts are created)
     
     # Step 5: Find all markdown files
-    posts_dir = Path('../vdw-conversion/posts')
+    posts_dir = Path('../vdw-posts/posts')
     markdown_files = list(posts_dir.glob('*.md'))
     
     if not markdown_files:
@@ -249,6 +250,10 @@ def main():
     
     # Step 6: Index all posts in MeiliSearch using management command
     print(f"\nIndexing {created_posts} posts in MeiliSearch...")
+    if not check_meilisearch():
+        start_meilisearch()
+    else:
+        print("Meilisearch is already running. 👍")
     execute_from_command_line(['manage.py', 'reindex_search'])
     print("MeiliSearch indexing complete!")
 
