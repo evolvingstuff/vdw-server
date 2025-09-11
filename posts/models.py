@@ -56,6 +56,7 @@ class Post(models.Model):
     aliases = models.TextField(blank=True, editable=False, help_text="Old URLs for redirects, one per line")
     front_matter = models.TextField(blank=True, null=True, editable=False, help_text="Original frontmatter JSON for debugging")
     original_tiki = models.TextField(blank=True, null=True, editable=False, help_text="Original Tiki wiki markup for reference")
+    redacted_count = models.IntegerField(default=0, help_text="Number of censored sections from Tiki conversion")
     
     def save(self, *args, **kwargs):
         # Auto-generate slug if not provided

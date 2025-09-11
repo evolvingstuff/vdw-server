@@ -2,6 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
+from django.contrib.admin import SimpleListFilter
 from .models import Post, Tag
 
 
@@ -58,11 +59,26 @@ class TagAdmin(admin.ModelAdmin):
     linked_posts.short_description = "Posts with this tag"
 
 
+class RedactedOnlyFilter(SimpleListFilter):
+    title = 'redacted content'
+    parameter_name = 'has_redacted'
+    
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Redacted only'),
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(redacted_count__gt=0)
+        return queryset
+
+
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ['title', 'status', 'live_link', 'created_date', 'modified_date']
-    list_filter = ['status', 'created_date', 'modified_date', 'tags']
+    list_display = ['title', 'status', 'redacted_indicator', 'live_link', 'created_date', 'modified_date']
+    list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ['title', 'content_md', 'meta_description']
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
@@ -129,6 +145,16 @@ class PostAdmin(admin.ModelAdmin):
         else:
             return "Save first"
     live_link.short_description = "Live URL"
+    
+    def redacted_indicator(self, obj):
+        if obj.redacted_count > 0:
+            return format_html(
+                '<span style="color: #f66; font-weight: bold;" title="{} censored sections">⚠️ {}</span>',
+                obj.redacted_count, obj.redacted_count
+            )
+        return format_html('<span style="color: #ccc;">—</span>')
+    redacted_indicator.short_description = "Redacted"
+    redacted_indicator.admin_order_field = 'redacted_count'
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

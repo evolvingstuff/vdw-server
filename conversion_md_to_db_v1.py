@@ -193,16 +193,21 @@ def main():
     skipped_files = []  # Track files with no frontmatter
     
     for file_path in tqdm(markdown_files, desc="Converting posts"):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            file_content = f.read()
-        
-        # Extract frontmatter and content
-        start = file_content.find('{')
-        if start == -1:
-            skipped_files.append(str(file_path))
-            continue
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                file_content = f.read()
             
-        frontmatter, markdown_content, frontmatter_json = extract_frontmatter_and_content(file_content)
+            # Extract frontmatter and content
+            start = file_content.find('{')
+            if start == -1:
+                skipped_files.append(str(file_path))
+                continue
+                
+            frontmatter, markdown_content, frontmatter_json = extract_frontmatter_and_content(file_content)
+        except Exception as e:
+            print(f"\nERROR processing file: {file_path}")
+            print(f"Error details: {e}")
+            raise
         
         # Clean markdown content
         markdown_content = clean_markdown_content(markdown_content)
@@ -227,6 +232,9 @@ def main():
         # Parse date
         created_date = parse_date(frontmatter['date'], timezone)
         
+        # Calculate redacted count from censored_sections (must exist)
+        redacted_count = len(frontmatter['censored_sections'])
+        
         # Create Post object
         post = Post.objects.create(
             title=frontmatter['title'],
@@ -238,7 +246,8 @@ def main():
             original_page_id=frontmatter.get('tiki_page_id'),
             original_tiki=tiki_content,
             aliases='\n'.join(frontmatter.get('aliases', [])),
-            front_matter=frontmatter_json
+            front_matter=frontmatter_json,
+            redacted_count=redacted_count
         )
         
         # Add tags
