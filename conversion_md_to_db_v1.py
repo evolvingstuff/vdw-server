@@ -174,9 +174,10 @@ def main():
     # Step 4: Create superuser
     create_superuser()
     
-    # Step 5: Setup MeiliSearch (will be done after posts are created)
+    # Step 5: Start MeiliSearch (restart it fresh to ensure clean state)
+    start_meilisearch()
     
-    # Step 5: Find all markdown files
+    # Step 6: Find all markdown files
     posts_dir = Path('../vdw-posts/posts')
     markdown_files = list(posts_dir.glob('*.md'))
     
@@ -185,7 +186,7 @@ def main():
     
     print(f"Found {len(markdown_files)} markdown files to process")
     
-    # Step 5: Process each file
+    # Step 7: Process each file
     created_posts = 0
     used_slugs = set()  # Track slugs to avoid duplicates
     skipped_files = []  # Track files with no frontmatter
@@ -248,12 +249,8 @@ def main():
         for skipped_file in skipped_files:
             print(f"  - {skipped_file}")
     
-    # Step 6: Index all posts in MeiliSearch using management command
+    # Step 8: Index all posts in MeiliSearch using management command
     print(f"\nIndexing {created_posts} posts in MeiliSearch...")
-    if not check_meilisearch():
-        start_meilisearch()
-    else:
-        print("Meilisearch is already running. 👍")
     execute_from_command_line(['manage.py', 'reindex_search'])
     print("MeiliSearch indexing complete!")
 

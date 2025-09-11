@@ -15,10 +15,7 @@ def main():
     # Check and start Meilisearch only when running the development server
     if 'runserver' in sys.argv:
         print("Checking for Meilisearch instance...")
-        if not check_meilisearch():
-            start_meilisearch()
-        else:
-            print("Meilisearch is already running. 👍")
+        start_meilisearch()
 
         print("\nStart admin at: http://127.0.0.1:8000/admin/\n")
 
