@@ -67,24 +67,43 @@ class PostAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
-    readonly_fields = ['live_link']
+    readonly_fields = ['live_link', 'original_tiki_display']
     
-    fieldsets = (
-        ('Content', {
-            'fields': ('title', 'slug', 'status', 'live_link', 'content_md', 'notes')
-        }),
-        ('Tags', {
-            'fields': ('tags',)
-        }),
-        ('SEO', {
-            'fields': ('meta_description',),
-            'classes': ('collapse',)
-        }),
-        ('Timestamps', {
-            'fields': ('created_date',),
-            'classes': ('collapse',)
-        }),
-    )
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Content', {
+                'fields': ('title', 'slug', 'status', 'live_link', 'content_md', 'notes')
+            }),
+            ('Tags', {
+                'fields': ('tags',)
+            }),
+            ('SEO', {
+                'fields': ('meta_description',),
+                'classes': ('collapse',)
+            }),
+            ('Timestamps', {
+                'fields': ('created_date',),
+                'classes': ('collapse',)
+            }),
+        ]
+        
+        # Only show Original Tiki section if tiki data exists
+        if obj and obj.original_tiki:
+            fieldsets.append(
+                ('Original Tiki Data', {
+                    'fields': ('original_tiki_display',),
+                    'classes': ('collapse',),
+                    'description': 'Original Tiki wiki markup for reference'
+                })
+            )
+        
+        return fieldsets
+    
+    def original_tiki_display(self, obj):
+        if obj.original_tiki:
+            return format_html('<textarea readonly rows="15" cols="80" style="font-family: monospace; background: #f5f5f5;">{}</textarea>', obj.original_tiki)
+        return "No original Tiki data available"
+    original_tiki_display.short_description = "Original Tiki Markup"
     
     def live_link(self, obj):
         if obj.pk and obj.status == 'published':

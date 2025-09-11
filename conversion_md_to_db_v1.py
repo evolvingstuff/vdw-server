@@ -179,6 +179,7 @@ def main():
     
     # Step 6: Find all markdown files
     posts_dir = Path('../vdw-posts/posts')
+    posts_tiki_dir = Path('../vdw-posts/posts_tiki')
     markdown_files = list(posts_dir.glob('*.md'))
     
     if not markdown_files:
@@ -206,6 +207,14 @@ def main():
         # Clean markdown content
         markdown_content = clean_markdown_content(markdown_content)
         
+        # Load corresponding tiki file (MUST exist)
+        tiki_file_path = posts_tiki_dir / f"{file_path.stem}.tiki"
+        if not tiki_file_path.exists():
+            raise FileNotFoundError(f"Missing required tiki file: {tiki_file_path}")
+        
+        with open(tiki_file_path, 'r', encoding='utf-8') as f:
+            tiki_content = f.read()
+        
         # Process tags from both 'tags' and 'categories'
         all_tags = []
         if 'tags' in frontmatter:
@@ -227,6 +236,7 @@ def main():
             created_date=created_date,
             modified_date=created_date,  # Set modified_date to same as created_date
             original_page_id=frontmatter.get('tiki_page_id'),
+            original_tiki=tiki_content,
             aliases='\n'.join(frontmatter.get('aliases', [])),
             front_matter=frontmatter_json
         )
