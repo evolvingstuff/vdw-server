@@ -67,13 +67,27 @@ class PostAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
-    readonly_fields = ['live_link', 'original_tiki_display']
+    readonly_fields = ['live_link', 'tiki_markdown_comparison']
     
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Content', {
                 'fields': ('title', 'slug', 'status', 'live_link', 'content_md', 'notes')
             }),
+        ]
+        
+        # Insert comparison section right after Content if tiki data exists
+        if obj and obj.original_tiki:
+            fieldsets.append(
+                ('Tiki vs Markdown Comparison', {
+                    'fields': ('tiki_markdown_comparison',),
+                    'classes': ('collapse',),
+                    'description': ''
+                })
+            )
+        
+        # Add remaining sections
+        fieldsets.extend([
             ('Tags', {
                 'fields': ('tags',)
             }),
@@ -85,25 +99,26 @@ class PostAdmin(admin.ModelAdmin):
                 'fields': ('created_date',),
                 'classes': ('collapse',)
             }),
-        ]
-        
-        # Only show Original Tiki section if tiki data exists
-        if obj and obj.original_tiki:
-            fieldsets.append(
-                ('Original Tiki Data', {
-                    'fields': ('original_tiki_display',),
-                    'classes': ('collapse',),
-                    'description': 'Original Tiki wiki markup for reference'
-                })
-            )
+        ])
         
         return fieldsets
     
-    def original_tiki_display(self, obj):
+    def tiki_markdown_comparison(self, obj):
         if obj.original_tiki:
-            return format_html('<textarea readonly rows="15" cols="80" style="font-family: monospace; background: #f5f5f5;">{}</textarea>', obj.original_tiki)
+            return format_html('''
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">Original Tiki</h4>
+                        <textarea readonly rows="25" cols="90" style="width: 100%; font-family: monospace; background: #f5f5f5; border: 1px solid #ddd; padding: 8px; box-sizing: border-box; resize: vertical;">{}</textarea>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">Converted Markdown</h4>
+                        <textarea readonly rows="25" cols="90" style="width: 100%; font-family: monospace; background: #f5f5f5; border: 1px solid #ddd; padding: 8px; box-sizing: border-box; resize: vertical;">{}</textarea>
+                    </div>
+                </div>
+            ''', obj.original_tiki, obj.content_md)
         return "No original Tiki data available"
-    original_tiki_display.short_description = "Original Tiki Markup"
+    tiki_markdown_comparison.short_description = ""
     
     def live_link(self, obj):
         if obj.pk and obj.status == 'published':
