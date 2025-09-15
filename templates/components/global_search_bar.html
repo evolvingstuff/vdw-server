@@ -401,4 +401,26 @@ body {
         }
     });
 })();
+
+// Dynamic admin link based on current page
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const adminLink = document.querySelector('.nav-right a[href="/admin/"]');
+        if (adminLink) {
+            const currentPath = window.location.pathname;
+
+            // Check if we're on a post detail page
+            const postMatch = currentPath.match(/^\/posts\/([^\/]+)\/$/);
+            if (postMatch) {
+                // For post pages, set next to current URL
+                // Middleware will handle transformation to edit URL
+                adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
+            } else if (currentPath !== '/') {
+                // For other pages, just preserve the current URL
+                adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
+            }
+            // Homepage keeps default /admin/ link
+        }
+    });
+})();
 </script>
