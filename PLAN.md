@@ -1,162 +1,58 @@
-# Docker Deployment Plan
+# Feature: Admin Login Redirect to Previous Page
 
-## Overview
-Move from the Bitnami/systemd nightmare to a clean Docker-based deployment that:
-- Runs consistently in development (venv OR docker) and production (docker)
-- Eliminates server permission/configuration hell
-- Provides clean deployment automation
-- Supports operational tasks (database updates, search reindexing)
+## Goal
+When clicking the admin link from a post page and logging in, automatically redirect to the editing screen for that specific post instead of the default admin dashboard.
 
-## Phase 1: Local Docker Setup
+## Current Behavior
+- User views a post (e.g., `/post/XYZ`)
+- User clicks "Admin" link
+- User logs in
+- User is redirected to default admin dashboard
+- User must manually navigate to find and edit the post
 
-### 1.1 Development Environment Support
-**Goal**: App works in both environments for maximum flexibility
-- **PyCharm debugging**: Run in venv with local Meilisearch
-- **Production parity**: Run in Docker containers
+## Desired Behavior
+- User views a post (e.g., `/post/XYZ`)
+- User clicks "Admin" link
+- User logs in
+- User is automatically redirected to the edit screen for post XYZ
 
-**Implementation**:
-- Environment detection in settings
-- Docker compose for full stack
-- Documentation for both workflows
+## Implementation Plan
 
-### 1.2 Management Commands
-Add operational commands to manage.py:
-```python
-python manage.py reindex_search  # Clear and rebuild Meilisearch index
-```
+### 1. Analyze Current Implementation
+- Find where the admin link is rendered in templates
+- Locate the login view/controller
+- Understand current redirect logic after login
 
-### 1.3 Docker Configuration
-**Dockerfile**:
-- Python 3.12 base image
-- Install dependencies from requirements.txt
-- Copy application code
-- Expose port 8000
+### 2. Capture Origin Context
+- Modify admin link to include a `next` parameter with current page URL
+- For post pages, enhance this to include post ID or direct edit URL
 
-**docker-compose.yml**:
-- Django app service
-- Meilisearch service (with master key)
-- Volume mounts for:
-  - Database file (persistent)
-  - Static files
-  - Media files (if any)
+### 3. Modify Login Flow
+- Update login view to preserve the `next` parameter
+- After successful login, check if `next` parameter contains a post reference
+- If it's a post page, transform redirect to go directly to edit screen
+- Otherwise, use standard redirect logic
 
-### 1.4 Environment Configuration
-**.env structure**:
-```
-# Database
-DATABASE_URL=sqlite:///db.sqlite3
+### 4. Handle Edge Cases
+- Ensure security: validate and sanitize redirect URLs
+- Handle cases where post might not exist or user lacks permissions
+- Fallback to default admin page if redirect fails
 
-# Meilisearch
-MEILISEARCH_URL=http://meilisearch:7700  # Docker service name
-MEILISEARCH_MASTER_KEY=your-key
-MEILISEARCH_INDEX_NAME=posts
+## Technical Details
 
-# Development overrides
-MEILISEARCH_URL=http://localhost:7700    # When running in venv
-```
+### URL Pattern Mapping
+- Post view URL: `/post/<id>` or similar
+- Post edit URL: `/admin/posts/<id>/edit` or Django admin pattern
+- Need to map from viewing URL to editing URL
 
-## Phase 2: Production Deployment
+### Security Considerations
+- Only allow redirects to same domain
+- Validate user has permission to edit the specific post
+- Sanitize any user-provided redirect URLs
 
-### 2.1 Platform Choice
-**Target**: EC2 instance with plain Ubuntu (no Bitnami)
-- Clean permissions
-- Standard Docker installation
-- Predictable environment
-
-### 2.2 Deployment Workflow
-**Code Updates**:
-```bash
-# On EC2 instance
-git pull
-docker-compose up --build -d
-```
-
-**Database Updates**:
-```bash
-# Local to EC2
-scp ./db.sqlite3 user@server:/app/db.sqlite3
-
-# On EC2
-docker-compose stop django
-docker-compose start django
-docker-compose exec django python manage.py reindex_search
-```
-
-### 2.3 Deployment Script
-Create `deploy.py` (Docker version):
-- **Option 1**: Deploy code (git pull + rebuild)
-- **Option 2**: Deploy database (scp + reindex)  
-- **Option 3**: Full deploy (both)
-- **Option 4**: Reindex search only
-- **Option 5**: View logs/status
-
-### 2.4 Server Setup (One-time)
-```bash
-# EC2 Ubuntu setup
-sudo apt update
-sudo apt install docker.io docker-compose git
-sudo usermod -aG docker ubuntu
-
-# Clone repo and set up
-git clone your-repo /app
-cd /app
-cp .env.example .env  # Edit with production values
-docker-compose up -d
-```
-
-## Phase 3: Operational Benefits
-
-### 3.1 Eliminated Problems
-- ❌ Permission conflicts between bitnami/www-data
-- ❌ systemd service configuration
-- ❌ Manual dependency management  
-- ❌ Server-specific environment issues
-- ❌ SSH debugging sessions
-
-### 3.2 New Capabilities
-- ✅ Consistent dev/prod environments
-- ✅ Easy rollbacks (`git checkout previous-commit && docker-compose up --build`)
-- ✅ Isolated services (Django, Meilisearch)
-- ✅ Simple scaling (add more containers)
-- ✅ Clear deployment process
-
-### 3.3 Development Workflow
-**Daily development** (PyCharm):
-```bash
-# Start Meilisearch only
-docker-compose up meilisearch -d
-# Run Django in venv for debugging
-python manage.py runserver
-```
-
-**Integration testing** (Docker):
-```bash
-# Full stack
-docker-compose up --build
-```
-
-**Production deployment**:
-```bash
-# Test locally first
-docker-compose up --build
-# Then deploy to server
-./deploy.py  # Option 1: Deploy code
-```
-
-## Implementation Order
-1. ✅ Create management command for search reindexing
-2. ✅ Create Dockerfile
-3. ✅ Create docker-compose.yml  
-4. ✅ Test hybrid development setup
-5. ✅ Create deployment script
-6. ✅ Test full workflow locally
-7. ✅ Deploy to clean EC2 instance
-8. ✅ Document the process
-
-## Success Criteria
-- App runs identically in venv and Docker
-- Deployment is single command
-- Database updates work reliably
-- Search reindexing works correctly
-- No more SSH debugging sessions
-- Server crashes don't require complex recovery
+## Testing Checklist
+- [ ] Admin link from homepage redirects to admin dashboard after login
+- [ ] Admin link from post page redirects to post edit screen after login
+- [ ] Invalid/malicious redirect URLs are handled safely
+- [ ] Users without edit permissions get appropriate error/redirect
+- [ ] Logout and re-login preserves intended redirect
