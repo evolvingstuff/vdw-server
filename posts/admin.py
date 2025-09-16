@@ -77,7 +77,7 @@ class RedactedOnlyFilter(SimpleListFilter):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ['title', 'status', 'redacted_indicator', 'live_link', 'created_date', 'modified_date']
+    list_display = ['title', 'status', 'chars_display', 'redacted_indicator', 'live_link', 'created_date_display', 'modified_date_display']
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ['title', 'content_md', 'meta_description']
     prepopulated_fields = {'slug': ('title',)}
@@ -155,6 +155,21 @@ class PostAdmin(admin.ModelAdmin):
         return format_html('<span style="color: #ccc;">—</span>')
     redacted_indicator.short_description = "Redacted"
     redacted_indicator.admin_order_field = 'redacted_count'
-    
+
+    def chars_display(self, obj):
+        return obj.character_count
+    chars_display.short_description = "Chars"
+    chars_display.admin_order_field = 'character_count'
+
+    def created_date_display(self, obj):
+        return obj.created_date.strftime('%B %d, %Y')
+    created_date_display.short_description = "Created Date"
+    created_date_display.admin_order_field = 'created_date'
+
+    def modified_date_display(self, obj):
+        return obj.modified_date.strftime('%B %d, %Y')
+    modified_date_display.short_description = "Modified Date"
+    modified_date_display.admin_order_field = 'modified_date'
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

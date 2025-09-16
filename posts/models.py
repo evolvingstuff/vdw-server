@@ -57,6 +57,7 @@ class Post(models.Model):
     front_matter = models.TextField(blank=True, null=True, editable=False, help_text="Original frontmatter JSON for debugging")
     original_tiki = models.TextField(blank=True, null=True, editable=False, help_text="Original Tiki wiki markup for reference")
     redacted_count = models.IntegerField(default=0, help_text="Number of censored sections from Tiki conversion")
+    character_count = models.IntegerField(default=0, help_text="Number of non-HTML characters in content")
     
     def save(self, *args, **kwargs):
         # Auto-generate slug if not provided
@@ -81,6 +82,9 @@ class Post(models.Model):
         # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text)
         self.content_text = text.strip()
+
+        # Calculate character count (non-HTML characters)
+        self.character_count = len(self.content_text)
         
         super().save(*args, **kwargs)
         
