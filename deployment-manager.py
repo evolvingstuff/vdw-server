@@ -535,7 +535,7 @@ def print_menu():
     print("2. Deploy Database (upload db + reindex search)")
     print("3. Full Deploy (upload code + upload db + reindex search)")
     print("4. Reindex Search (rebuild search index only)")
-    print("5. Troubleshoot / Show Status (server containers + logs)")
+    print("5. Troubleshoot Server / Show Status (server containers + logs)")
     print("6. Exit")
     print()
 
