@@ -113,7 +113,7 @@ class DockerDeployment:
                 
                 # Upload directories (posts, templates, static, etc.)
                 for dir_path in Path('.').iterdir():
-                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode']:
+                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode', 'data.ms']:
                         print(f"   Uploading directory {dir_path}...")
                         scp.put(str(dir_path), app_path, recursive=True)
             
@@ -532,10 +532,10 @@ def print_menu():
     print("Select deployment option:\n")
     print("0. Provision Server (initial setup: install Docker, upload code, configure)")
     print("1. Deploy Code (upload code + rebuild containers)")
-    print("2. Deploy Database (upload + reindex search)")
-    print("3. Full Deploy (code + database)")
+    print("2. Deploy Database (upload db + reindex search)")
+    print("3. Full Deploy (upload code + upload db + reindex search)")
     print("4. Reindex Search (rebuild search index only)")
-    print("5. Show Status (containers + logs)")
+    print("5. Troubleshoot / Show Status (server containers + logs)")
     print("6. Exit")
     print()
 

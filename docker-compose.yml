@@ -7,6 +7,7 @@ services:
       - ./db.sqlite3:/app/db.sqlite3
       - ./static:/app/static
     environment:
+      - RUNNING_IN_DOCKER=true
       - MEILISEARCH_URL=http://meilisearch:7700
       - MEILISEARCH_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
       - MEILISEARCH_INDEX_NAME=${MEILISEARCH_INDEX_NAME:-posts}

@@ -12,8 +12,8 @@ def main():
     if len(sys.argv) == 1:
         sys.argv.append('runserver')
 
-    # Check and start Meilisearch only when running the development server
-    if 'runserver' in sys.argv:
+    # Check and start Meilisearch only when running the development server locally (not in Docker)
+    if 'runserver' in sys.argv and not os.getenv('RUNNING_IN_DOCKER'):
         print("Checking for Meilisearch instance...")
         start_meilisearch()
 
