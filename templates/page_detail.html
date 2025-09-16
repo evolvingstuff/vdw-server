@@ -19,12 +19,6 @@
     <div class="markdown-content">
         {{ page.content_html|safe }}
     </div>
-
-    {% if user.is_staff %}
-        <div class="admin-links" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee; font-size: 14px;">
-            <a href="{% url 'admin:pages_page_change' page.pk %}" target="_blank">✏️ Edit Page</a>
-        </div>
-    {% endif %}
 </article>
 
 {% if not is_homepage %}
