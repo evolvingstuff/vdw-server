@@ -1,0 +1,35 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}{{ page.title }} - VDW Blog{% endblock %}
+
+{% block meta_description %}
+    {% if page.meta_description %}
+        {{ page.meta_description }}
+    {% else %}
+        {{ page.title }} - {{ page.content_text|truncatewords:30 }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<article class="page-content">
+    {% if not is_homepage %}
+        <h1>{{ page.title }}</h1>
+    {% endif %}
+
+    <div class="markdown-content">
+        {{ page.content_html|safe }}
+    </div>
+
+    {% if user.is_staff %}
+        <div class="admin-links" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee; font-size: 14px;">
+            <a href="{% url 'admin:pages_page_change' page.pk %}" target="_blank">✏️ Edit Page</a>
+        </div>
+    {% endif %}
+</article>
+
+{% if not is_homepage %}
+<nav style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
+    <a href="{% url 'homepage' %}">← Back to Home</a>
+</nav>
+{% endif %}
+{% endblock %}

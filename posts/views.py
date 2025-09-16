@@ -1,6 +1,6 @@
 import os
 import re
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -230,5 +230,7 @@ def upload_media(request):
         'filename': uploaded_file.name,
         'size': uploaded_file.size
     })
+
+
 
 

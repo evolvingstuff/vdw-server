@@ -415,11 +415,15 @@ body {
                 // For post pages, set next to current URL
                 // Middleware will handle transformation to edit URL
                 adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
-            } else if (currentPath !== '/') {
-                // For other pages, just preserve the current URL
+            } else if (currentPath === '/') {
+                // For homepage, set next to current URL
+                // Middleware will handle transformation to homepage edit URL
+                adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
+            } else {
+                // For other pages, preserve the current URL
+                // Middleware will handle transformation to page edit URL
                 adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
             }
-            // Homepage keeps default /admin/ link
         }
     });
 })();

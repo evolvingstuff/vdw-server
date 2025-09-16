@@ -1,8 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-import markdown2
-import re
+from core.models import ContentBase
 
 
 class Tag(models.Model):
@@ -21,20 +20,15 @@ class Tag(models.Model):
         ordering = ['name']
 
 
-class Post(models.Model):
+class Post(ContentBase):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('published', 'Published'),
     ]
-    
+
     # Core fields
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, max_length=200)
-    
-    # Content fields (cached for performance)
-    content_md = models.TextField(verbose_name="Content (Markdown)")
-    content_html = models.TextField(editable=False)
-    content_text = models.TextField(editable=False)
     
     # Metadata
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
@@ -57,7 +51,6 @@ class Post(models.Model):
     front_matter = models.TextField(blank=True, null=True, editable=False, help_text="Original frontmatter JSON for debugging")
     original_tiki = models.TextField(blank=True, null=True, editable=False, help_text="Original Tiki wiki markup for reference")
     redacted_count = models.IntegerField(default=0, help_text="Number of censored sections from Tiki conversion")
-    character_count = models.IntegerField(default=0, help_text="Number of non-HTML characters in content")
     
     def save(self, *args, **kwargs):
         # Auto-generate slug if not provided
@@ -69,25 +62,10 @@ class Post(models.Model):
             while Post.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
-        
-        # Process markdown to HTML
-        self.content_html = markdown2.markdown(
-            self.content_md,
-            extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
-        )
-        
-        # Extract plain text for search
-        # Remove HTML tags
-        text = re.sub(r'<[^>]+>', '', self.content_html)
-        # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text)
-        self.content_text = text.strip()
 
-        # Calculate character count (non-HTML characters)
-        self.character_count = len(self.content_text)
-        
+        # Call parent save (ContentBase) which handles markdown processing
         super().save(*args, **kwargs)
-        
+
         # Copy tags to derived_tags (for now, until ontology is implemented)
         if self.pk:  # Only if the post has been saved
             self.derived_tags.set(self.tags.all())
@@ -97,3 +75,4 @@ class Post(models.Model):
     
     class Meta:
         ordering = ['-created_date']
+

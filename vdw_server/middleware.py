@@ -2,11 +2,12 @@ import re
 from django.shortcuts import redirect
 from django.urls import reverse
 from posts.models import Post
+from pages.models import Page
 
 
 class AdminPostRedirectMiddleware:
     """
-    Middleware to transform post view URLs to edit URLs when accessing admin.
+    Middleware to transform post and page URLs to edit URLs when accessing admin.
     Handles both logged-in users and post-login redirects.
     """
     def __init__(self, get_response):
@@ -35,6 +36,31 @@ class AdminPostRedirectMiddleware:
                     # Post not found, redirect to admin home
                     return redirect(reverse('admin:index'))
 
+            # Check if it's the homepage
+            elif next_url == '/':
+                try:
+                    # Find the homepage and redirect to edit page
+                    homepage = Page.objects.get(page_type='homepage')
+                    edit_url = reverse('admin:pages_page_change', args=[homepage.pk])
+                    return redirect(edit_url)
+                except Page.DoesNotExist:
+                    # Homepage not found, redirect to admin home
+                    return redirect(reverse('admin:index'))
+
+            # Check if it's a page detail URL
+            else:
+                page_match = re.match(r'^/([^/]+)/$', next_url)
+                if page_match:
+                    slug = page_match.group(1)
+                    try:
+                        # Find the page and redirect to edit page
+                        page = Page.objects.get(slug=slug)
+                        edit_url = reverse('admin:pages_page_change', args=[page.pk])
+                        return redirect(edit_url)
+                    except Page.DoesNotExist:
+                        # Page not found, continue to default admin behavior
+                        pass
+
         response = self.get_response(request)
 
         # Also handle post-login redirects
@@ -59,5 +85,30 @@ class AdminPostRedirectMiddleware:
                 except Post.DoesNotExist:
                     # Post not found, redirect to admin home
                     return redirect(reverse('admin:index'))
+
+            # Check if it's the homepage
+            elif redirect_url == '/':
+                try:
+                    # Find the homepage and redirect to edit page
+                    homepage = Page.objects.get(page_type='homepage')
+                    edit_url = reverse('admin:pages_page_change', args=[homepage.pk])
+                    return redirect(edit_url)
+                except Page.DoesNotExist:
+                    # Homepage not found, redirect to admin home
+                    return redirect(reverse('admin:index'))
+
+            # Check if it's a page detail URL
+            else:
+                page_match = re.match(r'^/([^/]+)/$', redirect_url)
+                if page_match:
+                    slug = page_match.group(1)
+                    try:
+                        # Find the page and redirect to edit page
+                        page = Page.objects.get(slug=slug)
+                        edit_url = reverse('admin:pages_page_change', args=[page.pk])
+                        return redirect(edit_url)
+                    except Page.DoesNotExist:
+                        # Page not found, continue to default behavior
+                        pass
 
         return response

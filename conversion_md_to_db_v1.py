@@ -28,15 +28,39 @@ def setup_django():
     # Import Django components
     from django.core.management import execute_from_command_line
     from posts.models import Post, Tag
+    from pages.models import Page
     from django.utils import timezone
     from django.utils.text import slugify
-    
-    return execute_from_command_line, Post, Tag, timezone, slugify
+
+    return execute_from_command_line, Post, Tag, Page, timezone, slugify
 
 def run_migrations(execute_from_command_line):
     """Run Django migrations to create fresh database"""
     print("Running migrations to create fresh database...")
     execute_from_command_line(['manage.py', 'migrate'])
+
+
+def create_homepage(Page):
+    """Create initial homepage"""
+    homepage, created = Page.objects.get_or_create(
+        page_type='homepage',
+        defaults={
+            'title': 'Home',
+            'slug': 'home',
+            'content_md': '''# Home Page W.I.P.
+
+Welcome to VDW Blog
+
+[Browse All Posts →](/posts/)''',
+            'is_published': True,
+            'meta_description': 'Welcome to VDW Blog'
+        }
+    )
+
+    if created:
+        print("✅ Homepage created successfully")
+    else:
+        print("ℹ️  Homepage already exists")
 
 
 def create_superuser():
@@ -166,18 +190,21 @@ def main():
     delete_database()
     
     # Step 2: Setup Django AFTER database is deleted
-    execute_from_command_line, Post, Tag, timezone, slugify = setup_django()
+    execute_from_command_line, Post, Tag, Page, timezone, slugify = setup_django()
     
     # Step 3: Run migrations 
     run_migrations(execute_from_command_line)
     
     # Step 4: Create superuser
     create_superuser()
-    
-    # Step 5: Start MeiliSearch (restart it fresh to ensure clean state)
+
+    # Step 5: Create homepage
+    create_homepage(Page)
+
+    # Step 6: Start MeiliSearch (restart it fresh to ensure clean state)
     start_meilisearch()
-    
-    # Step 6: Find all markdown files
+
+    # Step 7: Find all markdown files
     posts_dir = Path('../vdw-posts/posts')
     posts_tiki_dir = Path('../vdw-posts/posts_tiki')
     markdown_files = list(posts_dir.glob('*.md'))
@@ -187,7 +214,7 @@ def main():
     
     print(f"Found {len(markdown_files)} markdown files to process")
     
-    # Step 7: Process each file
+    # Step 8: Process each file
     created_posts = 0
     used_slugs = set()  # Track slugs to avoid duplicates
     skipped_files = []  # Track files with no frontmatter
@@ -268,7 +295,7 @@ def main():
         for skipped_file in skipped_files:
             print(f"  - {skipped_file}")
     
-    # Step 8: Index all posts in MeiliSearch using management command
+    # Step 9: Index all posts in MeiliSearch using management command
     print(f"\nIndexing {created_posts} posts in MeiliSearch...")
     execute_from_command_line(['manage.py', 'reindex_search'])
     print("MeiliSearch indexing complete!")

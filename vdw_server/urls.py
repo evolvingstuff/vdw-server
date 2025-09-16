@@ -18,12 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from core.views import homepage
 from posts.views import preview_markdown, post_list, post_detail, upload_media
+from pages.views import homepage, page_detail
 from search.views import search_api
 
 urlpatterns = [
-    path('', homepage, name='homepage'),  # Root URL for homepage
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/upload-media/', upload_media, name='upload_media'),
     path('admin/', admin.site.urls),
@@ -32,6 +31,10 @@ urlpatterns = [
     path('posts/<slug:slug>/', post_detail, name='post_detail'),
     path('tags/', include('tags.urls')),  # Tags filtering
     path('markdownx/', include('markdownx.urls')),
+
+    # Page routes (must come last to avoid catching other URLs)
+    path('', homepage, name='homepage'),  # Homepage
+    path('<slug:slug>/', page_detail, name='page_detail'),  # Other pages
 ]
 
 if settings.DEBUG:
