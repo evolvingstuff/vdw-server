@@ -202,9 +202,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const inputWrapper = document.createElement('div');
         inputWrapper.className = 'markdown-input';
         
-        // Create preview pane wrapper
+        // Create preview pane wrapper (hidden in regular view)
         const previewWrapper = document.createElement('div');
         previewWrapper.className = 'markdown-preview-wrapper';
+        previewWrapper.style.display = 'none';  // Hide preview in regular view
         previewWrapper.innerHTML = '<div class="preview-label">Preview:</div><div class="markdown-preview markdown-content"></div>';
         
         // Create fullscreen overlay
@@ -344,17 +345,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Initial preview
-        updatePreview();
-        
-        // Update preview on input with debounce
-        const debouncedUpdate = debounce(updatePreview, 300);
+        // No initial preview in regular view (only in fullscreen)
+        // updatePreview();
+
+        // Update preview on input with debounce (only needed for fullscreen sync)
+        const debouncedUpdate = debounce(() => {
+            if (fullscreenOverlay.classList.contains('active')) {
+                updatePreview();
+            }
+        }, 300);
         const debouncedFullscreenUpdate = debounce(() => {
             syncFromFullscreen();
         }, 300);
-        
+
         contentField.addEventListener('input', debouncedUpdate);
-        contentField.addEventListener('change', updatePreview);
+        contentField.addEventListener('change', () => {
+            if (fullscreenOverlay.classList.contains('active')) {
+                updatePreview();
+            }
+        });
         
         fullscreenTextarea.addEventListener('input', debouncedFullscreenUpdate);
         fullscreenTextarea.addEventListener('change', () => {
