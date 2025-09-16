@@ -27,7 +27,8 @@ def setup_django():
     
     # Import Django components
     from django.core.management import execute_from_command_line
-    from posts.models import Post, Tag
+    from posts.models import Post
+    from tags.models import Tag
     from pages.models import Page
     from django.utils import timezone
     from django.utils.text import slugify

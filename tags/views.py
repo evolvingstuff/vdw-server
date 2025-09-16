@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from posts.models import Post, Tag
+from posts.models import Post
+from .models import Tag
 
 
 def tag_posts(request, tag_slug):
