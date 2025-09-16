@@ -232,8 +232,8 @@ def main():
         # Parse date
         created_date = parse_date(frontmatter['date'], timezone)
         
-        # Calculate redacted count from censored_sections (must exist)
-        redacted_count = len(frontmatter['censored_sections'])
+        # Calculate redacted count from sections_excluded (must exist)
+        redacted_count = len(frontmatter['sections_excluded'])
         
         # Create Post object
         post = Post.objects.create(
