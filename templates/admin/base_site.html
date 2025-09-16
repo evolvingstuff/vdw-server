@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
+    <span class="home-link"><a href="{% url 'homepage' %}">Back to site</a></span>
+</div>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+#site-name {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+#site-name .home-link a {
+    font-size: 0.875rem;
+    color: inherit;
+    text-decoration: underline;
+}
+#site-name .home-link a:focus,
+#site-name .home-link a:hover {
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
