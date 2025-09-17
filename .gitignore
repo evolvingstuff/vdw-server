@@ -5,4 +5,7 @@ db.sqlite3
 .env
 conversion/
 data.ms/*
+# Symlinked agents config
+AGENTS.md
+# Symlinked claude compatibility stub
 CLAUDE.md
