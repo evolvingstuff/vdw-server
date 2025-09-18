@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found · VDW Blog{% endblock %}
+
+{% block extra_css %}
+    .not-found {
+        margin-top: 6rem;
+        padding: 3rem;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #f9fbff, #eef3ff);
+        box-shadow: 0 20px 45px rgba(30, 60, 90, 0.12);
+        text-align: center;
+    }
+
+    .not-found__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1.5rem;
+        border-radius: 50%;
+        background: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+        font-size: 2.5rem;
+        box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.15);
+    }
+
+    .not-found__title {
+        margin: 0 0 0.75rem;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .not-found__lead {
+        margin: 0 auto 1.5rem;
+        max-width: 32ch;
+        font-size: 1.1rem;
+        color: #506070;
+    }
+
+    .not-found__actions {
+        display: inline-flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .not-found__actions a,
+    .not-found__actions button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.4rem;
+        border-radius: 999px;
+        border: none;
+        background: #3498db;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 12px 25px rgba(52, 152, 219, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        cursor: pointer;
+    }
+
+    .not-found__actions a:hover,
+    .not-found__actions button:hover {
+        transform: translateY(-1px);
+        background: #2c82c9;
+        box-shadow: 0 16px 30px rgba(44, 130, 201, 0.25);
+    }
+
+    .not-found__actions a.secondary {
+        background: white;
+        color: #3498db;
+        border: 1px solid rgba(52, 152, 219, 0.35);
+        box-shadow: none;
+    }
+
+    .not-found__actions a.secondary:hover {
+        background: rgba(52, 152, 219, 0.08);
+        color: #2c82c9;
+        box-shadow: none;
+    }
+
+    .not-found__search-hint {
+        margin-top: 2rem;
+        font-size: 0.95rem;
+        color: #708090;
+    }
+
+    @media (max-width: 600px) {
+        .not-found {
+            padding: 2.25rem 1.75rem;
+            margin-top: 4rem;
+        }
+
+        .not-found__title {
+            font-size: 2rem;
+        }
+
+        .not-found__lead {
+            font-size: 1rem;
+        }
+
+        .not-found__actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .not-found__actions a,
+        .not-found__actions button {
+            justify-content: center;
+            width: 100%;
+        }
+    }
+{% endblock %}
+
+{% block content %}
+    <section class="not-found" aria-labelledby="not-found-heading">
+        <div class="not-found__icon" aria-hidden="true">⌕</div>
+        <h1 id="not-found-heading" class="not-found__title">We couldn't find that page</h1>
+        <p class="not-found__lead">
+            Maybe the link is outdated or the page has moved. Try searching the site or head back to the homepage.
+        </p>
+        <div class="not-found__actions">
+            <a href="/" class="primary">Go to homepage</a>
+            <a href="/posts/" class="secondary">Browse latest posts</a>
+        </div>
+        <p class="not-found__search-hint">
+            Tip: The search bar above looks across posts and pages.
+        </p>
+    </section>
+{% endblock %}
