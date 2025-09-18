@@ -37,6 +37,34 @@ class DockerDeployment:
                 sys.exit(1)
         
         self.ssh_client = None
+
+    def check_git_branch(self):
+        """Check current git branch and warn if not on main"""
+        try:
+            result = subprocess.run(['git', 'branch', '--show-current'],
+                                  capture_output=True, text=True, cwd='.')
+            if result.returncode != 0:
+                print("⚠️  Could not determine git branch (not in a git repository?)")
+                return True  # Continue deployment if git check fails
+
+            current_branch = result.stdout.strip()
+            if current_branch != 'main':
+                print(f"\n⚠️  WARNING: You are on branch '{current_branch}', not 'main'")
+                print("   Deployment will upload your current local code regardless of branch.")
+                print("   Consider switching to 'main' or pushing your changes first.")
+
+                response = input(f"\n   Continue deploying from '{current_branch}'? (y/n): ").lower()
+                if response != 'y':
+                    print("❌ Deployment cancelled")
+                    return False
+
+                print(f"   Proceeding with deployment from '{current_branch}'...")
+
+            return True
+
+        except Exception as e:
+            print(f"⚠️  Git branch check failed: {e}")
+            return True  # Continue deployment if git check fails
     
     def connect(self):
         """Establish SSH connection"""
@@ -133,7 +161,11 @@ class DockerDeployment:
     def deploy_code(self):
         """Deploy code updates via SCP upload + docker rebuild"""
         print("\n🚀 Starting code deployment...")
-        
+
+        # Check git branch before deploying
+        if not self.check_git_branch():
+            return False
+
         if not self.connect():
             return False
         
@@ -261,7 +293,7 @@ class DockerDeployment:
     def deploy_full(self):
         """Deploy both code and database"""
         print("\n🎯 Starting full deployment...")
-        
+
         print("Step 1: Deploying code...")
         if not self.deploy_code():
             print("❌ Code deployment failed, aborting full deployment")
