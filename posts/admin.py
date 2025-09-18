@@ -34,7 +34,7 @@ class RedactedOnlyFilter(SimpleListFilter):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ['title', 'status', 'chars_display', 'redacted_indicator', 'live_link', 'created_date_display', 'modified_date_display']
+    list_display = ['title', 'status', 'chars_display', 'redacted_indicator', 'tags_count', 'live_link', 'created_date_display', 'modified_date_display']
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ['title', 'content_md', 'meta_description']
     prepopulated_fields = {'slug': ('title',)}
@@ -42,6 +42,12 @@ class PostAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_date'
     readonly_fields = ['live_link', 'tiki_markdown_comparison']
     
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        from django.db.models import Count
+        queryset = queryset.annotate(tags_count_annotation=Count('tags'))
+        return queryset.prefetch_related('tags')
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Content', {
@@ -127,6 +133,15 @@ class PostAdmin(admin.ModelAdmin):
         return obj.modified_date.strftime('%B %d, %Y')
     modified_date_display.short_description = "Modified Date"
     modified_date_display.admin_order_field = 'modified_date'
+
+    def tags_count(self, obj):
+        # Use the annotated count if available, otherwise fall back to counting
+        count = getattr(obj, 'tags_count_annotation', None) or obj.tags.count()
+        if count > 0:
+            return format_html('<span style="font-weight: bold;">{}</span>', count)
+        return format_html('<span style="color: #ccc;">—</span>')
+    tags_count.short_description = "Tags"
+    tags_count.admin_order_field = 'tags_count_annotation'
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
