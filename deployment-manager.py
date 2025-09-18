@@ -186,12 +186,22 @@ class DockerDeployment:
                 print(f"❌ Docker rebuild failed: {error}")
                 return False
             
+            # Run database migrations
+            print("🔄 Running database migrations...")
+            success, output, error = self.execute_command(
+                f"cd {app_path} && docker compose exec -T django python manage.py migrate"
+            )
+            if not success:
+                print(f"⚠️  Migration may have failed: {error}")
+            else:
+                print("✅ Migrations completed!")
+
             # Check container status
             print("🔍 Checking container status...")
             success, output, error = self.execute_command(
                 f"cd {app_path} && docker compose ps"
             )
-            
+
             print("✅ Code deployment completed successfully!")
             print(f"🌐 Site should be available at: http://{self.config['host']}:{self.config['django_port']}")
             return True
@@ -562,12 +572,12 @@ def print_menu():
     print(f"📁 App path: {os.getenv('DEPLOY_APP_PATH', '/app')}\n")
     
     print("Select deployment option:\n")
-    print("0. Provision Server (initial setup: install Docker, upload code, configure)")
-    print("1. Deploy Code (upload code + rebuild containers)")
-    print("2. Deploy Database (upload db + reindex search)")
-    print("3. Full Deploy (upload code + upload db + reindex search)")
-    print("4. Reindex Search (rebuild search index only)")
-    print("5. Troubleshoot Server / Show Status (server containers + logs)")
+    print("0. Provision Server (initial setup: install Docker, upload code, configure, creates empty db)")
+    print("1. Deploy Code from Local (upload code + retain db + run migrations + rebuild containers)")
+    print("2. Deploy Database from Local (retain code + upload db + reindex search)")
+    print("3. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
+    print("4. Reindex Search on Server")
+    print("5. Troubleshoot on Server")
     print("6. Exit")
     print()
 
