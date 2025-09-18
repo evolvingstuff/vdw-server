@@ -7,7 +7,7 @@
     <h1>{{ post.title }}</h1>
     
     <div class="post-meta">
-        Published on {{ post.created_date|date:"F d, Y" }}
+        Created {{ post.created_date|date:"F Y" }}
         {% if post.modified_date != post.created_date %}
             • Updated {{ post.modified_date|date:"F d, Y" }}
         {% endif %}
