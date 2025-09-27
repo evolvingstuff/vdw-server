@@ -36,7 +36,7 @@ class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
     list_display = ['title', 'status', 'chars_display', 'redacted_indicator', 'tags_count', 'live_link', 'created_date_display', 'modified_date_display']
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
-    search_fields = ['title', 'content_md', 'meta_description']
+    search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
@@ -145,4 +145,3 @@ class PostAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-
