@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -10,8 +11,8 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from .models import Post
-import markdown2
-import json
+
+from helper_functions.markdown import render_markdown
 
 
 def post_list(request):
@@ -110,10 +111,7 @@ def preview_markdown(request):
         markdown_text = data['markdown']  # Will crash if missing - good!
         
         # Use same markdown settings as the model
-        html = markdown2.markdown(
-            markdown_text,
-            extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
-        )
+        html = render_markdown(markdown_text)
         
         # Add file type icons to attachment links
         html = add_file_icons_to_html(html)
@@ -230,7 +228,5 @@ def upload_media(request):
         'filename': uploaded_file.name,
         'size': uploaded_file.size
     })
-
-
 
 

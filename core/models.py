@@ -1,6 +1,7 @@
 from django.db import models
-import markdown2
 import re
+
+from helper_functions.markdown import render_markdown
 
 
 class ContentBase(models.Model):
@@ -12,10 +13,7 @@ class ContentBase(models.Model):
 
     def save(self, *args, **kwargs):
         # Process markdown to HTML
-        self.content_html = markdown2.markdown(
-            self.content_md,
-            extras=['fenced-code-blocks', 'tables', 'strike', 'footnotes']
-        )
+        self.content_html = render_markdown(self.content_md)
 
         # Extract plain text for search
         # Remove HTML tags
