@@ -6,6 +6,11 @@ from typing import Iterable
 import markdown2
 
 
+BULLET_NUMBER_LITERAL_RE = re.compile(
+    r"(?m)^(?P<prefix>\s*[*+-]\s+)(?P<number>\d+)\.(?=\s|$)"
+)
+
+
 DEFAULT_MARKDOWN_EXTRAS: Iterable[str] = (
     'fenced-code-blocks',
     'tables',
@@ -49,6 +54,7 @@ URL_RE = re.compile(r'https?://[^\s<]+')
 
 def render_markdown(markdown_text: str) -> str:
     """Render Markdown with defaults and preserve original footnote numbers."""
+    markdown_text = _escape_literal_ordered_markers(markdown_text)
     html = markdown2.markdown(markdown_text, extras=DEFAULT_MARKDOWN_EXTRAS)
 
     if '[^' not in markdown_text:
@@ -153,6 +159,17 @@ def _autolink_urls(fragment: str) -> str:
 
     result.append(fragment[last_end:])
     return ''.join(result)
+
+
+def _escape_literal_ordered_markers(markdown_text: str) -> str:
+    """Prevent numeric bullets like "* 123." from becoming nested ordered lists."""
+
+    def replace(match: re.Match[str]) -> str:
+        prefix = match.group('prefix')
+        number = match.group('number')
+        return f'{prefix}{number}\.'
+
+    return BULLET_NUMBER_LITERAL_RE.sub(replace, markdown_text)
 
 
 __all__ = ['render_markdown']

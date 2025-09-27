@@ -89,3 +89,28 @@ Anchor[^6]
         html = render_markdown(markdown)
 
         self.assertEqual(html.count('href="https://example.com"'), 1)
+
+    def test_numeric_bullets_render_as_text(self) -> None:
+        markdown = """
+* 123. Literal value
+- 456. Another literal
+* 789. Third literal
+"""
+
+        html = render_markdown(markdown)
+
+        self.assertIn('<li>123. Literal value</li>', html)
+        self.assertIn('<li>456. Another literal</li>', html)
+        self.assertIn('<li>789. Third literal</li>', html)
+        self.assertNotIn('<ol start="123">', html)
+
+    def test_nested_ordered_list_still_supported(self) -> None:
+        markdown = """
+* Parent
+    1. Child
+"""
+
+        html = render_markdown(markdown)
+
+        self.assertIn('<ol>', html)
+        self.assertIn('<li>Child</li>', html)
