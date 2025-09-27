@@ -39,6 +39,13 @@ CONSECUTIVE_FOOTNOTE_REFS_RE = re.compile(
     r'</sup>(?=<sup class="footnote-ref")'
 )
 
+FOOTNOTE_BACKLINK_RE = re.compile(
+    r'(?:\s|&#160;)*<a[^>]*class="[^"]*footnoteBackLink[^"]*"[^>]*>.*?</a>',
+    re.DOTALL,
+)
+
+URL_RE = re.compile(r'https?://[^\s<]+')
+
 
 def render_markdown(markdown_text: str) -> str:
     """Render Markdown with defaults and preserve original footnote numbers."""
@@ -92,6 +99,8 @@ def _restore_definition_numbers(html: str) -> str:
             lambda m: f'{m.group(1)}{label}{m.group(2)}"',
             li_body,
         )
+        li_body = _remove_backlinks(li_body)
+        li_body = _autolink_urls(li_body)
         rebuilt_items.append(
             f'<li id="fn-{label}"{attrs} value="{label}">{li_body}</li>'
         )
@@ -107,6 +116,43 @@ def _restore_definition_numbers(html: str) -> str:
 def _space_consecutive_references(html: str) -> str:
     """Ensure consecutive footnote references are visually separated."""
     return CONSECUTIVE_FOOTNOTE_REFS_RE.sub('</sup>&nbsp;', html)
+
+
+def _remove_backlinks(fragment: str) -> str:
+    """Strip footnote backlink anchors from a definition fragment."""
+    return FOOTNOTE_BACKLINK_RE.sub('', fragment)
+
+
+def _autolink_urls(fragment: str) -> str:
+    """Wrap bare HTTP(S) URLs in anchor tags without touching existing links."""
+
+    def should_link(prefix: str) -> bool:
+        last_lt = prefix.rfind('<')
+        last_gt = prefix.rfind('>')
+        if last_lt > last_gt:
+            # Inside an HTML tag/attribute
+            return False
+        last_open_anchor = prefix.rfind('<a')
+        if last_open_anchor != -1:
+            last_close_anchor = prefix.rfind('</a>')
+            if last_close_anchor < last_open_anchor:
+                return False
+        return True
+
+    result: list[str] = []
+    last_end = 0
+    for match in URL_RE.finditer(fragment):
+        start, end = match.span()
+        url = match.group(0)
+        result.append(fragment[last_end:start])
+        if should_link(fragment[:start]):
+            result.append(f'<a href="{url}">{url}</a>')
+        else:
+            result.append(url)
+        last_end = end
+
+    result.append(fragment[last_end:])
+    return ''.join(result)
 
 
 __all__ = ['render_markdown']

@@ -42,7 +42,7 @@ Repeat[^3] footnote[^3].
 
         self.assertEqual(html.count('href="#fn-3">3</a>'), 2)
         self.assertEqual(html.count('<li id="fn-3" value="3">'), 1)
-        self.assertIn('Jump back to footnote 3', html)
+        self.assertNotIn('footnoteBackLink', html)
 
     def test_consecutive_references_get_space(self) -> None:
         markdown = """
@@ -55,3 +55,37 @@ Combo[^4][^7]
         html = render_markdown(markdown)
 
         self.assertIn('</sup>&nbsp;<sup class="footnote-ref" id="fnref-7">', html)
+
+    def test_backlink_removed_from_footnote(self) -> None:
+        markdown = """
+Link[^2]
+
+[^2]: Example reference
+"""
+
+        html = render_markdown(markdown)
+
+        self.assertNotIn('footnoteBackLink', html)
+        self.assertNotIn('&#8617;', html)
+
+    def test_autolinks_plain_http_urls(self) -> None:
+        markdown = """
+Links[^5]
+
+[^5]: Visit https://example.com/path for more info.
+"""
+
+        html = render_markdown(markdown)
+
+        self.assertIn('<a href="https://example.com/path">https://example.com/path</a>', html)
+
+    def test_does_not_wrap_existing_anchor(self) -> None:
+        markdown = """
+Anchor[^6]
+
+[^6]: <a href="https://example.com">https://example.com</a>
+"""
+
+        html = render_markdown(markdown)
+
+        self.assertEqual(html.count('href="https://example.com"'), 1)
