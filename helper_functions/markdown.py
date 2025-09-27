@@ -1,0 +1,112 @@
+"""Markdown rendering helpers with preserved footnote numbers."""
+
+import re
+from typing import Iterable
+
+import markdown2
+
+
+DEFAULT_MARKDOWN_EXTRAS: Iterable[str] = (
+    'fenced-code-blocks',
+    'tables',
+    'strike',
+    'footnotes',
+)
+
+FOOTNOTE_REF_RE = re.compile(
+    r'<sup class="footnote-ref" id="fnref-(?P<label>\d+)">'  # noqa: E501
+    r'<a href="#fn-\d+"(?P<attrs>[^>]*)>(?P<number>\d+)</a>'
+    r'</sup>'
+)
+
+FOOTNOTE_BLOCK_RE = re.compile(
+    r'(<div class="footnotes">\s*<hr />\s*<ol>)'
+    r'(?P<body>.*?)'
+    r'(</ol>\s*</div>)',
+    re.DOTALL,
+)
+
+FOOTNOTE_LI_RE = re.compile(
+    r'<li id="fn-(?P<label>\d+)"(?P<attrs>[^>]*)>(?P<body>.*?)</li>',
+    re.DOTALL,
+)
+
+BACKLINK_TITLE_RE = re.compile(
+    r'(title="Jump back to footnote )\d+( in the text\.)"'
+)
+
+CONSECUTIVE_FOOTNOTE_REFS_RE = re.compile(
+    r'</sup>(?=<sup class="footnote-ref")'
+)
+
+
+def render_markdown(markdown_text: str) -> str:
+    """Render Markdown with defaults and preserve original footnote numbers."""
+    html = markdown2.markdown(markdown_text, extras=DEFAULT_MARKDOWN_EXTRAS)
+
+    if '[^' not in markdown_text:
+        # Fast path when no footnotes are present
+        return html
+
+    html = _restore_inline_footnote_numbers(html)
+    html = _restore_definition_numbers(html)
+    html = _space_consecutive_references(html)
+    return html
+
+
+def _restore_inline_footnote_numbers(html: str) -> str:
+    """Replace sequential footnote reference numbers with their original labels."""
+
+    def replace(match: re.Match[str]) -> str:
+        label = match.group('label')
+        attrs = match.group('attrs')
+        return (
+            f'<sup class="footnote-ref" id="fnref-{label}">'  # noqa: E501
+            f'<a href="#fn-{label}"{attrs}>{label}</a>'
+            '</sup>'
+        )
+
+    return FOOTNOTE_REF_RE.sub(replace, html)
+
+
+def _restore_definition_numbers(html: str) -> str:
+    """Ensure footnote definitions keep original numbers and remove duplicates."""
+    match = FOOTNOTE_BLOCK_RE.search(html)
+    if not match:
+        return html
+
+    body = match.group('body')
+    seen_labels: set[str] = set()
+    rebuilt_items: list[str] = []
+
+    for li_match in FOOTNOTE_LI_RE.finditer(body):
+        label = li_match.group('label')
+        if label in seen_labels:
+            continue
+        seen_labels.add(label)
+        attrs = li_match.group('attrs')
+        # Remove existing value attribute to avoid duplication
+        attrs = re.sub(r'\svalue="\d+"', '', attrs)
+        li_body = li_match.group('body')
+        li_body = BACKLINK_TITLE_RE.sub(
+            lambda m: f'{m.group(1)}{label}{m.group(2)}"',
+            li_body,
+        )
+        rebuilt_items.append(
+            f'<li id="fn-{label}"{attrs} value="{label}">{li_body}</li>'
+        )
+
+    rebuilt_body = ''.join(rebuilt_items)
+    return (
+        html[: match.start('body')]
+        + rebuilt_body
+        + html[match.end('body') :]
+    )
+
+
+def _space_consecutive_references(html: str) -> str:
+    """Ensure consecutive footnote references are visually separated."""
+    return CONSECUTIVE_FOOTNOTE_REFS_RE.sub('</sup>&nbsp;', html)
+
+
+__all__ = ['render_markdown']
