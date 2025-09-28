@@ -4,6 +4,7 @@ db.sqlite3
 **/*.pyc
 .env
 conversion/
+logs/
 data.ms/*
 # Symlinked agents config
 AGENTS.md

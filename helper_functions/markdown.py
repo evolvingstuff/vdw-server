@@ -167,7 +167,7 @@ def _escape_literal_ordered_markers(markdown_text: str) -> str:
     def replace(match: re.Match[str]) -> str:
         prefix = match.group('prefix')
         number = match.group('number')
-        return f'{prefix}{number}\.'
+        return f'{prefix}{number}' + r'\.'
 
     return BULLET_NUMBER_LITERAL_RE.sub(replace, markdown_text)
 
