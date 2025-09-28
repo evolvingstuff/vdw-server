@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import time
+import shlex
 from pathlib import Path
 from dotenv import load_dotenv
 import paramiko
@@ -129,8 +130,19 @@ class DockerDeployment:
         print("📤 Uploading application code...")
         
         app_path = self.config['app_path']
-        
+        remote_app_path = shlex.quote(app_path)
+        remote_user = shlex.quote(self.config['user'])
+        ensure_cmd = (
+            f"sudo mkdir -p {remote_app_path} && "
+            f"sudo chown {remote_user}:{remote_user} {remote_app_path}"
+        )
+
         try:
+            success, output, error = self.execute_command(ensure_cmd)
+            if not success:
+                print(f"❌ Failed to prepare remote app directory: {error}")
+                return False
+
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 # Upload all important files
                 for pattern in ['*.py', '*.txt', '*.yml', '*.yaml', 'Dockerfile', '.dockerignore']:
@@ -235,33 +247,50 @@ class DockerDeployment:
         
         try:
             app_path = self.config['app_path']
-            
+            remote_app_path = shlex.quote(app_path)
+            remote_tmp = f"/home/{self.config['user']}/db.sqlite3.upload"
+            remote_tmp_q = shlex.quote(remote_tmp)
+            remote_db_path = f"{app_path}/db.sqlite3"
+            remote_db_path_q = shlex.quote(remote_db_path)
+
             # Stop Django container to avoid database locks
             print("🛑 Stopping Django container...")
-            self.execute_command(f"cd {app_path} && docker compose stop django")
-            
-            # Remove existing database file/directory
+            self.execute_command(f"cd {remote_app_path} && docker compose stop django")
+
+            # Clean up any previous uploads and remove existing mount target
             print("📤 Uploading database...")
-            self.execute_command(f"sudo rm -rf {app_path}/db.sqlite3")
-            
+            self.execute_command(f"rm -f {remote_tmp_q}")
+            success, output, error = self.execute_command(f"sudo rm -rf {remote_db_path_q}")
+            if not success:
+                print(f"❌ Failed to remove existing database: {error}")
+                return False
+
             with SCPClient(self.ssh_client.get_transport()) as scp:
-                scp.put(str(local_db), f"{app_path}/db.sqlite3")
+                scp.put(str(local_db), remote_tmp)
+
+            # Move uploaded file into place atomically
+            success, output, error = self.execute_command(f"sudo mv {remote_tmp_q} {remote_db_path_q}")
+            if not success:
+                print(f"❌ Failed to move uploaded database into place: {error}")
+                self.execute_command(f"rm -f {remote_tmp_q}")
+                return False
+
             print("✅ Database uploaded successfully!")
-            
+
             # Fix database permissions for Docker container (root access)
             print("🔧 Setting database permissions...")
-            success, output, error = self.execute_command(f"sudo chown root:root {app_path}/db.sqlite3")
+            success, output, error = self.execute_command(f"sudo chown root:root {remote_db_path_q}")
             if not success:
                 print(f"❌ Failed to set database ownership: {error}")
                 return False
             
-            success, output, error = self.execute_command(f"sudo chmod 644 {app_path}/db.sqlite3")
+            success, output, error = self.execute_command(f"sudo chmod 644 {remote_db_path_q}")
             if not success:
                 print(f"❌ Failed to set database permissions: {error}")
                 return False
             
             # Fix directory permissions so SQLite can create temp files  
-            success, output, error = self.execute_command(f"sudo chown root:root {app_path}")
+            success, output, error = self.execute_command(f"sudo chown root:root {remote_app_path}")
             if not success:
                 print(f"❌ Failed to set directory ownership: {error}")
                 return False
