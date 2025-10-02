@@ -254,7 +254,12 @@ def main():
             all_tags.extend(frontmatter['tags'])
         if 'categories' in frontmatter:
             all_tags.extend(frontmatter['categories'])
-        
+
+        admin_tag_present = any(
+            isinstance(tag_name, str) and tag_name.strip().lower() == 'admin only'
+            for tag_name in all_tags
+        )
+
         tags = process_tags(all_tags, Tag, slugify, used_slugs)
         
         # Parse date
@@ -268,7 +273,7 @@ def main():
             title=frontmatter['title'],
             slug=frontmatter['slug'],
             content_md=markdown_content,
-            status='published',
+            status='draft' if admin_tag_present else 'published',
             created_date=created_date,
             modified_date=created_date,  # Set modified_date to same as created_date
             original_page_id=frontmatter.get('tiki_page_id'),
