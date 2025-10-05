@@ -185,6 +185,115 @@
     </main>
 
     <!-- Additional JavaScript can be added by child templates -->
+    <script>
+    (function() {
+        const urlCheckPattern = /(https?:\/\/[^\s<>'"]+)/;
+
+        function shouldSkipNode(textNode) {
+            const parent = textNode.parentElement;
+            if (!parent) return true;
+            if (parent.closest('a, script, style, textarea, code, pre')) return true;
+
+            return !urlCheckPattern.test(textNode.nodeValue || '');
+        }
+
+        function linkifyTextNode(textNode) {
+            const text = textNode.nodeValue;
+            if (!text) return;
+
+            const urlPattern = /(https?:\/\/[^\s<>'"]+)/g;
+            const fragment = document.createDocumentFragment();
+            let lastIndex = 0;
+            let match;
+
+            while ((match = urlPattern.exec(text)) !== null) {
+                const matchText = match[0];
+                const index = match.index;
+
+                if (index > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+                }
+
+                let url = matchText;
+                const trailingParts = [];
+
+                while (/[.,!?;:]$/.test(url)) {
+                    trailingParts.unshift(url.slice(-1));
+                    url = url.slice(0, -1);
+                }
+
+                if (url.endsWith(')')) {
+                    const opens = (url.match(/\(/g) || []).length;
+                    const closes = (url.match(/\)/g) || []).length;
+                    if (closes > opens) {
+                        trailingParts.unshift(')');
+                        url = url.slice(0, -1);
+                    }
+                }
+
+                if (url.endsWith(']')) {
+                    const opens = (url.match(/\[/g) || []).length;
+                    const closes = (url.match(/\]/g) || []).length;
+                    if (closes > opens) {
+                        trailingParts.unshift(']');
+                        url = url.slice(0, -1);
+                    }
+                }
+
+                if (url.endsWith('}')) {
+                    const opens = (url.match(/\{/g) || []).length;
+                    const closes = (url.match(/\}/g) || []).length;
+                    if (closes > opens) {
+                        trailingParts.unshift('}');
+                        url = url.slice(0, -1);
+                    }
+                }
+
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.textContent = url;
+                fragment.appendChild(anchor);
+
+                if (trailingParts.length) {
+                    fragment.appendChild(document.createTextNode(trailingParts.join('')));
+                }
+
+                lastIndex = index + matchText.length;
+            }
+
+            if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+
+            if (textNode.parentNode) {
+                textNode.parentNode.replaceChild(fragment, textNode);
+            }
+        }
+
+        function linkifyUrls() {
+            if (!document.body) return;
+
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+
+            while (walker.nextNode()) {
+                nodes.push(walker.currentNode);
+            }
+
+            nodes.forEach((node) => {
+                if (!shouldSkipNode(node)) {
+                    linkifyTextNode(node);
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', linkifyUrls);
+        } else {
+            linkifyUrls();
+        }
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
