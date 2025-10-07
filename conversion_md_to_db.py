@@ -179,10 +179,33 @@ def process_tags(tag_names, Tag, slugify, used_slugs):
     return tags
 
 def parse_date(date_string, timezone):
-    """Parse date string to Django datetime"""
-    # Assuming format like "2019-10-02"
-    dt = datetime.strptime(date_string, '%Y-%m-%d')
-    return timezone.make_aware(dt)
+    """Parse ISO-ish date strings into timezone-aware datetimes."""
+    if not date_string:
+        raise ValueError("Date string is required")
+
+    value = date_string.strip()
+
+    # Support both simple YYYY-MM-DD and fuller ISO 8601 strings.
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        try:
+            dt = datetime.strptime(value, '%Y-%m-%d')
+        except ValueError as exc:
+            raise ValueError(f"Unsupported date format: {value}") from exc
+
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt)
+
+    return dt.astimezone(timezone.get_current_timezone())
+
+
+def get_created_and_modified_dates(frontmatter, timezone):
+    """Return created/modified datetimes derived from frontmatter."""
+    created = parse_date(frontmatter['date'], timezone)
+    last_modified_raw = frontmatter.get('lastmod')
+    modified = parse_date(last_modified_raw, timezone) if last_modified_raw else created
+    return created, modified
 
 def main():
     print("Starting markdown to database conversion...")
@@ -262,8 +285,8 @@ def main():
 
         tags = process_tags(all_tags, Tag, slugify, used_slugs)
         
-        # Parse date
-        created_date = parse_date(frontmatter['date'], timezone)
+        # Parse dates from frontmatter
+        created_date, modified_date = get_created_and_modified_dates(frontmatter, timezone)
         
         # Calculate redacted count from sections_excluded (must exist)
         redacted_count = len(frontmatter['sections_excluded'])
@@ -275,7 +298,7 @@ def main():
             content_md=markdown_content,
             status='draft' if admin_tag_present else 'published',
             created_date=created_date,
-            modified_date=created_date,  # Set modified_date to same as created_date
+            modified_date=modified_date,
             original_page_id=frontmatter.get('tiki_page_id'),
             original_tiki=tiki_content,
             aliases='\n'.join(frontmatter.get('aliases', [])),
@@ -287,8 +310,8 @@ def main():
         post.tags.set(tags)
         
         # Fix modified_date after tags are set (tags.set() triggers another save)
-        # Use direct database update to bypass auto_now=True
-        Post.objects.filter(pk=post.pk).update(modified_date=created_date)
+        # Use direct database update to bypass auto_now=True so we preserve frontmatter lastmod
+        Post.objects.filter(pk=post.pk).update(modified_date=modified_date)
         
         created_posts += 1
     
