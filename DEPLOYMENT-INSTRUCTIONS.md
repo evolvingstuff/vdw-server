@@ -41,7 +41,7 @@ AWS_STORAGE_BUCKET_NAME=your-bucket
 # Meilisearch Configuration
 MEILISEARCH_URL=http://localhost:7700
 MEILISEARCH_MASTER_KEY=your_master_key
-MEILISEARCH_INDEX_NAME=posts
+MEILISEARCH_INDEX_NAME=pages
 ```
 
 ### Step 3: Deploy to Server
@@ -139,7 +139,7 @@ The deployment-manager.py script provides an interactive menu with these options
 ### Code Deployment Process
 1. Connects to server via SSH
 2. Uploads all Python files, requirements, Docker configs
-3. Uploads application directories (posts, templates, static, etc.)
+3. Uploads application directories (pages, templates, static, etc.)
 4. Excludes: .git, __pycache__, .env, db.sqlite3, venv
 5. Rebuilds and restarts Docker containers
 

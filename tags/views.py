@@ -1,23 +1,23 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from posts.models import Post
+from pages.models import Page
 from .models import Tag
 
 
-def tag_posts(request, tag_slug):
-    """Display all posts with a specific tag"""
+def tag_pages(request, tag_slug):
+    """Display all pages with a specific tag"""
     tag = get_object_or_404(Tag, slug=tag_slug)
-    posts_list = Post.objects.filter(
-        tags=tag, 
+    pages_list = Page.objects.filter(
+        tags=tag,
         status='published'
     ).order_by('-created_date')
-    
-    # Add pagination - 20 posts per page (same as All Posts)
-    paginator = Paginator(posts_list, 20)
+
+    # Add pagination - 20 pages per page (same as All Pages)
+    paginator = Paginator(pages_list, 20)
     page_number = request.GET.get('page')
-    posts = paginator.get_page(page_number)
-    
-    return render(request, 'tags/tag_posts.html', {
+    pages = paginator.get_page(page_number)
+
+    return render(request, 'tags/tag_pages.html', {
         'tag': tag,
-        'posts': posts
+        'pages': pages
     })

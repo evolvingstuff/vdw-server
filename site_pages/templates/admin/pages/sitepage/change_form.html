@@ -1,0 +1,641 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Make the submit row sticky */
+    .submit-row {
+        position: sticky;
+        position: -webkit-sticky;
+        bottom: 0;
+        background: #f8f8f8;
+        border-top: 2px solid #ddd;
+        padding: 10px !important;
+        margin: 0 -20px -20px -20px !important;
+        z-index: 1000;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Ensure proper button styling in sticky row */
+    .submit-row input[type="submit"] {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'pages/css/markdown-content.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'pages/css/markdown-hacks.css' %}">
+<style>
+    /* Normal stacked view */
+    .markdown-editor-container {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .markdown-input {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .markdown-preview-wrapper {
+        width: 100%;
+    }
+
+    .markdown-preview {
+        width: 100%;
+        min-height: 300px;
+        max-height: 600px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        background: white;
+        overflow-y: auto;
+        border-radius: 4px;
+    }
+
+    .field-content_md .vLargeTextField {
+        width: 100% !important;
+        min-height: 500px;
+        font-family: 'Courier New', monospace;
+        resize: vertical;
+    }
+
+    .preview-label {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .preview-loading {
+        color: #999;
+        font-style: italic;
+    }
+
+    /* Fullscreen editor button */
+    .fullscreen-btn {
+        display: block;
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .fullscreen-btn:hover {
+        background: #205067;
+    }
+
+    /* Fullscreen overlay */
+    .fullscreen-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #f8f8f8;
+        z-index: 10000;
+        padding: 20px;
+    }
+
+    .fullscreen-overlay.active {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fullscreen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .fullscreen-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .fullscreen-close {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .fullscreen-close:hover {
+        background: #c82333;
+    }
+
+    .fullscreen-save-close {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 10px;
+    }
+
+    .fullscreen-save-close:hover {
+        background: #218838;
+    }
+
+    .fullscreen-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Confirmation modal */
+    .confirm-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10001;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .confirm-modal.active {
+        display: flex;
+    }
+
+    .confirm-modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+    }
+
+    .confirm-modal-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .confirm-modal-message {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .confirm-modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .confirm-modal-buttons button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .confirm-save-btn {
+        background: #28a745;
+        color: white;
+    }
+
+    .confirm-save-btn:hover {
+        background: #218838;
+    }
+
+    .confirm-discard-btn {
+        background: #dc3545;
+        color: white;
+    }
+
+    .confirm-discard-btn:hover {
+        background: #c82333;
+    }
+
+    .confirm-cancel-btn {
+        background: #6c757d;
+        color: white;
+    }
+
+    .confirm-cancel-btn:hover {
+        background: #5a6268;
+    }
+
+    .fullscreen-content {
+        display: flex;
+        gap: 20px;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .fullscreen-editor {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .fullscreen-editor textarea {
+        width: 100%;
+        height: 100%;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: none;
+    }
+
+    .fullscreen-preview-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .fullscreen-preview {
+        flex: 1;
+        border: 1px solid #ddd;
+        padding: 15px;
+        background: white;
+        overflow-y: auto;
+        border-radius: 4px;
+    }
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentField = document.querySelector('#id_content_md');
+
+    if (contentField) {
+        // Store original parent before any DOM manipulation
+        const originalParent = contentField.parentNode;
+
+        // Create preview container (stacked layout)
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'markdown-editor-container';
+
+        // Create fullscreen button
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.type = 'button';
+        fullscreenBtn.className = 'fullscreen-btn';
+        fullscreenBtn.textContent = '⛶ Fullscreen Editor';
+
+        // Wrap the textarea
+        const inputWrapper = document.createElement('div');
+        inputWrapper.className = 'markdown-input';
+
+        // Create preview pane wrapper (hidden in regular view)
+        const previewWrapper = document.createElement('div');
+        previewWrapper.className = 'markdown-preview-wrapper';
+        previewWrapper.style.display = 'none';  // Hide preview in regular view
+        previewWrapper.innerHTML = '<div class="preview-label">Preview:</div><div class="markdown-preview markdown-content"></div>';
+
+        // Create fullscreen overlay
+        const fullscreenOverlay = document.createElement('div');
+        fullscreenOverlay.className = 'fullscreen-overlay';
+        fullscreenOverlay.innerHTML = `
+            <div class="fullscreen-header">
+                <div class="fullscreen-title">Markdown Editor - Fullscreen Mode</div>
+                <div class="fullscreen-buttons">
+                    <button type="button" class="fullscreen-save-close">💾 Save and Close</button>
+                    <button type="button" class="fullscreen-close">✕ Close</button>
+                </div>
+            </div>
+            <div class="fullscreen-content">
+                <div class="fullscreen-editor">
+                    <div class="preview-label">Editor:</div>
+                    <textarea class="fullscreen-textarea"></textarea>
+                </div>
+                <div class="fullscreen-preview-container">
+                    <div class="preview-label">Preview:</div>
+                    <div class="fullscreen-preview markdown-content"></div>
+                </div>
+            </div>
+        `;
+
+        // Create confirmation modal
+        const confirmModal = document.createElement('div');
+        confirmModal.className = 'confirm-modal';
+        confirmModal.innerHTML = `
+            <div class="confirm-modal-content">
+                <div class="confirm-modal-title">Unsaved Changes</div>
+                <div class="confirm-modal-message">You have unsaved changes. What would you like to do?</div>
+                <div class="confirm-modal-buttons">
+                    <button type="button" class="confirm-save-btn">Save and Close</button>
+                    <button type="button" class="confirm-discard-btn">Discard Changes</button>
+                    <button type="button" class="confirm-cancel-btn">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        // Insert container where the contentField currently is
+        originalParent.insertBefore(previewContainer, contentField);
+
+        // Build the structure
+        inputWrapper.appendChild(fullscreenBtn);
+        inputWrapper.appendChild(contentField);
+        previewContainer.appendChild(inputWrapper);
+        previewContainer.appendChild(previewWrapper);
+
+        // Add fullscreen overlay and modal to body
+        document.body.appendChild(fullscreenOverlay);
+        document.body.appendChild(confirmModal);
+
+        const preview = previewWrapper.querySelector('.markdown-preview');
+        const fullscreenTextarea = fullscreenOverlay.querySelector('.fullscreen-textarea');
+        const fullscreenPreview = fullscreenOverlay.querySelector('.fullscreen-preview');
+        const fullscreenClose = fullscreenOverlay.querySelector('.fullscreen-close');
+        const fullscreenSaveClose = fullscreenOverlay.querySelector('.fullscreen-save-close');
+
+        // Modal elements
+        const confirmSaveBtn = confirmModal.querySelector('.confirm-save-btn');
+        const confirmDiscardBtn = confirmModal.querySelector('.confirm-discard-btn');
+        const confirmCancelBtn = confirmModal.querySelector('.confirm-cancel-btn');
+
+        // Debounce function
+        let debounceTimer;
+        function debounce(func, delay) {
+            return function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(func, delay);
+            };
+        }
+
+        // Get CSRF token from Django's form
+        function getCSRFToken() {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            return csrfInput ? csrfInput.value : '';
+        }
+
+        // Update preview function (works for both normal and fullscreen)
+        function updatePreview(targetPreview) {
+            const markdownText = contentField.value;
+            const previewElement = targetPreview || preview;
+
+            if (!markdownText) {
+                previewElement.innerHTML = '<em style="color: #999;">Preview will appear here...</em>';
+                if (targetPreview === fullscreenPreview) {
+                    preview.innerHTML = '<em style="color: #999;">Preview will appear here...</em>';
+                }
+                return;
+            }
+
+            previewElement.innerHTML = '<span class="preview-loading">Updating preview...</span>';
+
+            fetch('/admin/preview-markdown/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ markdown: markdownText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    previewElement.innerHTML = data.html;
+                    // Update both previews if in fullscreen mode
+                    if (fullscreenOverlay.classList.contains('active')) {
+                        if (targetPreview === fullscreenPreview) {
+                            preview.innerHTML = data.html;
+                        } else {
+                            fullscreenPreview.innerHTML = data.html;
+                        }
+                    }
+                } else if (data.error) {
+                    previewElement.innerHTML = '<em style="color: red;">Error: ' + data.error + '</em>';
+                }
+            })
+            .catch(error => {
+                console.error('Preview error:', error);
+                previewElement.innerHTML = '<em style="color: red;">Failed to update preview</em>';
+            });
+        }
+
+        // Track if content has changed
+        let originalContent = '';
+
+        // Fullscreen toggle functions
+        function openFullscreen() {
+            fullscreenOverlay.classList.add('active');
+            fullscreenTextarea.value = contentField.value;
+            originalContent = contentField.value;  // Store original content
+            updatePreview(fullscreenPreview);
+            fullscreenTextarea.focus();
+        }
+
+        function closeFullscreen() {
+            fullscreenOverlay.classList.remove('active');
+            contentField.value = fullscreenTextarea.value;
+            updatePreview(preview);
+            contentField.focus();
+        }
+
+        function saveAndClose() {
+            // Sync content and trigger save
+            contentField.value = fullscreenTextarea.value;
+            closeFullscreen();
+
+            // Find and click the save button
+            const saveButton = document.querySelector('input[name="_save"]');
+            if (saveButton) {
+                saveButton.click();
+            }
+        }
+
+        function hasUnsavedChanges() {
+            return fullscreenTextarea.value !== originalContent;
+        }
+
+        function showConfirmModal() {
+            if (hasUnsavedChanges()) {
+                confirmModal.classList.add('active');
+            } else {
+                closeFullscreen();
+            }
+        }
+
+        function hideConfirmModal() {
+            confirmModal.classList.remove('active');
+        }
+
+        // Sync content between normal and fullscreen editors
+        function syncToFullscreen() {
+            if (fullscreenOverlay.classList.contains('active')) {
+                fullscreenTextarea.value = contentField.value;
+                updatePreview(fullscreenPreview);
+            }
+        }
+
+        function syncFromFullscreen() {
+            contentField.value = fullscreenTextarea.value;
+            updatePreview(preview);
+        }
+
+        // Event listeners
+        fullscreenBtn.addEventListener('click', openFullscreen);
+        fullscreenClose.addEventListener('click', showConfirmModal);
+        fullscreenSaveClose.addEventListener('click', saveAndClose);
+
+        // Modal button handlers
+        confirmSaveBtn.addEventListener('click', function() {
+            hideConfirmModal();
+            saveAndClose();
+        });
+
+        confirmDiscardBtn.addEventListener('click', function() {
+            hideConfirmModal();
+            fullscreenTextarea.value = originalContent;  // Restore original content
+            closeFullscreen();
+        });
+
+        confirmCancelBtn.addEventListener('click', function() {
+            hideConfirmModal();
+        });
+
+        // ESC key to close fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (confirmModal.classList.contains('active')) {
+                    hideConfirmModal();
+                } else if (fullscreenOverlay.classList.contains('active')) {
+                    showConfirmModal();
+                }
+            }
+        });
+
+        // No initial preview in regular view (only in fullscreen)
+        // updatePreview();
+
+        // Update preview on input with debounce (only needed for fullscreen sync)
+        const debouncedUpdate = debounce(() => {
+            if (fullscreenOverlay.classList.contains('active')) {
+                updatePreview();
+            }
+        }, 300);
+        const debouncedFullscreenUpdate = debounce(() => {
+            syncFromFullscreen();
+        }, 300);
+
+        contentField.addEventListener('input', debouncedUpdate);
+        contentField.addEventListener('change', () => {
+            if (fullscreenOverlay.classList.contains('active')) {
+                updatePreview();
+            }
+        });
+
+        fullscreenTextarea.addEventListener('input', debouncedFullscreenUpdate);
+        fullscreenTextarea.addEventListener('change', () => {
+            syncFromFullscreen();
+        });
+
+        // Setup paste upload for all file types
+        function setupPasteUpload(textarea) {
+            textarea.addEventListener('paste', async (e) => {
+                // Check if clipboard contains any files
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                let file = null;
+
+                for (let item of items) {
+                    // Accept any file type, not just images
+                    if (item.kind === 'file') {
+                        file = item.getAsFile();
+                        break;
+                    }
+                }
+
+                if (!file) return; // No file in clipboard, let normal paste happen
+
+                e.preventDefault(); // Prevent default paste for files
+
+                console.log('Pasting file:', file.name || 'file', 'Type:', file.type);
+
+                // Generate filename if not present
+                let fileName = file.name;
+                if (!fileName) {
+                    // Generate name based on file type
+                    const ext = file.type.split('/')[1] || 'bin';
+                    const prefix = file.type.startsWith('image/') ? 'pasted-image' : 'pasted-file';
+                    fileName = `${prefix}-${Date.now()}.${ext}`;
+                }
+
+                // Choose markdown syntax based on file type
+                const isImage = file.type.startsWith('image/');
+                const loadingText = isImage
+                    ? `![Uploading ${fileName}...](uploading)`
+                    : `[Uploading ${fileName}...](uploading)`;
+
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                textarea.value = textarea.value.slice(0, startPos) + loadingText + textarea.value.slice(endPos);
+
+                // Move cursor after the inserted text
+                textarea.selectionStart = startPos + loadingText.length;
+                textarea.selectionEnd = startPos + loadingText.length;
+
+                // Upload file
+                const formData = new FormData();
+                formData.append('file', file, fileName);
+
+                try {
+                    const response = await fetch('/admin/upload-media/', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    console.log('Upload response:', data);
+
+                    if (data.success && data.url) {
+                        // Replace loading text with actual URL using appropriate markdown syntax
+                        const markdown = isImage
+                            ? `![${fileName}](${data.url})`
+                            : `[${fileName}](${data.url})`;
+                        textarea.value = textarea.value.replace(loadingText, markdown);
+
+                        // Update preview
+                        if (textarea === contentField) {
+                            updatePreview();
+                        } else {
+                            syncFromFullscreen();
+                        }
+                    } else {
+                        // Remove loading text and show error
+                        textarea.value = textarea.value.replace(loadingText, '');
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        console.error('Upload error:', data);
+                    }
+                } catch (error) {
+                    // Remove loading text and show error
+                    textarea.value = textarea.value.replace(loadingText, '');
+                    alert('Upload failed: ' + error.message);
+                    console.error('Upload error:', error);
+                }
+            });
+        }
+
+        // Setup paste upload for main editor
+        setupPasteUpload(contentField);
+        // Setup paste upload for fullscreen editor
+        setupPasteUpload(fullscreenTextarea);
+    }
+});
+</script>
+{% endblock %}

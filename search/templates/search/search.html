@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-{% if query %}Search: {{ query }} - VDW{% else %}Search Posts - VDW{% endif %}
+{% if query %}Search: {{ query }} - VDW{% else %}Search Pages - VDW{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -14,11 +14,11 @@
             <div class="search-results">
                 {% for result in results %}
                     <div class="search-result-item">
-                        <h3><a href="/posts/{{ result.slug }}/">{{ result.title }}</a></h3>
+                        <h3><a href="/pages/{{ result.slug }}/">{{ result.title }}</a></h3>
                         <div class="result-snippet">
                             {{ result.content|truncatechars:300 }}
                         </div>
-                        <div class="result-url">/posts/{{ result.slug }}/</div>
+                        <div class="result-url">/pages/{{ result.slug }}/</div>
                     </div>
                 {% endfor %}
             </div>
@@ -29,8 +29,8 @@
             </div>
         {% endif %}
     {% else %}
-        <h1>Search Posts</h1>
-        <p>Enter a search term in the search bar above to find posts.</p>
+        <h1>Search Pages</h1>
+        <p>Enter a search term in the search bar above to find pages.</p>
     {% endif %}
 </div>
 

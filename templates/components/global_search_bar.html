@@ -3,7 +3,7 @@
     <div class="nav-left">
         <a href="{% url 'homepage' %}" class="nav-brand">VDW Blog</a>
         <a href="{% url 'homepage' %}" class="nav-link">Home</a>
-        <a href="{% url 'post_list' %}" class="nav-link">All Posts</a>
+        <a href="{% url 'page_list' %}" class="nav-link">All Pages</a>
     </div>
     
     <!-- Center Search -->
@@ -11,7 +11,7 @@
         <input 
             type="text" 
             id="global-search-input" 
-            placeholder="Search posts..." 
+            placeholder="Search pages..." 
             autocomplete="off"
             autocorrect="off"
             spellcheck="false"
@@ -302,7 +302,7 @@ body {
             const content = hit._formatted?.content || hit.content || '';
             const snippet = content.substring(0, 120) + (content.length > 120 ? '...' : '');
             
-            return `<div class="search-result-item" data-url="/posts/${hit.slug}/">
+            return `<div class="search-result-item" data-url="/pages/${hit.slug}/">
     <div class="result-title">${title}</div>
     <div class="result-snippet">${snippet}</div>
 </div>`;
@@ -409,11 +409,9 @@ body {
         if (adminLink) {
             const currentPath = window.location.pathname;
 
-            // Check if we're on a post detail page
-            const postMatch = currentPath.match(/^\/posts\/([^\/]+)\/$/);
-            if (postMatch) {
-                // For post pages, set next to current URL
-                // Middleware will handle transformation to edit URL
+            // Check if we're on a page detail view (new or legacy URL)
+            const pageMatch = currentPath.match(/^\/(?:pages|posts)\/([^\/]+)\/$/);
+            if (pageMatch) {
                 adminLink.href = `/admin/?next=${encodeURIComponent(currentPath)}`;
             } else if (currentPath === '/') {
                 // For homepage, set next to current URL

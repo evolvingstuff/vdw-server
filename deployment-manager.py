@@ -151,7 +151,7 @@ class DockerDeployment:
                             print(f"   Uploading {file_path}...")
                             scp.put(str(file_path), f"{app_path}/{file_path.name}")
                 
-                # Upload directories (posts, templates, static, etc.)
+                # Upload directories (pages, templates, static, etc.)
                 for dir_path in Path('.').iterdir():
                     if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode', 'data.ms']:
                         print(f"   Uploading directory {dir_path}...")

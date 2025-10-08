@@ -18,8 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from posts.views import preview_markdown, post_list, post_detail, upload_media
-from pages.views import homepage, page_detail
+from django.views.generic import RedirectView
+from pages.views import preview_markdown, page_list, page_detail, upload_media
+from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 
 urlpatterns = [
@@ -27,14 +28,17 @@ urlpatterns = [
     path('admin/upload-media/', upload_media, name='upload_media'),
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
-    path('posts/', post_list, name='post_list'),
-    path('posts/<slug:slug>/', post_detail, name='post_detail'),
+    path('pages/', page_list, name='page_list'),
+    path('pages/<slug:slug>/', page_detail, name='page_detail'),
+    # Legacy URLs for backwards compatibility
+    path('posts/', RedirectView.as_view(pattern_name='page_list', permanent=True)),
+    path('posts/<slug:slug>/', RedirectView.as_view(pattern_name='page_detail', permanent=True)),
     path('tags/', include('tags.urls')),  # Tags filtering
     path('markdownx/', include('markdownx.urls')),
 
     # Page routes (must come last to avoid catching other URLs)
     path('', homepage, name='homepage'),  # Homepage
-    path('<slug:slug>/', page_detail, name='page_detail'),  # Other pages
+    path('<slug:slug>/', site_page_detail, name='site_page_detail'),  # Other site pages
 ]
 
 if settings.DEBUG:
