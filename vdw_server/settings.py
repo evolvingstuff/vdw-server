@@ -43,8 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'posts',
-    'pages',
+    'pages.apps.PagesConfig',
+    'site_pages.apps.SitePagesConfig',
     'search',
     'tags',
     'markdownx',
@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'vdw_server.middleware.AdminPostRedirectMiddleware',  # Custom admin redirect
+    'vdw_server.middleware.AdminPageRedirectMiddleware',  # Custom admin redirect
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -151,4 +151,4 @@ MARKDOWNX_EDITOR_RESIZABLE = True
 # Auto-detect environment: Docker uses service name, venv uses localhost
 MEILISEARCH_URL = os.getenv('MEILISEARCH_URL', 'http://localhost:7700')
 MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY')
-MEILISEARCH_INDEX_NAME = os.getenv('MEILISEARCH_INDEX_NAME', 'posts')
+MEILISEARCH_INDEX_NAME = os.getenv('MEILISEARCH_INDEX_NAME', 'pages')

@@ -1,0 +1,95 @@
+{% extends 'pages/base.html' %}
+
+{% block title %}{{ page.title }} - VDW Blog{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ page.title }}</h1>
+    
+    <div class="post-meta">
+        Created {{ page.created_date|date:"F Y" }}
+        {% if page.modified_date != page.created_date %}
+            • Updated {{ page.modified_date|date:"F d, Y" }}
+        {% endif %}
+    </div>
+
+    <nav class="post-toc" id="post-toc" style="margin: 1.5em 0 2em 0; padding: 1em; background: #f8f9fa; border: 1px solid #e1e5e9; border-radius: 8px; display: none;">
+        <div style="font-size: 0.9em; font-weight: 600; color: #666; margin-bottom: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">On this page</div>
+        <ul id="toc-list" style="margin: 0; padding: 0; list-style: none;"></ul>
+    </nav>
+
+    <div class="markdown-content">
+        {{ page.content_html|safe }}
+    </div>
+    
+    {% if page.tags.all %}
+    <div class="tags">
+        <strong>Tags:</strong>
+        {% for tag in page.tags.all %}
+        <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</article>
+
+<nav style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
+    <a href="{% url 'page_list' %}">← Back to all pages</a>
+</nav>
+
+<script>
+(function() {
+    function initTOC() {
+        const contentEl = document.querySelector('.markdown-content');
+        const tocContainer = document.getElementById('post-toc');
+        const tocList = document.getElementById('toc-list');
+
+        if (!contentEl || !tocContainer || !tocList) return;
+
+        const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        if (headings.length === 0) {
+            tocContainer.style.display = 'none';
+            return;
+        }
+
+        headings.forEach((heading, index) => {
+            if (!heading.id) {
+                const text = heading.textContent || '';
+                const slug = text.toLowerCase().trim()
+                    .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
+                    .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+                heading.id = slug || 'heading-' + index;
+            }
+
+            const li = document.createElement('li');
+            li.style.cssText = 'margin: 0.4em 0; padding: 0 0 0 1.2em; position: relative;';
+            li.innerHTML = '•';
+
+            const link = document.createElement('a');
+            link.href = '#' + heading.id;
+            link.textContent = heading.textContent;
+            link.style.cssText = 'color: #3498db; text-decoration: none; font-size: 0.95em; margin-left: 0.5em;';
+
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const navBar = document.getElementById('global-search-bar');
+                const offset = (navBar ? navBar.offsetHeight : 0) + 12;
+                const targetPos = heading.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top: targetPos, behavior: 'smooth' });
+                if (history.pushState) history.pushState(null, null, '#' + heading.id);
+            });
+
+            li.appendChild(link);
+            tocList.appendChild(li);
+        });
+
+        tocContainer.style.display = 'block';
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTOC);
+    } else {
+        initTOC();
+    }
+})();
+</script>
+{% endblock %}

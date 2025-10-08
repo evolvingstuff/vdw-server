@@ -163,7 +163,7 @@ class Post(models.Model):
   - Daily cron job: `pg_dump` → compress → upload to S3
   - Separate S3 bucket for backups (e.g., `vitamindwiki-backups`)
   - 30-day retention policy (auto-delete old backups)
-  - Size: ~50-100MB compressed for 14k posts
+  - Size: ~50-100MB compressed for 14k pages
   - Can restore to any point in last 30 days
 - **Images**: Already on S3, versioned
 - **Code**: Git repository

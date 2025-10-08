@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from .search import search_posts
+from .search import search_pages
 
 
 def search_page(request):
@@ -10,7 +10,7 @@ def search_page(request):
     results = []
     
     if query and len(query) >= 2:
-        search_results = search_posts(query, limit=100)  # Get more results for full page
+        search_results = search_pages(query, limit=100)  # Get more results for full page
         results = search_results.get('hits', [])
     
     return render(request, 'search/search.html', {
@@ -38,6 +38,6 @@ def search_api(request):
     except ValueError:
         limit = 20
     
-    results = search_posts(query, limit=limit)
+    results = search_pages(query, limit=limit)
     
     return JsonResponse(results)

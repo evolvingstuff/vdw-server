@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Pages tagged with "{{ tag.name }}" - VDW Blog{% endblock %}
+
+{% block content %}
+<h1>Pages tagged with "{{ tag.name }}"</h1>
+<div class="post-list">
+    {% for page in pages %}
+    <article class="post">
+        <h2><a href="{% url 'page_detail' page.slug %}">{{ page.title }}</a></h2>
+        <div class="post-meta">
+            Created {{ page.created_date|date:"F Y" }}
+        </div>
+        
+        {% if page.meta_description %}
+        <p>{{ page.meta_description }}</p>
+        {% else %}
+        <div class="markdown-content">
+            {{ page.content_text|truncatewords:50 }}...
+        </div>
+        {% endif %}
+        
+        {% if page.tags.all %}
+        <div class="tags">
+            {% for tag in page.tags.all %}
+            <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+    {% empty %}
+    <p>No published pages with this tag yet.</p>
+    {% endfor %}
+</div>
+
+<!-- Pagination controls -->
+{% if pages.has_other_pages %}
+<div class="pagination-container">
+    <div class="pagination">
+        <!-- First/Previous buttons -->
+        {% if pages.has_previous %}
+            <a href="?page=1">« <span class="page-text">First</span></a>
+            <a href="?page={{ pages.previous_page_number }}">‹ <span class="page-text">Prev</span></a>
+        {% else %}
+            <span class="disabled">« <span class="page-text">First</span></span>
+            <span class="disabled">‹ <span class="page-text">Prev</span></span>
+        {% endif %}
+        
+        <!-- Page numbers -->
+        {% for page_num in pages.paginator.page_range %}
+            {% if page_num == pages.number %}
+                <span class="current-page">{{ page_num }}</span>
+            {% elif page_num >= pages.number|add:"-3" and page_num <= pages.number|add:"3" %}
+                <a href="?page={{ page_num }}">{{ page_num }}</a>
+            {% elif page_num == 1 or page_num == pages.paginator.num_pages %}
+                <a href="?page={{ page_num }}">{{ page_num }}</a>
+            {% elif page_num == pages.number|add:"-4" or page_num == pages.number|add:"4" %}
+                <span class="ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        <!-- Next/Last buttons -->
+        {% if pages.has_next %}
+            <a href="?page={{ pages.next_page_number }}"><span class="page-text">Next</span> ›</a>
+            <a href="?page={{ pages.paginator.num_pages }}"><span class="page-text">Last</span> »</a>
+        {% else %}
+            <span class="disabled"><span class="page-text">Next</span> ›</span>
+            <span class="disabled"><span class="page-text">Last</span> »</span>
+        {% endif %}
+    </div>
+    <div class="pagination-info">
+        Showing page {{ pages.number }} of {{ pages.paginator.num_pages }} ({{ pages.paginator.count }} total pages)
+    </div>
+</div>
+{% endif %}
+{% endblock %}

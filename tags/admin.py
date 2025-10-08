@@ -6,43 +6,43 @@ from .models import Tag
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'post_count']
+    list_display = ['name', 'slug', 'page_count']
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name']
-    readonly_fields = ['linked_posts']
+    readonly_fields = ['linked_pages']
 
     fieldsets = (
         ('Tag Info', {
             'fields': ('name', 'slug')
         }),
-        ('Linked Posts', {
-            'fields': ('linked_posts',),
+        ('Linked Pages', {
+            'fields': ('linked_pages',),
             'classes': ('collapse',)  # Collapsed by default
         }),
     )
 
-    def post_count(self, obj):
-        count = obj.posts.count()
-        return f"{count} post{'s' if count != 1 else ''}"
-    post_count.short_description = "Posts"
+    def page_count(self, obj):
+        count = obj.pages.count()
+        return f"{count} page{'s' if count != 1 else ''}"
+    page_count.short_description = "Pages"
 
-    def linked_posts(self, obj):
+    def linked_pages(self, obj):
         if not obj.pk:
-            return "Save tag first to see linked posts"
+            return "Save tag first to see linked pages"
 
-        posts = obj.posts.all().order_by('-created_date')
-        total_count = posts.count()
+        pages = obj.pages.all().order_by('-created_date')
+        total_count = pages.count()
 
         if total_count == 0:
-            return "No posts tagged with this tag"
+            return "No pages tagged with this tag"
 
         links = []
-        for post in posts:
-            admin_url = reverse('admin:posts_post_change', args=[post.pk])
-            status_icon = "✅" if post.status == 'published' else "📝"
-            date_str = post.created_date.strftime('%Y-%m-%d')
-            links.append(f'<a href="{admin_url}">{status_icon} {post.title}</a> <small>({date_str})</small>')
+        for page in pages:
+            admin_url = reverse('admin:posts_page_change', args=[page.pk])
+            status_icon = "✅" if page.status == 'published' else "📝"
+            date_str = page.created_date.strftime('%Y-%m-%d')
+            links.append(f'<a href="{admin_url}">{status_icon} {page.title}</a> <small>({date_str})</small>')
 
-        result = f'<strong>Total: {total_count} posts</strong><br><br>' + '<br>'.join(links)
+        result = f'<strong>Total: {total_count} pages</strong><br><br>' + '<br>'.join(links)
         return format_html(result)
-    linked_posts.short_description = "Posts with this tag"
+    linked_pages.short_description = "Pages with this tag"

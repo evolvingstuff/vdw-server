@@ -1,14 +1,14 @@
 import re
 from django.shortcuts import redirect
 from django.urls import reverse
-from posts.models import Post
 from pages.models import Page
+from site_pages.models import SitePage
 
 
-class AdminPostRedirectMiddleware:
+class AdminPageRedirectMiddleware:
     """
-    Middleware to transform post and page URLs to edit URLs when accessing admin.
-    Handles both logged-in users and post-login redirects.
+    Middleware to transform published page and site page URLs into their admin edit
+    equivalents. Handles both logged-in users and post-login redirects.
     """
     def __init__(self, get_response):
         self.get_response = get_response
@@ -23,27 +23,30 @@ class AdminPostRedirectMiddleware:
 
             next_url = request.GET.get('next')
 
-            # Check if it's a post detail URL
-            post_match = re.match(r'^/posts/([^/]+)/$', next_url)
-            if post_match:
-                slug = post_match.group(1)
+            # Check if it's a page detail URL (new or legacy path)
+            page_slug = None
+            for pattern in (r'^/pages/([^/]+)/$', r'^/posts/([^/]+)/$'):
+                match = re.match(pattern, next_url)
+                if match:
+                    page_slug = match.group(1)
+                    break
+
+            if page_slug:
                 try:
-                    # Find the post and redirect to edit page
-                    post = Post.objects.get(slug=slug)
-                    edit_url = reverse('admin:posts_post_change', args=[post.pk])
+                    page = Page.objects.get(slug=page_slug)
+                    edit_url = reverse('admin:posts_page_change', args=[page.pk])
                     return redirect(edit_url)
-                except Post.DoesNotExist:
-                    # Post not found, redirect to admin home
+                except Page.DoesNotExist:
                     return redirect(reverse('admin:index'))
 
             # Check if it's the homepage
-            elif next_url == '/':
+            if next_url == '/':
                 try:
                     # Find the homepage and redirect to edit page
-                    homepage = Page.objects.get(page_type='homepage')
-                    edit_url = reverse('admin:pages_page_change', args=[homepage.pk])
+                    homepage = SitePage.objects.get(page_type='homepage')
+                    edit_url = reverse('admin:pages_sitepage_change', args=[homepage.pk])
                     return redirect(edit_url)
-                except Page.DoesNotExist:
+                except SitePage.DoesNotExist:
                     # Homepage not found, redirect to admin home
                     return redirect(reverse('admin:index'))
 
@@ -54,10 +57,10 @@ class AdminPostRedirectMiddleware:
                     slug = page_match.group(1)
                     try:
                         # Find the page and redirect to edit page
-                        page = Page.objects.get(slug=slug)
-                        edit_url = reverse('admin:pages_page_change', args=[page.pk])
+                        page = SitePage.objects.get(slug=slug)
+                        edit_url = reverse('admin:pages_sitepage_change', args=[page.pk])
                         return redirect(edit_url)
-                    except Page.DoesNotExist:
+                    except SitePage.DoesNotExist:
                         # Page not found, continue to default admin behavior
                         pass
 
@@ -73,27 +76,29 @@ class AdminPostRedirectMiddleware:
             # Get the redirect URL from response
             redirect_url = response.url
 
-            # Check if it's a post detail URL
-            post_match = re.match(r'^/posts/([^/]+)/$', redirect_url)
-            if post_match:
-                slug = post_match.group(1)
+            page_slug = None
+            for pattern in (r'^/pages/([^/]+)/$', r'^/posts/([^/]+)/$'):
+                match = re.match(pattern, redirect_url)
+                if match:
+                    page_slug = match.group(1)
+                    break
+
+            if page_slug:
                 try:
-                    # Find the post and redirect to edit page
-                    post = Post.objects.get(slug=slug)
-                    edit_url = reverse('admin:posts_post_change', args=[post.pk])
+                    page = Page.objects.get(slug=page_slug)
+                    edit_url = reverse('admin:posts_page_change', args=[page.pk])
                     return redirect(edit_url)
-                except Post.DoesNotExist:
-                    # Post not found, redirect to admin home
+                except Page.DoesNotExist:
                     return redirect(reverse('admin:index'))
 
             # Check if it's the homepage
-            elif redirect_url == '/':
+            if redirect_url == '/':
                 try:
                     # Find the homepage and redirect to edit page
-                    homepage = Page.objects.get(page_type='homepage')
-                    edit_url = reverse('admin:pages_page_change', args=[homepage.pk])
+                    homepage = SitePage.objects.get(page_type='homepage')
+                    edit_url = reverse('admin:pages_sitepage_change', args=[homepage.pk])
                     return redirect(edit_url)
-                except Page.DoesNotExist:
+                except SitePage.DoesNotExist:
                     # Homepage not found, redirect to admin home
                     return redirect(reverse('admin:index'))
 
@@ -104,10 +109,10 @@ class AdminPostRedirectMiddleware:
                     slug = page_match.group(1)
                     try:
                         # Find the page and redirect to edit page
-                        page = Page.objects.get(slug=slug)
-                        edit_url = reverse('admin:pages_page_change', args=[page.pk])
+                        page = SitePage.objects.get(slug=slug)
+                        edit_url = reverse('admin:pages_sitepage_change', args=[page.pk])
                         return redirect(edit_url)
-                    except Page.DoesNotExist:
+                    except SitePage.DoesNotExist:
                         # Page not found, continue to default behavior
                         pass
 

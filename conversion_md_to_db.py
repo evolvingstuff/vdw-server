@@ -27,13 +27,13 @@ def setup_django():
     
     # Import Django components
     from django.core.management import execute_from_command_line
-    from posts.models import Post
-    from tags.models import Tag
     from pages.models import Page
+    from tags.models import Tag
+    from site_pages.models import SitePage
     from django.utils import timezone
     from django.utils.text import slugify
 
-    return execute_from_command_line, Post, Tag, Page, timezone, slugify
+    return execute_from_command_line, Page, Tag, SitePage, timezone, slugify
 
 def run_migrations(execute_from_command_line):
     """Run Django migrations to create fresh database"""
@@ -41,9 +41,9 @@ def run_migrations(execute_from_command_line):
     execute_from_command_line(['manage.py', 'migrate'])
 
 
-def create_homepage(Page):
+def create_homepage(SitePage):
     """Create initial homepage"""
-    homepage, created = Page.objects.get_or_create(
+    homepage, created = SitePage.objects.get_or_create(
         page_type='homepage',
         defaults={
             'title': 'Home',
@@ -52,7 +52,7 @@ def create_homepage(Page):
 
 Welcome to VDW Blog
 
-[Browse All Posts →](/posts/)''',
+[Browse All Pages →](/pages/)''',
             'is_published': True,
             'meta_description': 'Welcome to VDW Blog'
         }
@@ -214,7 +214,7 @@ def main():
     delete_database()
     
     # Step 2: Setup Django AFTER database is deleted
-    execute_from_command_line, Post, Tag, Page, timezone, slugify = setup_django()
+    execute_from_command_line, Page, Tag, SitePage, timezone, slugify = setup_django()
     
     # Step 3: Run migrations 
     run_migrations(execute_from_command_line)
@@ -223,27 +223,27 @@ def main():
     create_superuser()
 
     # Step 5: Create homepage
-    create_homepage(Page)
+    create_homepage(SitePage)
 
     # Step 6: Start MeiliSearch (restart it fresh to ensure clean state)
     start_meilisearch()
 
     # Step 7: Find all markdown files
-    posts_dir = Path('../vdw-posts/posts')
-    posts_tiki_dir = Path('../vdw-posts/posts_tiki')
-    markdown_files = list(posts_dir.glob('*.md'))
+    pages_dir = Path('../vdw-posts/posts')
+    pages_tiki_dir = Path('../vdw-posts/posts_tiki')
+    markdown_files = list(pages_dir.glob('*.md'))
     
     if not markdown_files:
-        raise ValueError(f"No markdown files found in {posts_dir}")
+        raise ValueError(f"No markdown files found in {pages_dir}")
     
     print(f"Found {len(markdown_files)} markdown files to process")
     
     # Step 8: Process each file
-    created_posts = 0
+    created_pages = 0
     used_slugs = set()  # Track slugs to avoid duplicates
     skipped_files = []  # Track files with no frontmatter
     
-    for file_path in tqdm(markdown_files, desc="Converting posts"):
+    for file_path in tqdm(markdown_files, desc="Converting pages"):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 file_content = f.read()
@@ -264,7 +264,7 @@ def main():
         markdown_content = clean_markdown_content(markdown_content)
         
         # Load corresponding tiki file (MUST exist)
-        tiki_file_path = posts_tiki_dir / f"{file_path.stem}.tiki"
+        tiki_file_path = pages_tiki_dir / f"{file_path.stem}.tiki"
         if not tiki_file_path.exists():
             raise FileNotFoundError(f"Missing required tiki file: {tiki_file_path}")
         
@@ -291,8 +291,8 @@ def main():
         # Calculate redacted count from sections_excluded (must exist)
         redacted_count = len(frontmatter['sections_excluded'])
         
-        # Create Post object
-        post = Post.objects.create(
+        # Create Page object
+        page = Page.objects.create(
             title=frontmatter['title'],
             slug=frontmatter['slug'],
             content_md=markdown_content,
@@ -307,25 +307,25 @@ def main():
         )
         
         # Add tags
-        post.tags.set(tags)
+        page.tags.set(tags)
         
         # Fix modified_date after tags are set (tags.set() triggers another save)
         # Use direct database update to bypass auto_now=True so we preserve frontmatter lastmod
-        Post.objects.filter(pk=post.pk).update(modified_date=modified_date)
+        Page.objects.filter(pk=page.pk).update(modified_date=modified_date)
         
-        created_posts += 1
+        created_pages += 1
     
     print(f"\nConversion complete!")
-    print(f"Created {created_posts} posts")
+    print(f"Created {created_pages} pages")
     print(f"Total tags: {Tag.objects.count()}")
-    
+
     if skipped_files:
         print(f"\nSkipped {len(skipped_files)} files with no frontmatter:")
         for skipped_file in skipped_files:
             print(f"  - {skipped_file}")
-    
-    # Step 9: Index all posts in MeiliSearch using management command
-    print(f"\nIndexing {created_posts} posts in MeiliSearch...")
+
+    # Step 9: Index all pages in MeiliSearch using management command
+    print(f"\nIndexing {created_pages} pages in MeiliSearch...")
     execute_from_command_line(['manage.py', 'reindex_search'])
     print("MeiliSearch indexing complete!")
 
