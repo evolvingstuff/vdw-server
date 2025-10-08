@@ -10,6 +10,16 @@ from datetime import datetime
 from tqdm import tqdm
 from helper_functions.meilisearch import *
 
+
+DISALLOWED_TAG_NAMES = {
+    'ai',
+    'top news',
+    'z',
+    'z-section',
+    'video page names',
+    'old name',
+}
+
 def delete_database():
     """Delete existing SQLite database"""
     db_path = Path('db.sqlite3')
@@ -151,11 +161,14 @@ def clean_markdown_content(content):
     return content
 
 def process_tags(tag_names, Tag, slugify, used_slugs):
-    """Create or get Tag objects for a list of tag names"""
+    """Create or get Tag objects for a list of tag names, skipping disallowed entries."""
     tags = []
     for tag_name in tag_names:
         tag_name = tag_name.strip()
         if not tag_name:
+            continue
+
+        if tag_name.lower() in DISALLOWED_TAG_NAMES:
             continue
             
         # Check if tag already exists by name

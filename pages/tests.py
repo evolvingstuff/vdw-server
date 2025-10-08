@@ -4,10 +4,12 @@ from unittest.mock import patch
 from django.contrib.admin.sites import AdminSite
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.utils import timezone
+from django.utils.text import slugify
 
-from conversion_md_to_db import get_created_and_modified_dates
+from conversion_md_to_db import get_created_and_modified_dates, process_tags
 from pages.admin import PageAdmin
 from pages.models import Page
+from tags.models import Tag
 
 
 class PageAdminSearchTests(TestCase):
@@ -93,3 +95,29 @@ class ConversionDateParsingTests(SimpleTestCase):
 
         self.assertEqual(created, expected_created)
         self.assertEqual(modified, expected_modified)
+
+
+class ConversionTagFilteringTests(TestCase):
+    def test_disallowed_tags_are_removed(self):
+        used_slugs = set()
+        raw_tags = [
+            'Normal Tag',
+            ' AI ',
+            'Another Tag',
+            'Top news',
+            'Video Page Names',
+            'Z',
+            'Z-section',
+            'Old Name',
+        ]
+
+        tags = process_tags(raw_tags, Tag, slugify, used_slugs)
+
+        names = {tag.name for tag in tags}
+
+        self.assertEqual(names, {'Normal Tag', 'Another Tag'})
+        self.assertIn(slugify('Normal Tag'), used_slugs)
+        self.assertNotIn('ai', used_slugs)
+
+        disallowed_names = {'AI', 'Top news', 'Video Page Names', 'Z', 'Z-section', 'Old Name'}
+        self.assertEqual(Tag.objects.filter(name__in=disallowed_names).count(), 0)
