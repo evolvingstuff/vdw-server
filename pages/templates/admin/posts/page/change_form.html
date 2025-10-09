@@ -439,6 +439,14 @@ document.addEventListener('DOMContentLoaded', function() {
             originalContent = contentField.value;  // Store original content
             updatePreview(fullscreenPreview);
             fullscreenTextarea.focus();
+            if (typeof fullscreenTextarea.setSelectionRange === 'function') {
+                fullscreenTextarea.setSelectionRange(0, 0);
+            } else if ('selectionStart' in fullscreenTextarea) {
+                fullscreenTextarea.selectionStart = 0;
+                fullscreenTextarea.selectionEnd = 0;
+            }
+            fullscreenTextarea.scrollTop = 0;
+            fullscreenPreview.scrollTop = 0;
         }
 
         function closeFullscreen() {
