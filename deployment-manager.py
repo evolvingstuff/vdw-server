@@ -124,11 +124,69 @@ class DockerDeployment:
         except Exception as e:
             print(f"❌ Command execution failed: {e}")
             return False, "", str(e)
-    
+
+    @staticmethod
+    def _format_bytes(num_bytes):
+        """Convert byte counts into a human readable string"""
+        units = ['B', 'KB', 'MB', 'GB', 'TB']
+        value = float(num_bytes)
+        for unit in units:
+            if value < 1024.0:
+                return f"{value:.1f} {unit}"
+            value /= 1024.0
+        return f"{value:.1f} PB"
+
+    def get_remote_free_bytes(self, path):
+        """Return available bytes for the filesystem containing path"""
+        success, output, error = self.execute_command(f"df -B1 {shlex.quote(path)}")
+        if not success or not output:
+            raise RuntimeError(f"Failed to check disk space: {error or 'no output'}")
+
+        lines = output.splitlines()
+        if len(lines) < 2:
+            raise RuntimeError(f"Unexpected df output: {output}")
+
+        parts = lines[1].split()
+        try:
+            return int(parts[3])
+        except (IndexError, ValueError) as exc:
+            raise RuntimeError(f"Could not parse df output: {output}") from exc
+
+    def perform_remote_cleanup(self, remote_app_path):
+        """Run disk cleanup commands on the remote host"""
+        print("🧹 Running remote cleanup commands...")
+        commands = [
+            ("Pruning unused Docker artifacts", "docker system prune -f"),
+            ("Pruning unused Docker volumes", "docker volume prune -f"),
+            (
+                "Removing stray SQLite temp files",
+                f"sudo find {shlex.quote(remote_app_path)} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
+            ),
+        ]
+
+        for description, command in commands:
+            print(f"   {description}...")
+            success, _, error = self.execute_command(command)
+            if not success:
+                raise RuntimeError(f"{description} failed: {error}")
+
+        print("✅ Remote cleanup completed")
+
+    def maybe_cleanup_remote_disk(self, remote_app_path):
+        """Interactively offer to clean up remote disk space"""
+        response = input(
+            "   Attempt cleanup (docker prune + remove SQLite temp files)? (y/n): "
+        ).lower()
+        if response != 'y':
+            return False
+
+        self.perform_remote_cleanup(remote_app_path)
+        return True
+
     def upload_code(self):
         """Upload application code via SCP"""
         print("📤 Uploading application code...")
-        
+
         app_path = self.config['app_path']
         remote_app_path = shlex.quote(app_path)
         remote_user = shlex.quote(self.config['user'])
@@ -244,7 +302,7 @@ class DockerDeployment:
         
         if not self.connect():
             return False
-        
+
         try:
             app_path = self.config['app_path']
             remote_app_path = shlex.quote(app_path)
@@ -252,6 +310,32 @@ class DockerDeployment:
             remote_tmp_q = shlex.quote(remote_tmp)
             remote_db_path = f"{app_path}/db.sqlite3"
             remote_db_path_q = shlex.quote(remote_db_path)
+
+            db_size_bytes = local_db.stat().st_size
+            required_bytes = db_size_bytes * 2
+
+            print("📦 Checking remote disk space...")
+            free_bytes = self.get_remote_free_bytes(app_path)
+            print(
+                f"   Available: {self._format_bytes(free_bytes)} | "
+                f"Required: {self._format_bytes(required_bytes)}"
+            )
+
+            if free_bytes < required_bytes:
+                print(
+                    "⚠️  Remote disk space is low; deployment requires additional space."
+                )
+                cleaned = self.maybe_cleanup_remote_disk(app_path)
+                if cleaned:
+                    free_bytes = self.get_remote_free_bytes(app_path)
+                    print(f"   Post-cleanup free space: {self._format_bytes(free_bytes)}")
+
+                if free_bytes < required_bytes:
+                    print(
+                        "❌ Not enough remote disk space after cleanup attempts. "
+                        "Aborting deployment."
+                    )
+                    return False
 
             # Stop Django container to avoid database locks
             print("🛑 Stopping Django container...")
