@@ -1,6 +1,11 @@
 import re
+from pathlib import Path
+
+from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
+
 from pages.models import Page
 from site_pages.models import SitePage
 
@@ -117,3 +122,32 @@ class AdminPageRedirectMiddleware:
                         pass
 
         return response
+
+
+class MaintenanceModeMiddleware:
+    """Return 503 responses while a maintenance sentinel file exists."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.sentinel_path = Path(settings.BASE_DIR) / "tmp" / "maintenance.lock"
+
+    def __call__(self, request):
+        if self.sentinel_path.exists() and not self._should_allow(request):
+            return HttpResponse("Maintenance in progress", status=503)
+        return self.get_response(request)
+
+    def _should_allow(self, request):
+        path = request.path
+        static_url = settings.STATIC_URL or "/static/"
+        if static_url and not static_url.startswith('/'):
+            static_url = f"/{static_url}"
+        if path.startswith(static_url):
+            return True
+        if path.startswith("/admin/manual-restore/"):
+            return True
+        if path.startswith("/admin/jsi18n/"):
+            return True
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated and user.is_staff and path.startswith("/admin/"):
+            return True
+        return False

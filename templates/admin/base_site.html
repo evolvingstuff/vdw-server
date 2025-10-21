@@ -7,10 +7,13 @@
     <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
     <span class="home-link"><a href="{% url 'homepage' %}">Back to site</a></span>
     {% if user.is_staff %}
-    <form method="post" action="{% url 'manual_backup' %}" class="manual-backup-form" id="manual-backup-form">
-        {% csrf_token %}
-        <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
-    </form>
+    <div class="manual-backup-actions">
+        <form method="post" action="{% url 'manual_backup' %}" class="manual-backup-form" id="manual-backup-form">
+            {% csrf_token %}
+            <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
+        </form>
+        <a href="{% url 'manual_restore' %}" class="manual-restore-button" id="manual-restore-button">Restore Backup</a>
+    </div>
     {% endif %}
 </div>
 {% if user.is_anonymous %}
@@ -25,6 +28,11 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+#site-name .manual-backup-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 #site-name .manual-backup-form {
     margin: 0;
@@ -41,6 +49,18 @@
 #site-name .manual-backup-button:hover,
 #site-name .manual-backup-button:focus {
     background-color: #095fa7;
+}
+#site-name .manual-restore-button {
+    background-color: #1f2937;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+    text-decoration: none;
+}
+#site-name .manual-restore-button:hover,
+#site-name .manual-restore-button:focus {
+    background-color: #111827;
 }
 #site-name .manual-backup-button[disabled] {
     background-color: #5e7f99;
