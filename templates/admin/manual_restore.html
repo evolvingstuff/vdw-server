@@ -1,0 +1,109 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="manual-restore-wrapper">
+    <h1>Restore Manual Backup</h1>
+    <p>Select a backup from S3 (<code>{{ backup_entries.0.path|default:'db_backups/manual_backups/' }}</code>) to replace the live database.</p>
+    <p><strong>Warning:</strong> Site traffic is paused briefly while the SQLite file is swapped in.</p>
+
+    {% if backup_entries %}
+    <form method="post" class="manual-restore-form">
+        {% csrf_token %}
+        <table class="manual-restore-table">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>Backup</th>
+                    <th>Modified</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for entry in backup_entries %}
+                <tr>
+                    <td>
+                        <input type="radio" name="backup_path" value="{{ entry.path }}" id="backup-{{ forloop.counter }}" {% if entry.path == selected_backup %}checked{% endif %} required>
+                    </td>
+                    <td>
+                        <label for="backup-{{ forloop.counter }}">
+                            <code>{{ entry.name }}</code>
+                        </label>
+                    </td>
+                    <td>{{ entry.modified|date:"Y-m-d H:i:s T" }}</td>
+                    <td>{{ entry.size_bytes|filesizeformat }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="manual-restore-actions">
+            <button type="submit" class="manual-backup-button manual-backup-button--danger">Restore Selected Backup</button>
+        </div>
+    </form>
+    {% else %}
+    <p><em>No manual backups found.</em></p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.manual-restore-wrapper {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    max-width: 760px;
+    padding: 1.5rem;
+}
+.manual-restore-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1rem;
+}
+.manual-restore-table th,
+.manual-restore-table td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+}
+.manual-restore-table tbody tr:hover {
+    background: #f9fafb;
+}
+.manual-restore-actions {
+    margin-top: 1.5rem;
+}
+.manual-backup-button--danger {
+    background-color: #b91c1c;
+}
+.manual-backup-button--danger:hover,
+.manual-backup-button--danger:focus {
+    background-color: #991b1b;
+}
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.manual-restore-form');
+    if (!form) {
+        return;
+    }
+    form.addEventListener('submit', function () {
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Restoring backup...';
+        }
+        const overlay = document.createElement('div');
+        overlay.className = 'manual-backup-overlay';
+        const label = document.createElement('div');
+        label.className = 'manual-backup-overlay__label';
+        label.textContent = 'Restoring backup and swapping database...';
+        overlay.appendChild(label);
+        document.body.appendChild(overlay);
+    }, { once: true });
+});
+</script>
+{% endblock %}
