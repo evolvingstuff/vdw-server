@@ -6,6 +6,12 @@
 <div id="site-name">
     <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
     <span class="home-link"><a href="{% url 'homepage' %}">Back to site</a></span>
+    {% if user.is_staff %}
+    <form method="post" action="{% url 'manual_backup' %}" class="manual-backup-form" id="manual-backup-form">
+        {% csrf_token %}
+        <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
+    </form>
+    {% endif %}
 </div>
 {% if user.is_anonymous %}
   {% include "admin/color_theme_toggle.html" %}
@@ -20,6 +26,49 @@
     align-items: center;
     gap: 1rem;
 }
+#site-name .manual-backup-form {
+    margin: 0;
+}
+#site-name .manual-backup-button {
+    background-color: #0b7dda;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+}
+#site-name .manual-backup-button:hover,
+#site-name .manual-backup-button:focus {
+    background-color: #095fa7;
+}
+#site-name .manual-backup-button[disabled] {
+    background-color: #5e7f99;
+    cursor: wait;
+    opacity: 0.85;
+}
+#site-name .manual-backup-status {
+    color: #1f2937;
+    font-size: 0.8125rem;
+}
+.manual-backup-overlay {
+    align-items: center;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: fixed;
+    z-index: 2000;
+}
+.manual-backup-overlay__label {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
 #site-name .home-link a {
     font-size: 0.875rem;
     color: inherit;
@@ -30,6 +79,39 @@
     text-decoration: none;
 }
 </style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('manual-backup-form');
+    if (!form) {
+        return;
+    }
+    form.addEventListener('submit', function () {
+        const button = document.getElementById('manual-backup-button');
+        if (!button) {
+            return;
+        }
+        button.disabled = true;
+        button.dataset.originalText = button.textContent;
+        button.textContent = 'Backing up...';
+        const status = document.createElement('span');
+        status.className = 'manual-backup-status';
+        status.textContent = ' Working...';
+        button.insertAdjacentElement('afterend', status);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'manual-backup-overlay';
+        const label = document.createElement('div');
+        label.className = 'manual-backup-overlay__label';
+        label.textContent = 'Creating manual backup...';
+        overlay.appendChild(label);
+        document.body.appendChild(overlay);
+    }, { once: true });
+});
+</script>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

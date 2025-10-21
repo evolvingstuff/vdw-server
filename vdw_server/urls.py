@@ -22,10 +22,12 @@ from django.views.generic import RedirectView
 from pages.views import preview_markdown, page_list, page_detail, upload_media
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
+from vdw_server.admin_views import manual_backup
 
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/upload-media/', upload_media, name='upload_media'),
+    path('admin/manual-backup/', admin.site.admin_view(manual_backup), name='manual_backup'),
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
     path('pages/', page_list, name='page_list'),
