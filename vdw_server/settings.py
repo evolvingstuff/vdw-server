@@ -85,10 +85,18 @@ WSGI_APPLICATION = 'vdw_server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Choose SQLite location based on environment
+# - Local/dev: BASE_DIR/db.sqlite3
+# - In Docker: BASE_DIR/data/db.sqlite3 (mounted directory)
+if os.getenv('RUNNING_IN_DOCKER', '').lower() in ('1', 'true', 'yes'):
+    db_path = BASE_DIR / 'data' / 'db.sqlite3'
+else:
+    db_path = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': db_path,
     }
 }
 

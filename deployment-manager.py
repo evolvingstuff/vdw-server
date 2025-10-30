@@ -159,8 +159,12 @@ class DockerDeployment:
             ("Pruning unused Docker artifacts", "docker system prune -f"),
             ("Pruning unused Docker volumes", "docker volume prune -f"),
             (
-                "Removing stray SQLite temp files",
+                "Removing stray SQLite temp files (root)",
                 f"sudo find {shlex.quote(remote_app_path)} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
+            ),
+            (
+                "Removing stray SQLite temp files (data dir)",
+                f"sudo find {shlex.quote(remote_app_path)}/data -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete || true"
             ),
         ]
 
@@ -308,7 +312,10 @@ class DockerDeployment:
             remote_app_path = shlex.quote(app_path)
             remote_tmp = f"/home/{self.config['user']}/db.sqlite3.upload"
             remote_tmp_q = shlex.quote(remote_tmp)
-            remote_db_path = f"{app_path}/db.sqlite3"
+            # Use /app/data/db.sqlite3 inside the container; mount a directory
+            remote_db_dir = f"{app_path}/data"
+            remote_db_path = f"{remote_db_dir}/db.sqlite3"
+            remote_db_dir_q = shlex.quote(remote_db_dir)
             remote_db_path_q = shlex.quote(remote_db_path)
 
             db_size_bytes = local_db.stat().st_size
@@ -340,6 +347,10 @@ class DockerDeployment:
             # Stop Django container to avoid database locks
             print("🛑 Stopping Django container...")
             self.execute_command(f"cd {remote_app_path} && docker compose stop django")
+
+            # Ensure DB directory exists and is owned by root
+            self.execute_command(f"sudo mkdir -p {remote_db_dir_q}")
+            self.execute_command(f"sudo chown root:root {remote_db_dir_q}")
 
             # Clean up any previous uploads and remove existing mount target
             print("📤 Uploading database...")
@@ -373,8 +384,8 @@ class DockerDeployment:
                 print(f"❌ Failed to set database permissions: {error}")
                 return False
             
-            # Fix directory permissions so SQLite can create temp files  
-            success, output, error = self.execute_command(f"sudo chown root:root {remote_app_path}")
+            # Fix directory permissions so SQLite can create temp files next to the DB
+            success, output, error = self.execute_command(f"sudo chown root:root {remote_db_dir_q}")
             if not success:
                 print(f"❌ Failed to set directory ownership: {error}")
                 return False

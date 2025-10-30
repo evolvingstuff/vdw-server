@@ -142,11 +142,12 @@ The deployment-manager.py script provides an interactive menu with these options
 3. Uploads application directories (pages, templates, static, etc.)
 4. Excludes: .git, __pycache__, .env, db.sqlite3, venv
 5. Rebuilds and restarts Docker containers
+6. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`
 
 ### Database Deployment Process
 1. Stops Django container to release database lock
-2. Uploads local SQLite database
-3. Sets root:root ownership (required for Docker)
+2. Ensures `/app/data` exists and uploads local SQLite database to `/app/data/db.sqlite3`
+3. Sets root:root ownership and 644 permissions (required for Docker)
 4. Restarts Django container
 5. Rebuilds search index automatically
 
@@ -197,7 +198,7 @@ docker compose logs --tail=50 meilisearch
 
 **Database Permission Errors**
 - Run Option 2 to re-deploy database with correct permissions
-- Database should be owned by root:root with 644 permissions
+- Database should be owned by root:root with 644 permissions at `/app/data/db.sqlite3`
 
 **Search Not Working**
 - Run Option 4 to rebuild search index
