@@ -31,7 +31,7 @@ class Command(BaseCommand):
             initialize_search_index()
             self.stdout.write(self.style.SUCCESS('✅ Search index initialized'))
             
-            # Get all published pages
+            # Get all published pages. Use iterator to avoid materializing all rows at once
             pages = Page.objects.filter(status='published')
             page_count = pages.count()
             
@@ -39,9 +39,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING('⚠️  No published pages found to index'))
                 return
             
-            # Bulk index all pages
+            # Bulk index all pages with streaming iteration to avoid large SQLite temp files
             self.stdout.write(f'📝 Indexing {page_count} published pages...')
-            bulk_index_pages(list(pages))
+            bulk_index_pages(pages.iterator(chunk_size=1000))
             
             self.stdout.write(
                 self.style.SUCCESS(f'🎉 Successfully indexed {page_count} pages!')

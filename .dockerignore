@@ -16,6 +16,7 @@ pip-delete-this-directory.txt
 # Database (will be mounted as volume)
 db.sqlite3
 *.sqlite3
+data/
 
 # Environment files
 .env

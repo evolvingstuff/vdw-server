@@ -152,11 +152,27 @@ class DockerDeployment:
         except (IndexError, ValueError) as exc:
             raise RuntimeError(f"Could not parse df output: {output}") from exc
 
+    def get_remote_file_size_bytes(self, path):
+        """Return size in bytes for a remote file, 0 if missing"""
+        quoted = shlex.quote(path)
+        # Use stat if available, fallback to wc -c
+        cmd = (
+            f"if [ -f {quoted} ]; then (stat -c %s {quoted} 2>/dev/null || wc -c < {quoted}); else echo 0; fi"
+        )
+        success, output, error = self.execute_command(cmd, show_output=False)
+        if not success or not output:
+            raise RuntimeError(f"Failed to stat remote file {path}: {error or 'no output'}")
+        try:
+            return int(output.strip())
+        except ValueError as exc:
+            raise RuntimeError(f"Unexpected stat output for {path}: {output}") from exc
+
     def perform_remote_cleanup(self, remote_app_path):
         """Run disk cleanup commands on the remote host"""
         print("🧹 Running remote cleanup commands...")
         commands = [
             ("Pruning unused Docker artifacts", "docker system prune -f"),
+            ("Pruning Docker builder cache", "docker builder prune -af"),
             ("Pruning unused Docker volumes", "docker volume prune -f"),
             (
                 "Removing stray SQLite temp files (root)",
@@ -266,9 +282,9 @@ class DockerDeployment:
                 f"cd {app_path} && docker compose exec -T django python manage.py migrate"
             )
             if not success:
-                print(f"⚠️  Migration may have failed: {error}")
-            else:
-                print("✅ Migrations completed!")
+                print(f"❌ Migration failed: {error}")
+                return False
+            print("✅ Migrations completed!")
 
             # Check container status
             print("🔍 Checking container status...")
@@ -310,34 +326,44 @@ class DockerDeployment:
         try:
             app_path = self.config['app_path']
             remote_app_path = shlex.quote(app_path)
-            remote_tmp = f"/home/{self.config['user']}/db.sqlite3.upload"
-            remote_tmp_q = shlex.quote(remote_tmp)
             # Use /app/data/db.sqlite3 inside the container; mount a directory
             remote_db_dir = f"{app_path}/data"
             remote_db_path = f"{remote_db_dir}/db.sqlite3"
             remote_db_dir_q = shlex.quote(remote_db_dir)
             remote_db_path_q = shlex.quote(remote_db_path)
+            # Upload temp file inside the DB directory to avoid cross-filesystem moves
+            remote_tmp = f"{remote_db_dir}/db.sqlite3.upload"
+            remote_tmp_q = shlex.quote(remote_tmp)
 
             db_size_bytes = local_db.stat().st_size
-            required_bytes = db_size_bytes * 2
+            overhead_bytes = 64 * 1024 * 1024  # 64 MiB overhead for metadata/temp
+            required_bytes = db_size_bytes + overhead_bytes
 
             print("📦 Checking remote disk space...")
             free_bytes = self.get_remote_free_bytes(app_path)
+            current_remote_db_bytes = self.get_remote_file_size_bytes(remote_db_path)
+            effective_free = free_bytes + current_remote_db_bytes
             print(
                 f"   Available: {self._format_bytes(free_bytes)} | "
+                f"Current DB: {self._format_bytes(current_remote_db_bytes)} | "
+                f"Effective free: {self._format_bytes(effective_free)} | "
                 f"Required: {self._format_bytes(required_bytes)}"
             )
 
-            if free_bytes < required_bytes:
-                print(
-                    "⚠️  Remote disk space is low; deployment requires additional space."
-                )
+            if effective_free < required_bytes:
+                print("⚠️  Remote disk space is low; attempting cleanup.")
                 cleaned = self.maybe_cleanup_remote_disk(app_path)
                 if cleaned:
                     free_bytes = self.get_remote_free_bytes(app_path)
-                    print(f"   Post-cleanup free space: {self._format_bytes(free_bytes)}")
+                    current_remote_db_bytes = self.get_remote_file_size_bytes(remote_db_path)
+                    effective_free = free_bytes + current_remote_db_bytes
+                    print(
+                        f"   Post-cleanup free: {self._format_bytes(free_bytes)} | "
+                        f"Current DB: {self._format_bytes(current_remote_db_bytes)} | "
+                        f"Effective: {self._format_bytes(effective_free)}"
+                    )
 
-                if free_bytes < required_bytes:
+                if effective_free < required_bytes:
                     print(
                         "❌ Not enough remote disk space after cleanup attempts. "
                         "Aborting deployment."
@@ -348,13 +374,17 @@ class DockerDeployment:
             print("🛑 Stopping Django container...")
             self.execute_command(f"cd {remote_app_path} && docker compose stop django")
 
-            # Ensure DB directory exists and is owned by root
+            # Ensure DB directory exists and is writable for upload
             self.execute_command(f"sudo mkdir -p {remote_db_dir_q}")
-            self.execute_command(f"sudo chown root:root {remote_db_dir_q}")
+            # Temporarily grant ownership to upload user so SCP can write the temp file
+            self.execute_command(
+                f"sudo chown {self.config['user']}:{self.config['user']} {remote_db_dir_q}"
+            )
 
             # Clean up any previous uploads and remove existing mount target
             print("📤 Uploading database...")
             self.execute_command(f"rm -f {remote_tmp_q}")
+            # Remove existing DB first to free space before upload
             success, output, error = self.execute_command(f"sudo rm -rf {remote_db_path_q}")
             if not success:
                 print(f"❌ Failed to remove existing database: {error}")
@@ -384,7 +414,7 @@ class DockerDeployment:
                 print(f"❌ Failed to set database permissions: {error}")
                 return False
             
-            # Fix directory permissions so SQLite can create temp files next to the DB
+            # Restore directory ownership to root so SQLite temp files are created with root-managed perms
             success, output, error = self.execute_command(f"sudo chown root:root {remote_db_dir_q}")
             if not success:
                 print(f"❌ Failed to set directory ownership: {error}")
@@ -410,9 +440,9 @@ class DockerDeployment:
                 f"cd {app_path} && docker compose exec -T django python manage.py reindex_search"
             )
             if not success:
-                print(f"⚠️  Search reindexing may have failed: {error}")
-            else:
-                print("✅ Search index rebuilt!")
+                print(f"❌ Search reindexing failed: {error}")
+                return False
+            print("✅ Search index rebuilt!")
             
             print("✅ Database deployment completed successfully!")
             return True
@@ -465,6 +495,69 @@ class DockerDeployment:
             print(f"❌ Search reindexing failed: {e}")
             return False
         
+        finally:
+            self.disconnect()
+
+    def free_disk_on_server(self):
+        """Aggressively free disk on the remote host.
+        Steps:
+          - docker compose down
+          - remove SQLite DB at /app/data/db.sqlite3
+          - remove MeiliSearch data volume(s)
+          - prune docker builder cache + unused images
+          - vacuum systemd journal and clean apt caches
+        Leaves containers stopped so you can upload a fresh DB next.
+        """
+        print("\n🧹 Starting disk cleanup on server...")
+
+        if not self.connect():
+            return False
+
+        try:
+            app_path = self.config['app_path']
+            remote_db_dir = f"{app_path}/data"
+            remote_db_path = f"{remote_db_dir}/db.sqlite3"
+            remote_db_dir_q = shlex.quote(remote_db_dir)
+            remote_db_path_q = shlex.quote(remote_db_path)
+
+            # Measure free space before
+            before_free = self.get_remote_free_bytes(app_path)
+            print(f"   Free before: {self._format_bytes(before_free)}")
+
+            cmds = [
+                ("Stopping containers", f"cd {shlex.quote(app_path)} && docker compose down"),
+                ("Removing SQLite database", f"sudo rm -f {remote_db_path_q}"),
+                (
+                    "Removing MeiliSearch volume(s)",
+                    "for v in $(docker volume ls -q | grep meilisearch_data || true); do docker volume rm -f $v || true; done"
+                ),
+                ("Pruning Docker builder cache", "docker builder prune -af"),
+                ("Pruning unused Docker images", "docker image prune -af"),
+                ("Pruning unused Docker volumes", "docker volume prune -f"),
+                ("Vacuuming system journal (7d)", "sudo journalctl --vacuum-time=7d"),
+                ("Cleaning apt caches", "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*"),
+            ]
+
+            for desc, cmd in cmds:
+                print(f"   {desc}...")
+                success, _, error = self.execute_command(cmd)
+                if not success:
+                    print(f"⚠️  {desc} failed: {error}")
+
+            after_free = self.get_remote_free_bytes(app_path)
+            delta = max(0, after_free - before_free)
+            print(f"   Free after:  {self._format_bytes(after_free)}")
+            print(f"   Reclaimed:  {self._format_bytes(delta)}")
+
+            print("\n✅ Disk cleanup completed.")
+            print("Next steps:")
+            print("  1) From your machine: run option 2 (Deploy Database) to upload a fresh db.sqlite3")
+            print("  2) Then run option 4 (Reindex Search) to rebuild MeiliSearch")
+            return True
+
+        except Exception as e:
+            print(f"❌ Disk cleanup failed: {e}")
+            return False
         finally:
             self.disconnect()
     
@@ -701,8 +794,9 @@ def print_menu():
     print("2. Deploy Database from Local (retain code + upload db + reindex search)")
     print("3. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
     print("4. Reindex Search on Server")
-    print("5. Troubleshoot on Server")
-    print("6. Exit")
+    print("5. Free Disk on Server (stop containers, delete DB, remove Meili volume, prune caches)")
+    print("6. Troubleshoot on Server")
+    print("7. Exit")
     print()
 
 def main():
@@ -724,7 +818,7 @@ def main():
     
     while True:
         print_menu()
-        choice = input("Enter choice [0-6]: ").strip()
+        choice = input("Enter choice [0-7]: ").strip()
         
         if choice == '0':
             print("\n" + "=" * 50)
@@ -773,9 +867,17 @@ def main():
             deployer.reindex_search()
         
         elif choice == '5':
+            print("\n" + "=" * 50)
+            print("FREE DISK CLEANUP (DANGEROUS)")
+            print("=" * 50)
+            print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data volume\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
+            if input("\nProceed? (y/n): ").lower() == 'y':
+                deployer.free_disk_on_server()
+
+        elif choice == '6':
             deployer.show_status()
         
-        elif choice == '6':
+        elif choice == '7':
             print("\n👋 Goodbye!")
             break
         
