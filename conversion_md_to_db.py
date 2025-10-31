@@ -339,8 +339,14 @@ def main():
 
     # Step 9: Index all pages in MeiliSearch using management command
     print(f"\nIndexing {created_pages} pages in MeiliSearch...")
-    execute_from_command_line(['manage.py', 'reindex_search'])
-    print("MeiliSearch indexing complete!")
+    try:
+        execute_from_command_line(['manage.py', 'reindex_search'])
+        print("MeiliSearch indexing complete!")
+    except Exception as e:
+        # External system failure (MeiliSearch or client). Report clearly and continue.
+        print(f"❌ MeiliSearch indexing failed: {e}")
+        print("The database import completed, but search indexing did not.\n"
+              "Tip: upgrade the 'meilisearch' Python client to match your server and re-run `python manage.py reindex_search`.")
 
 if __name__ == '__main__':
     main()
