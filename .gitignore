@@ -6,6 +6,7 @@ db.sqlite3
 conversion/
 logs/
 data.ms/*
+.DS_Store
 # Symlinked agents config
 AGENTS.md
 # Symlinked claude compatibility stub
