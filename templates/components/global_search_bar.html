@@ -252,6 +252,13 @@ body {
     let currentHighlight = -1;
     let currentResults = [];
     
+    // Detect if this page load is from back/forward navigation
+    const navEntries = (typeof performance !== 'undefined' && performance.getEntriesByType)
+        ? performance.getEntriesByType('navigation')
+        : [];
+    const isBackNav = (navEntries && navEntries[0] && navEntries[0].type === 'back_forward') ||
+        (performance && performance.navigation && performance.navigation.type === 2);
+    
     // Debounced search function
     function performSearch(query) {
         if (!query || query.length < 2) {
@@ -311,9 +318,28 @@ body {
         results.innerHTML = html;
         dropdown.classList.add('show');
         
+        // If restoring from back navigation, restore scroll position once
+        try {
+            const savedScroll = sessionStorage.getItem('lastSearchScroll');
+            const restoreFlag = sessionStorage.getItem('restoreOnBack');
+            if (isBackNav && restoreFlag === '1' && savedScroll !== null) {
+                const y = parseInt(savedScroll, 10);
+                if (!Number.isNaN(y)) {
+                    results.scrollTop = y;
+                }
+                sessionStorage.removeItem('lastSearchScroll');
+                sessionStorage.removeItem('restoreOnBack');
+            }
+        } catch (e) {}
+        
         // Add click handlers
         results.querySelectorAll('.search-result-item').forEach(item => {
             item.addEventListener('click', () => {
+                try {
+                    sessionStorage.setItem('lastSearch', (searchInput.value || '').trim());
+                    sessionStorage.setItem('lastSearchScroll', String(results.scrollTop || 0));
+                    sessionStorage.setItem('restoreOnBack', '1');
+                } catch (e) {}
                 window.location.href = item.dataset.url;
             });
         });
@@ -375,6 +401,11 @@ body {
             case 'Enter':
                 e.preventDefault();
                 if (currentHighlight >= 0 && items[currentHighlight]) {
+                    try {
+                        sessionStorage.setItem('lastSearch', (searchInput.value || '').trim());
+                        sessionStorage.setItem('lastSearchScroll', String(results.scrollTop || 0));
+                        sessionStorage.setItem('restoreOnBack', '1');
+                    } catch (err) {}
                     window.location.href = items[currentHighlight].dataset.url;
                 }
                 break;
@@ -400,6 +431,17 @@ body {
             searchInput.focus();
         }
     });
+    // Restore previous search only on back/forward navigation
+    try {
+        const lastSearch = sessionStorage.getItem('lastSearch');
+        const restoreFlag = sessionStorage.getItem('restoreOnBack');
+        if (isBackNav && restoreFlag === '1' && lastSearch) {
+            searchInput.value = lastSearch;
+            performSearch(lastSearch);
+            // Keep restoreOnBack for scroll restoration in displayResults; remove lastSearch now
+            sessionStorage.removeItem('lastSearch');
+        }
+    } catch (e) {}
 })();
 
 // Dynamic admin link based on current page
