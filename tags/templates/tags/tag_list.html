@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}All Tags - VitaminDWiki{% endblock %}
+
+{% block content %}
+<h1>All Tags</h1>
+
+<p>Browse pages by tag. Click a tag to view all related pages.</p>
+
+<div class="tags" style="margin-top: 1em;">
+    {% for tag in tags %}
+        <a href="{% url 'tag_pages' tag.slug %}" class="tag">
+            {{ tag.name }}{% if tag.pub_count > 0 %} ({{ tag.pub_count }}){% endif %}
+        </a>
+    {% empty %}
+        <p>No tags found.</p>
+    {% endfor %}
+    </div>
+{% endblock %}
