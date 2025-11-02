@@ -2,36 +2,22 @@
 
 {% block title %}Pages tagged with "{{ tag.name }}" - VitaminDWiki{% endblock %}
 
+{% block extra_css %}
+.compact-list { font-size: 12pt; list-style: none; padding-left: 0; }
+.compact-list li { margin: 2px 0; }
+.compact-list a { color: #3498db; text-decoration: none; }
+.compact-list a:hover { text-decoration: underline; }
+{% endblock %}
+
 {% block content %}
 <h1>Pages tagged with "{{ tag.name }}"</h1>
-<div class="post-list">
+<ul class="compact-list">
     {% for page in pages %}
-    <article class="post">
-        <h2><a href="{% url 'page_detail' page.slug %}">{{ page.title }}</a></h2>
-        <div class="post-meta">
-            Created {{ page.created_date|date:"F Y" }}
-        </div>
-        
-        {% if page.meta_description %}
-        <p>{{ page.meta_description }}</p>
-        {% else %}
-        <div class="markdown-content">
-            {{ page.content_text|truncatewords:50 }}...
-        </div>
-        {% endif %}
-        
-        {% if page.tags.all %}
-        <div class="tags">
-            {% for tag in page.tags.all %}
-            <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </article>
+        <li><a href="{% url 'page_detail' page.slug %}">{{ page.title }}</a></li>
     {% empty %}
-    <p>No published pages with this tag yet.</p>
+        <li>No published pages with this tag yet.</li>
     {% endfor %}
-</div>
+    </ul>
 
 <!-- Pagination controls -->
 {% if pages.has_other_pages %}
