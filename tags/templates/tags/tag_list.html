@@ -3,23 +3,20 @@
 {% block title %}All Tags - VitaminDWiki{% endblock %}
 
 {% block extra_css %}
-.tags .tag {
-    margin-right: 3em; /* doubled spacing on tags page only */
-}
+.compact-list { font-size: 12pt; list-style: none; padding-left: 0; }
+.compact-list li { margin: 2px 0; }
+.compact-list a { color: #3498db; text-decoration: none; }
+.compact-list a:hover { text-decoration: underline; }
 {% endblock %}
 
 {% block content %}
 <h1>All Tags</h1>
 
-<p>Browse pages by tag. Click a tag to view all related pages.</p>
-
-<div class="tags" style="margin-top: 1em;">
+<ul class="compact-list">
     {% for tag in tags %}
-        <a href="{% url 'tag_pages' tag.slug %}" class="tag">
-            {{ tag.name }}{% if tag.pub_count > 0 %} ({{ tag.pub_count }}){% endif %}
-        </a>
+        <li><a href="{% url 'tag_pages' tag.slug %}">{{ tag.name }}{% if tag.pub_count > 0 %} ({{ tag.pub_count }}){% endif %}</a></li>
     {% empty %}
-        <p>No tags found.</p>
+        <li>No tags found.</li>
     {% endfor %}
-    </div>
+    </ul>
 {% endblock %}
