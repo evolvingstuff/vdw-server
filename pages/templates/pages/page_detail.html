@@ -1,6 +1,6 @@
 {% extends 'pages/base.html' %}
 
-{% block title %}{{ page.title }} - VDW Blog{% endblock %}
+{% block title %}{{ page.title }} - VitaminDWiki{% endblock %}
 
 {% block content %}
 <article>
@@ -30,11 +30,7 @@
         {% endfor %}
     </div>
     {% endif %}
-</article>
-
-<nav style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
-    <a href="{% url 'page_list' %}">← Back to all pages</a>
-</nav>
+ </article>
 
 <script>
 (function() {

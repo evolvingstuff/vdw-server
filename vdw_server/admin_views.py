@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import os
 import sqlite3
 import tempfile
@@ -13,7 +14,7 @@ from typing import Dict, List
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.core.files.base import ContentFile
+from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import connections
 from django.http import HttpRequest, HttpResponse
@@ -47,7 +48,20 @@ def manual_backup(request: HttpRequest) -> HttpResponse:
     db_path = Path(db_settings.get("NAME"))
     assert db_path.exists(), f"SQLITE DB MISSING: expected file at {db_path}"
 
-    backup_bytes = _build_sqlite_snapshot(db_path)
+    # Ensure enough free space on the DB filesystem for the temporary snapshot
+    usage = shutil.disk_usage(str(db_path.parent))
+    db_bytes = db_path.stat().st_size
+    # Keep overhead modest to avoid false negatives on tight disks.
+    # Empirically, SQLite backup requires ~DB size plus small metadata slack.
+    # 16 MiB buffer is typically sufficient; SQLite will still raise on ENOSPC.
+    overhead = 16 * 1024 * 1024  # 16 MiB overhead buffer
+    required = db_bytes + overhead
+    if usage.free < required:
+        raise RuntimeError(
+            f"INSUFFICIENT DISK: free={usage.free}B required={required}B on {db_path.parent}"
+        )
+
+    tmp_snapshot = _build_sqlite_snapshot(db_path)
 
     timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
     s3_path = f"db_backups/manual_backups/backup_{timestamp}.sqlite3"
@@ -58,7 +72,9 @@ def manual_backup(request: HttpRequest) -> HttpResponse:
             f"WRONG STORAGE BACKEND: Using {storage_class} - not an S3 storage backend"
         )
 
-    saved_path = default_storage.save(s3_path, ContentFile(backup_bytes))
+    # Stream upload from file (avoid loading entire DB into memory)
+    with tmp_snapshot.open("rb") as fp:
+        saved_path = default_storage.save(s3_path, File(fp))
     if saved_path != s3_path:
         raise RuntimeError(
             f"S3 PATH MISMATCH: Requested '{s3_path}' but got '{saved_path}'"
@@ -68,6 +84,9 @@ def manual_backup(request: HttpRequest) -> HttpResponse:
         raise RuntimeError(
             f"UPLOAD FAILED: File does not exist in S3 after save: {saved_path}"
         )
+
+    # Remove local snapshot file now that upload is confirmed
+    tmp_snapshot.unlink(missing_ok=True)
 
     logger.info("Manual SQLite backup uploaded to S3 at %s", saved_path)
     messages.success(request, f"Backup uploaded to S3: {saved_path}")
@@ -100,25 +119,42 @@ def manual_restore(request: HttpRequest) -> HttpResponse:
     return TemplateResponse(request, "admin/manual_restore.html", context)
 
 
-def _build_sqlite_snapshot(db_path: Path) -> bytes:
-    """Copy SQLite DB to a temp file and return its bytes."""
+def _build_sqlite_snapshot(db_path: Path) -> Path:
+    """Copy SQLite DB to a temp file on the DB's filesystem and return its path.
+
+    Rationale: Using the default system temp (often the container rootfs) can
+    run out of space. Writing the snapshot next to the live DB keeps I/O on the
+    data volume, which typically has more space. We also disable journaling and
+    use in-memory temp storage for the destination connection to reduce extra
+    disk usage during the copy.
+    """
     source = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    fd, tmp_path_str = tempfile.mkstemp(suffix=".sqlite3")
+    fd, tmp_path_str = tempfile.mkstemp(suffix=".sqlite3", dir=str(db_path.parent))
     os.close(fd)
     tmp_path = Path(tmp_path_str)
 
     try:
         dest = sqlite3.connect(tmp_path_str)
         try:
+            # Minimize extra disk usage for the throwaway copy
+            with dest:
+                dest.execute("PRAGMA journal_mode=OFF")
+                dest.execute("PRAGMA synchronous=OFF")
+                dest.execute("PRAGMA temp_store=MEMORY")
             source.backup(dest)
+        except Exception:
+            # Best-effort cleanup of partial snapshot on failure
+            try:
+                dest.close()
+            finally:
+                tmp_path.unlink(missing_ok=True)
+            raise
         finally:
             dest.close()
-        backup_bytes = tmp_path.read_bytes()
+        # Return the on-disk snapshot path to the caller for streaming upload
     finally:
         source.close()
-        tmp_path.unlink(missing_ok=True)
-
-    return backup_bytes
+    return tmp_path
 
 
 def _list_available_backups() -> List[Dict[str, object]]:

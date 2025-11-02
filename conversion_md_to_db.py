@@ -60,11 +60,11 @@ def create_homepage(SitePage):
             'slug': 'home',
             'content_md': '''# Home Page W.I.P.
 
-Welcome to VDW Blog
+Welcome to VitaminDWiki
 
 [Browse All Pages →](/pages/)''',
             'is_published': True,
-            'meta_description': 'Welcome to VDW Blog'
+            'meta_description': 'Welcome to VitaminDWiki'
         }
     )
 

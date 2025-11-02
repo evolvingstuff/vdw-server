@@ -116,7 +116,8 @@ class DockerDeployment:
             
             if show_output and output:
                 print(output)
-            if error:
+            # Only print stderr when the command failed; avoid noisy benign warnings
+            if error and exit_status != 0:
                 print(f"⚠️  {error}")
             
             return exit_status == 0, output, error
@@ -138,7 +139,7 @@ class DockerDeployment:
 
     def get_remote_free_bytes(self, path):
         """Return available bytes for the filesystem containing path"""
-        success, output, error = self.execute_command(f"df -B1 {shlex.quote(path)}")
+        success, output, error = self.execute_command(f"df -B1 {shlex.quote(path)}", show_output=False)
         if not success or not output:
             raise RuntimeError(f"Failed to check disk space: {error or 'no output'}")
 
@@ -170,27 +171,88 @@ class DockerDeployment:
     def perform_remote_cleanup(self, remote_app_path):
         """Run disk cleanup commands on the remote host"""
         print("🧹 Running remote cleanup commands...")
+
+        # Quick space report before cleanup
+        try:
+            self._print_remote_space_summary(remote_app_path, label_prefix="Before")
+        except Exception as exc:
+            print(f"⚠️  Failed to read space summary (before): {exc}")
+
+        app_q = shlex.quote(remote_app_path)
+        data_q = shlex.quote(f"{remote_app_path}/data")
+
+        # Core cleanup actions (kept conservative; no service downtime)
         commands = [
             ("Pruning unused Docker artifacts", "docker system prune -f"),
             ("Pruning Docker builder cache", "docker builder prune -af"),
             ("Pruning unused Docker volumes", "docker volume prune -f"),
             (
-                "Removing stray SQLite temp files (root)",
-                f"sudo find {shlex.quote(remote_app_path)} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
+                "Removing stray SQLite temp files (app root)",
+                f"sudo find {app_q} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
             ),
             (
                 "Removing stray SQLite temp files (data dir)",
-                f"sudo find {shlex.quote(remote_app_path)}/data -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete || true"
+                f"sudo find {data_q} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete || true"
+            ),
+            (
+                "Vacuuming system journal (cap to 200M)",
+                "sudo journalctl --vacuum-size=200M || true"
+            ),
+            (
+                "Cleaning apt caches",
+                "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* || true"
             ),
         ]
 
         for description, command in commands:
             print(f"   {description}...")
-            success, _, error = self.execute_command(command)
+            success, _, error = self.execute_command(command, show_output=False)
             if not success:
                 raise RuntimeError(f"{description} failed: {error}")
 
+        # Best-effort: clear large temp files inside the running Django container
+        print("   Clearing large /tmp files inside Django container (best-effort)...")
+        container_tmp_cleanup = (
+            f"cd {app_q} && "
+            "if docker compose ps -q django | grep -q .; then "
+            "docker compose exec -T django sh -lc "
+            "'find /tmp -maxdepth 1 -type f -name ""*.sqlite3*"" -delete 2>/dev/null || true; "
+            " find /tmp -maxdepth 1 -type f -size +10M -delete 2>/dev/null || true'"
+            " || true; "
+            "else echo 'django container not running; skipping /tmp cleanup'; fi"
+        )
+        # Do not fail the whole cleanup if this step fails
+        _success, _out, _err = self.execute_command(container_tmp_cleanup, show_output=False)
+
+        # Space report after cleanup
+        try:
+            self._print_remote_space_summary(remote_app_path, label_prefix="After ")
+        except Exception as exc:
+            print(f"⚠️  Failed to read space summary (after): {exc}")
+
         print("✅ Remote cleanup completed")
+
+    def _print_remote_space_summary(self, remote_app_path: str, label_prefix: str ="") -> None:
+        """Print a brief free-space summary for key mount points on the host.
+
+        Shows free bytes for '/', '/var/lib/docker', app path, and the data dir.
+        """
+        paths = [
+            ("/", "/"),
+            ("/var/lib/docker", "/var/lib/docker"),
+            ("app", remote_app_path),
+            ("data", f"{remote_app_path}/data"),
+        ]
+
+        parts = []
+        for label, path in paths:
+            try:
+                free = self.get_remote_free_bytes(path)
+                parts.append(f"{label}:{self._format_bytes(free)}")
+            except Exception:
+                parts.append(f"{label}:n/a")
+
+        print(f"   {label_prefix} free space → " + " | ".join(parts))
 
     def maybe_cleanup_remote_disk(self, remote_app_path):
         """Interactively offer to clean up remote disk space"""
@@ -505,7 +567,7 @@ class DockerDeployment:
           - remove SQLite DB at /app/data/db.sqlite3
           - remove MeiliSearch data volume(s)
           - prune docker builder cache + unused images
-          - vacuum systemd journal and clean apt caches
+          - truncate docker json logs, vacuum systemd journal, clean apt caches, purge large /tmp files
         Leaves containers stopped so you can upload a fresh DB next.
         """
         print("\n🧹 Starting disk cleanup on server...")
@@ -520,9 +582,11 @@ class DockerDeployment:
             remote_db_dir_q = shlex.quote(remote_db_dir)
             remote_db_path_q = shlex.quote(remote_db_path)
 
-            # Measure free space before
-            before_free = self.get_remote_free_bytes(app_path)
-            print(f"   Free before: {self._format_bytes(before_free)}")
+            # Measure free space before (show multiple mounts)
+            try:
+                self._print_remote_space_summary(app_path, label_prefix="Before")
+            except Exception as exc:
+                print(f"⚠️  Failed to read space summary (before): {exc}")
 
             cmds = [
                 ("Stopping containers", f"cd {shlex.quote(app_path)} && docker compose down"),
@@ -531,23 +595,36 @@ class DockerDeployment:
                     "Removing MeiliSearch volume(s)",
                     "for v in $(docker volume ls -q | grep meilisearch_data || true); do docker volume rm -f $v || true; done"
                 ),
+                (
+                    "Truncating Docker container JSON logs",
+                    "sudo find /var/lib/docker/containers -type f -name '*-json.log' -exec truncate -s 0 {} + 2>/dev/null || true"
+                ),
                 ("Pruning Docker builder cache", "docker builder prune -af"),
                 ("Pruning unused Docker images", "docker image prune -af"),
                 ("Pruning unused Docker volumes", "docker volume prune -f"),
-                ("Vacuuming system journal (7d)", "sudo journalctl --vacuum-time=7d"),
-                ("Cleaning apt caches", "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*"),
+                ("Vacuuming system journal (7d)", "sudo journalctl --vacuum-time=7d || true"),
+                ("Vacuuming system journal (cap 200M)", "sudo journalctl --vacuum-size=200M || true"),
+                ("Cleaning apt caches", "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* || true"),
+                (
+                    "Deleting large temp files (/tmp >10M, older than 1d)",
+                    "sudo find /tmp -type f -mtime +1 -size +10M -delete 2>/dev/null || true"
+                ),
+                (
+                    "Removing pip caches",
+                    "sudo rm -rf /root/.cache/pip /home/*/.cache/pip 2>/dev/null || true"
+                ),
             ]
 
             for desc, cmd in cmds:
                 print(f"   {desc}...")
-                success, _, error = self.execute_command(cmd)
+                success, _, error = self.execute_command(cmd, show_output=False)
                 if not success:
                     print(f"⚠️  {desc} failed: {error}")
 
-            after_free = self.get_remote_free_bytes(app_path)
-            delta = max(0, after_free - before_free)
-            print(f"   Free after:  {self._format_bytes(after_free)}")
-            print(f"   Reclaimed:  {self._format_bytes(delta)}")
+            try:
+                self._print_remote_space_summary(app_path, label_prefix="After ")
+            except Exception as exc:
+                print(f"⚠️  Failed to read space summary (after): {exc}")
 
             print("\n✅ Disk cleanup completed.")
             print("Next steps:")
