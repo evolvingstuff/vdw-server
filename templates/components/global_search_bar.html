@@ -1,7 +1,14 @@
+{% load static %}
 <div class="global-search-bar" id="global-search-bar">
     <!-- Left Navigation -->
     <div class="nav-left">
-        <a href="{% url 'homepage' %}" class="nav-brand">VitaminDWiki</a>
+        <a href="{% url 'homepage' %}" class="nav-brand">
+            <img 
+                src="{% static 'pages/images/logo.png' %}"
+                alt="VitaminDWiki logo"
+                class="nav-logo"
+            />
+        </a>
         <a href="{% url 'homepage' %}" class="nav-link">Home</a>
         <!-- Commented out per request: hide All Pages/All Tags from header -->
         <!-- <a href="{% url 'page_list' %}" class="nav-link">All Pages</a> -->
@@ -58,13 +65,17 @@
 }
 
 .nav-brand {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
-    text-decoration: none;
+    display: flex;
+    align-items: center;
     padding-right: 10px;
     border-right: 1px solid #e1e5e9;
     margin-right: 10px;
+}
+
+.nav-logo {
+    display: block;
+    height: 42px;
+    width: auto;
 }
 
 .nav-link {
