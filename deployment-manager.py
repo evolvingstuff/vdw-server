@@ -557,6 +557,10 @@ class DockerDeployment:
             if not self.upload_code():
                 return False
 
+            print("🔧 Uploading environment (.env) configuration...")
+            if not self.setup_environment():
+                return False
+
             if not self.rebuild_and_restart_stack():
                 return False
 
@@ -1099,7 +1103,7 @@ class DockerDeployment:
         options = forced_options[:] if forced_options else []
         if not options:
             if self.production_host:
-                options.append(('p', self.production_host, 'prod (Elastic IP)'))
+                options.append(('0', self.production_host, 'prod (Elastic IP)'))
             latest = self._load_provision_state()
             latest_ip = latest.get('public_ip') if latest else None
             if latest_ip:
@@ -1107,7 +1111,7 @@ class DockerDeployment:
                 label = 'test (latest provisioned)'
                 if ts:
                     label += f" ({ts})"
-                options.append(('t', latest_ip, label))
+                options.append(('1', latest_ip, label))
         return options
 
     def choose_active_host(self, forced_options: Optional[List] = None) -> None:
@@ -1126,7 +1130,7 @@ class DockerDeployment:
         choice = input(f"Select target ({prompt_keys}): ").strip().lower()
         for key, host, description in options:
             if choice == key:
-                label = 'prod' if key == 'p' else 'test'
+                label = 'prod' if key == '0' else 'test'
                 self.set_active_host(host, label)
                 return
         print("❌ Invalid target selection")
@@ -1157,7 +1161,7 @@ class DockerDeployment:
         choice = input(f"Select target ({prompt_keys}): ").strip().lower()
         for key, host, description in options:
             if choice == key:
-                label = 'prod' if key == 'p' else 'test'
+                label = 'prod' if key == '0' else 'test'
                 self.set_active_host(host, label)
                 return host
 
@@ -1443,9 +1447,9 @@ def print_menu(active_host: str, label: str):
     print("3. Deploy Code from Local (upload code + retain db + run migrations + rebuild containers)")
     print("4. Deploy Database from Local (retain code + upload db + reindex search)")
     print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
-    print("6. Reindex Search on Server")
-    print("7. Free Disk on Server (stop containers, delete DB, remove Meili volume, prune caches)")
-    print("8. Troubleshoot on Server")
+    print("6. Reindex Search")
+    print("7. Free Disk (stop containers, delete DB, remove Meili volume, prune caches)")
+    print("8. Troubleshoot (docker ps + logs)")
     print("9. Switch active host (production vs latest)")
     print("10. Exit")
     print()

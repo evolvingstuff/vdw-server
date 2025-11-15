@@ -73,7 +73,7 @@ Example `config/provisioning.json` (placeholder values):
 Edit this file directly if you ever need to change defaults (AMI, sizes, etc.).
 You never need to add a `Name=` tag here—the provisioner automatically tags each instance as `vdw<YYYYMMDDHHMMSS>` (UTC timestamp) so every server is clearly labeled.
 
-Whenever you run options 3–8 the CLI prompts you to choose “prod” (Elastic IP host) or “test” (latest provisioned host) so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly.
+Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly.
 
 ### Step 4: Deploy to Server
 
@@ -111,13 +111,13 @@ python deployment-manager.py
 - Runs option 3 followed by option 4 in one flow (code + database)
 
 ### 6. Reindex Search
-- Rebuilds the Meilisearch index without touching code or the DB
+- Rebuilds the Meilisearch index on the chosen host without touching code or the DB
 
-### 7. Free Disk on Server (Dangerous)
-- Stops all containers, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and frees disk space so you can upload a clean database.
+### 7. Free Disk (Dangerous)
+- Stops all containers on the chosen host, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and frees disk space so you can upload a clean database.
 
 ### 8. Troubleshoot / Show Status
-- Shows `docker compose ps` plus the last 20 log lines from every container
+- Shows `docker compose ps` plus the last 20 log lines from every container on the chosen host
 
 ### 9. Switch Active Host
 - Toggle between the production Elastic-IP host and the latest provisioned (temporary) host for subsequent commands.
