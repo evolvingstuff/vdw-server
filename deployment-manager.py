@@ -52,13 +52,11 @@ class DockerDeployment:
 
         self.active_host = None
         self.active_host_label = ''
-        self.set_active_host(
-            self.production_host
-            or (self.latest_state or {}).get('public_ip')
-            or '',
-            'production' if self.production_host else 'latest provisioned',
-            announce=False,
-        )
+        latest_ip = (self.latest_state or {}).get('public_ip')
+        if latest_ip:
+            self.set_active_host(latest_ip, 'latest provisioned', announce=False)
+        elif self.production_host:
+            self.set_active_host(self.production_host, 'production', announce=False)
 
         # Validate required config for general deploy actions
         required_fields = ['user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
@@ -540,13 +538,17 @@ class DockerDeployment:
     
     def deploy_code(self):
         """Deploy code updates via SCP upload + docker rebuild"""
-        print("\n🚀 Starting code deployment...")
+        target_host = self.prompt_host_for_operation('code deploy')
+        return self._deploy_code(target_host)
+
+    def _deploy_code(self, target_host: str) -> bool:
+        print(f"\n🚀 Starting code deployment on {target_host}...")
 
         # Check git branch before deploying
         if not self.check_git_branch():
             return False
 
-        if not self.connect():
+        if not self.connect(host_override=target_host):
             return False
         
         try:
@@ -559,7 +561,7 @@ class DockerDeployment:
                 return False
 
             print("✅ Code deployment completed successfully!")
-            print(f"🌐 Site should be available at: http://{self.config['host']}:{self.config['django_port']}")
+            print(f"🌐 Site should be available at: http://{target_host}:{self.config['django_port']}")
             return True
             
         except Exception as e:
@@ -570,8 +572,11 @@ class DockerDeployment:
             self.disconnect()
     
     def deploy_database(self):
-        """Deploy database update via SCP + container restart"""
-        print("\n🗄️  Starting database deployment...")
+        target_host = self.prompt_host_for_operation('database deploy')
+        return self._deploy_database(target_host)
+
+    def _deploy_database(self, target_host: str) -> bool:
+        print(f"\n🗄️  Starting database deployment on {target_host}...")
         
         # Check local database exists
         local_db = Path(self.config['local_db'])
@@ -586,7 +591,7 @@ class DockerDeployment:
             print("❌ Database deployment cancelled")
             return False
         
-        if not self.connect():
+        if not self.connect(host_override=target_host):
             return False
 
         try:
@@ -723,14 +728,15 @@ class DockerDeployment:
     def deploy_full(self):
         """Deploy both code and database"""
         print("\n🎯 Starting full deployment...")
+        target_host = self.prompt_host_for_operation('full deploy')
 
         print("Step 1: Deploying code...")
-        if not self.deploy_code():
+        if not self._deploy_code(target_host):
             print("❌ Code deployment failed, aborting full deployment")
             return False
         
         print("\nStep 2: Deploying database...")
-        if not self.deploy_database():
+        if not self._deploy_database(target_host):
             print("❌ Database deployment failed")
             return False
         
@@ -739,9 +745,10 @@ class DockerDeployment:
     
     def reindex_search(self):
         """Reindex search without other changes"""
-        print("\n🔍 Reindexing search...")
+        host = self.prompt_host_for_operation('reindex search')
+        print(f"\n🔍 Reindexing search on {host}...")
         
-        if not self.connect():
+        if not self.connect(host_override=host):
             return False
         
         try:
@@ -774,9 +781,10 @@ class DockerDeployment:
           - truncate docker json logs, vacuum systemd journal, clean apt caches, purge large /tmp files
         Leaves containers stopped so you can upload a fresh DB next.
         """
-        print("\n🧹 Starting disk cleanup on server...")
+        target_host = self.prompt_host_for_operation('free disk cleanup')
+        print(f"\n🧹 Starting disk cleanup on {target_host}...")
 
-        if not self.connect():
+        if not self.connect(host_override=target_host):
             return False
 
         try:
@@ -844,9 +852,10 @@ class DockerDeployment:
     
     def show_status(self):
         """Show server status and logs"""
-        print("\n📊 Checking server status...")
+        target_host = self.prompt_host_for_operation('server status')
+        print(f"\n📊 Checking server status on {target_host}...")
         
-        if not self.connect():
+        if not self.connect(host_override=target_host):
             return False
         
         try:
@@ -1086,18 +1095,23 @@ class DockerDeployment:
         except json.JSONDecodeError:
             return None
 
-    def choose_active_host(self) -> None:
-        options = []
-        if self.production_host:
-            options.append(('p', self.production_host, 'production (Elastic IP)'))
-        latest = self._load_provision_state()
-        latest_ip = latest.get('public_ip') if latest else None
-        if latest_ip:
-            ts = latest.get('written_at')
-            label = 'latest provisioned'
-            if ts:
-                label += f" ({ts})"
-            options.append(('l', latest_ip, label))
+    def _host_options(self, forced_options: Optional[List] = None) -> List:
+        options = forced_options[:] if forced_options else []
+        if not options:
+            if self.production_host:
+                options.append(('p', self.production_host, 'prod (Elastic IP)'))
+            latest = self._load_provision_state()
+            latest_ip = latest.get('public_ip') if latest else None
+            if latest_ip:
+                ts = latest.get('written_at')
+                label = 'test (latest provisioned)'
+                if ts:
+                    label += f" ({ts})"
+                options.append(('t', latest_ip, label))
+        return options
+
+    def choose_active_host(self, forced_options: Optional[List] = None) -> None:
+        options = self._host_options(forced_options)
 
         if not options:
             print("❌ No alternate hosts available (capture provisioning config or provision first)")
@@ -1108,13 +1122,46 @@ class DockerDeployment:
             marker = '*' if host == self.active_host else ' '
             print(f"  [{key}] {host} {description} {marker}")
 
-        choice = input("Select target (p/l): ").strip().lower()
+        prompt_keys = '/'.join(key for key, _, _ in options)
+        choice = input(f"Select target ({prompt_keys}): ").strip().lower()
         for key, host, description in options:
             if choice == key:
-                label = 'production' if key == 'p' else 'latest provisioned'
+                label = 'prod' if key == 'p' else 'test'
                 self.set_active_host(host, label)
                 return
         print("❌ Invalid target selection")
+
+    def require_active_host(self, prompt_keys: Optional[str] = None) -> str:
+        host = self.active_host
+        if host:
+            return host
+        print("❌ No active host selected.")
+        self.choose_active_host()
+        if not self.active_host:
+            raise RuntimeError("No active host selected")
+        return self.active_host
+
+    def prompt_host_for_operation(self, operation: str) -> str:
+        options = self._host_options()
+        if not options:
+            raise RuntimeError("No host choices available. Provision a server or configure the Elastic IP host.")
+
+        print(f"\nTarget selection for {operation}:")
+        for key, host, description in options:
+            marker = ''
+            if host == self.active_host:
+                marker = ' (current)'
+            print(f"  [{key}] {host} {description}{marker}")
+
+        prompt_keys = '/'.join(key for key, _, _ in options)
+        choice = input(f"Select target ({prompt_keys}): ").strip().lower()
+        for key, host, description in options:
+            if choice == key:
+                label = 'prod' if key == 'p' else 'test'
+                self.set_active_host(host, label)
+                return host
+
+        raise RuntimeError("Invalid host selection; deploy aborted")
     
     def install_docker(self):
         """Install Docker and Docker Compose on the server"""
@@ -1266,6 +1313,7 @@ sudo chown %s:%s "$TARGET"
         steps = [
             ("🐳 Rebuilding Docker containers", f"cd {app_path} && sudo docker compose up --build -d"),
             ("🔄 Running database migrations", f"cd {app_path} && sudo docker compose exec -T django python manage.py migrate"),
+            ("📦 Collecting static files", f"cd {app_path} && sudo docker compose exec -T django python manage.py collectstatic --noinput"),
             ("🔍 Checking container status", f"cd {app_path} && sudo docker compose ps"),
         ]
 
@@ -1306,13 +1354,7 @@ sudo chown %s:%s "$TARGET"
                     return False
                 if not self.prepare_data_volume():
                     return False
-                if not self.upload_code():
-                    return False
-                if not self.setup_environment():
-                    return False
                 if not self.configure_nginx_proxy():
-                    return False
-                if not self.rebuild_and_restart_stack():
                     return False
             finally:
                 self.disconnect()
@@ -1331,13 +1373,13 @@ sudo chown %s:%s "$TARGET"
                 'data_volume_id': data_volume_id,
                 'app_path': self.config['app_path'],
             })
-            self.set_active_host(public_ip, 'latest provisioned')
+            self.set_active_host(public_ip, 'test')
 
             print("\n🎉 Provisioning complete!")
             print("Next steps:")
-            print(f"  • Test the site via http://{public_ip}")
-            print("  • Update your /etc/hosts entry temporarily if needed")
-            print("  • Once satisfied, run menu option 1 (Associate Elastic IP) to swap traffic")
+            print("  • With the new host selected (see menu banner), run option 5 (Full Deploy) to upload code + DB")
+            print("  • Test via http://{} before swapping DNS".format(public_ip))
+            print("  • Once satisfied, run menu option 2 (Associate Elastic IP) to swap traffic")
             return True
 
         except Exception as exc:
@@ -1411,18 +1453,6 @@ def print_menu(active_host: str, label: str):
 def main():
     print_header()
     
-    # Check for required environment variables
-    if not os.getenv('DEPLOY_HOST'):
-        print("\n❌ Missing configuration!")
-        print("Please set DEPLOY_HOST in your .env file")
-        print("\nExample .env configuration:")
-        print("DEPLOY_HOST=your-server.com")
-        print("DEPLOY_USER=ubuntu")
-        print("DEPLOY_KEY_FILE=~/.ssh/your-key.pem")
-        print("DEPLOY_APP_PATH=/app")
-        print("DEPLOY_LOCAL_DB=./db.sqlite3")
-        sys.exit(1)
-    
     deployer = DockerDeployment()
     
     while True:
@@ -1437,9 +1467,9 @@ def main():
             print("=" * 50)
             print("This will:")
             print("  • Create a brand-new EC2 instance with configured sizes")
-            print("  • Install Docker, docker compose, and nginx")
-            print("  • Upload application code + .env, then start containers")
-            print("  • Leave Elastic IP unassigned so you can test safely")
+            print("  • Install Docker, docker compose, nginx, and prepare the /app/data volume")
+            print("  • Configure nginx to reverse proxy to the Django container (code deploy happens separately)")
+            print("  • Leave the Elastic IP unassigned so you can deploy + test via the temporary IP")
             
             if input("\nProceed? (y/n): ").lower() == 'y':
                 deployer.provision_server()

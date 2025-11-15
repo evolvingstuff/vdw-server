@@ -73,7 +73,7 @@ Example `config/provisioning.json` (placeholder values):
 Edit this file directly if you ever need to change defaults (AMI, sizes, etc.).
 You never need to add a `Name=` tag here—the provisioner automatically tags each instance as `vdw<YYYYMMDDHHMMSS>` (UTC timestamp) so every server is clearly labeled.
 
-When the CLI starts it targets the Elastic IP (`elastic_hostname` / `elastic_ip_address`). After you provision, it automatically switches the active host to the new instance’s temporary IP so you can finish prep work before swapping the Elastic IP. Option 9 lets you toggle between the production host and the latest provisioned host at any time.
+Whenever you run options 3–8 the CLI prompts you to choose “prod” (Elastic IP host) or “test” (latest provisioned host) so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly.
 
 ### Step 4: Deploy to Server
 
@@ -132,9 +132,10 @@ python deployment-manager.py
 1. (First time only) Run option 0 to capture provisioning config from the current instance
 2. Run: python deployment-manager.py
 3. Select: Option 1 (Provision + Bootstrap)
-4. Test the site via the temporary public IP (optionally add it to /etc/hosts)
-5. When ready, select Option 2 (Associate Elastic IP) to move DNS traffic to the new box
-6. Optionally terminate the previous instance when prompted
+4. With the banner now pointing at the new host, run Option 5 (Full Deploy) to upload code + database to the new server
+5. Test the site via the temporary public IP (optionally add it to /etc/hosts)
+6. When ready, select Option 2 (Associate Elastic IP) to move DNS traffic to the new box
+7. Optionally terminate the previous instance when prompted
 ```
 
 ### Code Updates Only
@@ -170,9 +171,9 @@ python deployment-manager.py
 1. Use boto3 to create (or reuse) the configured security group; opens ports 22/80/443 plus Django/Meilisearch/extra ports.
 2. Launch a new Ubuntu 24.04 instance with the configured AMI, instance type, block device sizes, IAM profile, and tags.
 3. Wait for EC2 + system checks, then poll for SSH availability on the temporary public IP.
-4. SSH in and automate bootstrap tasks: install Docker/docker compose, install nginx, format/mount the optional `/app/data` EBS volume, upload the repository + `.env`, configure nginx as a reverse proxy, and build the Docker stack.
-5. Persist metadata (instance ID, IPs, security group, volume IDs) to `tmp/provision-state.json` so the Elastic IP workflow knows which instance to target.
-6. Leave the Elastic IP untouched so you can test via the temporary IP before flipping DNS.
+4. SSH in and automate bootstrap tasks: install Docker/docker compose, install nginx, format/mount the optional `/app/data` EBS volume, and configure the nginx reverse proxy (but **do not** upload code yet).
+5. Persist metadata (instance ID, IPs, security group, volume IDs) to `tmp/provision-state.json` so the Elastic IP workflow knows which instance to target, and switch the CLI’s active host to the new server.
+6. Leave the Elastic IP untouched so you can test via the temporary IP before flipping DNS. Deploy the actual code/database by running option 5 (Full Deploy) against the new host prior to testing.
 
 ### Provisioning State File
 - Located at `tmp/provision-state.json` whenever option 0 finishes.
@@ -184,7 +185,7 @@ python deployment-manager.py
 2. Uploads all Python files, requirements, Docker configs
 3. Uploads application directories (pages, templates, static, etc.)
 4. Excludes: .git, __pycache__, .env, db.sqlite3, venv
-5. Rebuilds and restarts Docker containers
+5. Rebuilds and restarts Docker containers, runs database migrations, and executes `collectstatic` so images/CSS land in `/app/static`
 6. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`
 
 ### Database Deployment Process
