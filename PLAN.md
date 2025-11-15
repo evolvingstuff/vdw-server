@@ -1,70 +1,42 @@
-# Deploy Automation Plan
+# Deploy Automation Plan – Phase 2
 
-## Overview
-We are splitting this effort into two phases. Phase 1 focuses on provisioning AWS infrastructure (instance + networking) and configuring nginx so deployments are reproducible end-to-end from a clean slate. Phase 2 layers in DNS / Let's Encrypt workflows, including a reusable "reset Let's Encrypt" command inside `deployment-manager.py`.
+Phase 1 is complete: we can provision EC2 hosts with nginx/Docker, deploy code + DB to the temporary IP, and manually swap the Elastic IP once testing passes. Phase 2 focuses solely on HTTPS enablement and DNS/Certbot workflows so we can obtain, renew, and reset certificates without downtime.
 
-Assumptions from the user:
-- Stay with Python-based automation (extend `deployment-manager.py` + boto3/AWS CLI) rather than switching to Terraform/CloudFormation.
-- All provisioning parameters (region, AMI ID, instance type, volume sizes, security group IDs/names, Elastic IP allocation ID, etc.) must be driven by config entries (e.g., `.env` or a dedicated config file) so we can change them without code edits.
-- Elastic IP already exists; automation should re-associate it with the new instance but never creates another one.
-- Phase 2 (DNS + Let's Encrypt) can be done after Phase 1 is complete.
+## Remaining Goals
+1. Serve the site over HTTPS (port 443) via nginx using Let's Encrypt certificates.
+2. Provide a dedicated deployment-manager workflow to (re)issue certificates and update nginx without touching application code.
+3. Make DNS switches explicit and safe—either by automating the swap or documenting the exact manual steps with pauses in the CLI.
 
-## Phase 1 – Automated Provisioning & Reverse Proxy
-Goal: From a laptop, create a production-ready EC2 host (Ubuntu 24.04) with Docker, docker-compose, nginx reverse proxy, Gunicorn, and app files, while preparing (but not yet executing) the Elastic IP swap. Provisioning should be idempotent and callable via deployment-manager, and must leave the new instance testable via its temporary public IP. The Elastic IP reassociation will be a separate, explicitly-invoked step the user can run only after manual testing.
+## Deliverables
+1. **TLS-Ready nginx config**
+   - Update `nginx_config` to include an SSL server block listening on 443.
+   - Support HTTP->HTTPS redirects, HSTS (optional), and separate config paths for cert/key files.
+   - Ensure static/media aliases work identically for both 80 and 443.
 
-### Deliverables
-1. **Configuration schema** – Expand `.env` (or dedicated config) with:
-   - AWS region & profile, AMI ID, instance type, root volume size, optional data volume size
-   - Security group IDs/names (or definitions for new ones), key pair name, subnet ID/VPC ID
-   - Elastic IP allocation ID or address to re-associate
-   - Default disk usage thresholds, tags, etc.
-   Provide validation + friendly errors on missing values.
+2. **Certbot Integration**
+   - Install Certbot + nginx plugin during provisioning (but skip cert issuance until explicitly requested).
+   - Add CLI prompts to capture domain list (primary + SANs) and DNS challenge instructions if needed.
+   - Store cert paths in `config/provisioning.json` so they remain consistent.
 
-2. **Instance lifecycle helpers** – New Python helpers (boto3 preferred; fall back to AWS CLI if necessary) that:
-   - Launch an EC2 instance with the configured instance type + block devices + tags
-   - Wait for running state and fetch public DNS/IP
-   - Attach or create additional EBS volume if requested, format/mount to `/app/data`
-   - Output clear instructions + data needed for the later Elastic IP swap (allocation ID, current association)
-   - Optionally terminate the previous instance (manual confirmation)
+3. **New deployment-manager commands**
+   - `Setup HTTPS / Issue Certs`: stops nginx, runs Certbot for configured domains, updates config, restarts nginx.
+   - `Reset Let's Encrypt`: kills any running Certbot process, removes stale cert files, reissues certificates.
+   - Optional: `Renew HTTPS Certs` for cron-style manual runs (if we don't rely on certbot.timer).
 
-3. **Security group automation** – Update provisioning flow to either create dedicated SGs or reconfigure the existing one using config-driven port definitions (22, 80, 443, Django, Meilisearch). Ensure idempotent rule creation and IPv6 coverage if needed.
+4. **DNS Workflow Hook**
+   - Provide a helper or documented prompt (option) that reminds the operator to update DNS records before hitting Certbot if using HTTP-01, or to add TXT records when using DNS-01.
+   - Pause the CLI until the user confirms DNS propagation.
 
-4. **Remote bootstrap** – After SSH connectivity succeeds:
-   - Install Docker + docker compose plugin and required packages (same logic as today but resilient to reruns)
-   - Install/enable nginx as a reverse proxy in front of Gunicorn (manage `/etc/nginx/sites-available/vdw` template that proxies to Docker/Gunicorn, listens on 80, and prepares for TLS)
-   - Create systemd services or ensure docker-compose handles gunicorn; confirm log locations
-   - Upload application code (reuse existing SCP flow) and seed `.env` on server
-   - Start containers + nginx, verify HTTP 200 on health endpoint
+5. **Config & Docs**
+   - Extend `config/provisioning.json` with `primary_domain`, `alt_domains`, `cert_path`, `key_path`, and challenge type.
+   - Update `DEPLOYMENT-INSTRUCTIONS.md` with step-by-step HTTPS setup, renewal processes, and rollback instructions.
 
-5. **Deployment-manager workflow changes** – Introduce a "Phase 1" menu command (e.g., `Provision + Bootstrap Server`) which orchestrates the above steps. Break the logic into small methods we can reuse later (instance creation, security group config, remote bootstrap). Add a *separate* menu command for "Associate Elastic IP" so the operator can manually trigger the swap once validation is complete.
+## Validation & Testing
+- Dry run Certbot issuance using staging environment (Let's Encrypt staging endpoint) before going live.
+- Verify nginx reloads cleanly and both HTTP/HTTPS flows work.
+- Confirm that `Reset Let's Encrypt` stops/cleans existing jobs and reissues successfully without leaving partial state.
 
-6. **Documentation / runbooks** – Update `DEPLOYMENT-INSTRUCTIONS.md` (and any other relevant docs) to describe the new config variables and provisioning workflow. Include rollback instructions (e.g., how to swap the Elastic IP back) and disk-sizing rationale.
-
-### Validation Tasks
-- Dry run in a sandbox (or mock) to ensure boto3 commands are correct.
-- Confirm remote script handles being re-run (e.g., existing nginx config doesn't break).
-- Ensure logs or prompts highlight manual checkpoints (e.g., confirm before terminating old instance).
-
-## Phase 2 – DNS & Let's Encrypt Automation
-Goal: After Phase 1 baseline works, automate DNS switching and Let's Encrypt certificate management, including a "reset Let's Encrypt" workflow that can stop/remove an existing certbot run and reissue certificates safely.
-
-### Planned Deliverables
-1. **DNS orchestration** – (Optional) helper for updating Bluehost or Route53 records; at minimum, document the manual step and ensure deployment-manager can pause for verification.
-2. **nginx + Certbot integration** – Extend provisioning to install Certbot, request certificates for configured domains, and update nginx to serve HTTPS.
-3. **Reusable LE workflow** – Add a deployment-manager command (Phase 2) called "Reset Let's Encrypt" that:
-   - Stops nginx/certbot as needed
-   - Removes old certificate files if necessary
-   - Re-runs Certbot with the configured challenge method (likely DNS-01 to avoid downtime)
-   - Reloads nginx and verifies certificate expiry dates
-4. **Config-driven domains** – Add `PRIMARY_DOMAIN`, `ALT_DOMAINS`, and certificate storage paths to config; enforce that missing values raise errors.
-5. **Documentation/testing** – Update docs describing DNS cutover + LE reset, plus guidance on verifying certificates.
-
-## Out of Scope (for now)
-- Terraform/CloudFormation rewrite (unless future decision changes this)
-- Additional AWS services (CloudWatch alarms, IAM hardening, etc.) beyond what's required for Phase 1 deliverables
-- Automatic DNS updates or certificate issuance during Phase 1
-
-## Open Questions / Follow-ups
-- Confirm final AWS region, subnet, key pair, and disk sizing defaults (placeholders now; update once decided).
-- Decide whether to store provisioning config in `.env` or a structured file (YAML/TOML) for clarity.
-- Determine how aggressively we should tear down old infrastructure (automatic termination vs manual).
+## Open Questions
+- Challenge method: HTTP-01 vs DNS-01 (DNS-01 avoids downtime but needs automation of TXT records).
+- Whether to automate DNS changes (e.g., Route53) or keep them manual but guided.
+- Handling certificate renewals automatically via systemd timers vs manual CLI command.
