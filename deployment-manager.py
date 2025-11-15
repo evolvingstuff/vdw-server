@@ -1398,17 +1398,45 @@ sudo chown %s:%s "$TARGET"
             return False
 
         state = self._load_provision_state() or {}
-        default_instance = state.get('instance_id')
-        prompt = f"Enter instance ID to associate with Elastic IP [{default_instance or ''}]: "
-        target_instance = input(prompt).strip() or default_instance
-        if not target_instance:
-            print("❌ No instance ID provided")
+        latest_instance = state.get('instance_id')
+        latest_label = state.get('public_ip')
+        current_instance = None
+
+        try:
+            ec2 = self._aws_client('ec2')
+            address = ec2.describe_addresses(AllocationIds=[allocation_id])['Addresses'][0]
+            current_instance = address.get('InstanceId')
+            public_ip = address.get('PublicIp')
+        except ClientError as exc:
+            print(f"❌ Failed to inspect Elastic IP: {exc}")
             return False
 
-        ec2 = self._aws_client('ec2')
-        address = ec2.describe_addresses(AllocationIds=[allocation_id])['Addresses'][0]
-        current_instance = address.get('InstanceId')
-        public_ip = address.get('PublicIp')
+        print("\nElastic IP options:")
+        options = []
+        if current_instance:
+            options.append(('0', current_instance, f"prod (currently attached)"))
+        if latest_instance and latest_instance != current_instance:
+            label = f"test (latest provisioned @ {latest_label})" if latest_label else 'test (latest provisioned)'
+            options.append(('1', latest_instance, label))
+
+        if not options:
+            print("❌ No instance IDs available to associate. Provision first.")
+            return False
+
+        for key, instance_id, description in options:
+            print(f"  [{key}] {instance_id} {description}")
+
+        prompt_keys = '/'.join(key for key, _, _ in options)
+        choice = input(f"Select target ({prompt_keys}): ").strip()
+        target_instance = None
+        for key, instance_id, description in options:
+            if choice == key:
+                target_instance = instance_id
+                break
+
+        if not target_instance:
+            print("❌ Invalid selection")
+            return False
 
         print(f"Elastic IP {public_ip} currently attached to: {current_instance or 'none'}")
         if input(f"Associate {public_ip} with {target_instance}? (y/n): ").lower() != 'y':
