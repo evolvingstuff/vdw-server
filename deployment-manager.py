@@ -4,14 +4,21 @@ Docker-based deployment script for VDW Server
 Clean, simple deployment without the Bitnami nightmare
 """
 
+import json
 import os
-import sys
-import subprocess
-import time
 import shlex
+import socket
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
-from dotenv import load_dotenv
+from typing import Dict, List, Optional
+
+import boto3
 import paramiko
+from botocore.exceptions import ClientError
+from dotenv import load_dotenv
 from scp import SCPClient
 
 # Load environment variables
@@ -20,7 +27,6 @@ load_dotenv()
 class DockerDeployment:
     def __init__(self):
         self.config = {
-            'instance_id': os.getenv('EC2_INSTANCE_ID'),
             'host': os.getenv('DEPLOY_HOST'),
             'user': os.getenv('DEPLOY_USER'),
             'port': int(os.getenv('DEPLOY_PORT')),
@@ -30,14 +36,82 @@ class DockerDeployment:
             'django_port': os.getenv('DJANGO_PORT'),
         }
         
-        # Validate required config (instance_id only required for provisioning)
-        required_fields = ['host', 'user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
+        self.provision_state_path = Path('tmp/provision-state.json')
+        self.provision_config_path = Path('config/provisioning.json')
+        self._aws_session: Optional[boto3.session.Session] = None
+        self.provisioning: Optional[Dict] = self._load_provisioning_config(required=False)
+        
+        self.latest_state = self._load_provision_state()
+        self.production_host = self.config['host'] or ''
+        if not self.production_host and self.provisioning:
+            self.production_host = (
+                self.provisioning.get('elastic_hostname')
+                or self.provisioning.get('elastic_ip_address')
+                or ''
+            )
+
+        self.active_host = None
+        self.active_host_label = ''
+        self.set_active_host(
+            self.production_host
+            or (self.latest_state or {}).get('public_ip')
+            or '',
+            'production' if self.production_host else 'latest provisioned',
+            announce=False,
+        )
+
+        # Validate required config for general deploy actions
+        required_fields = ['user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
         for field in required_fields:
             if not self.config[field]:
                 print(f"❌ {field.upper().replace('_', '_')} not set in .env file")
                 sys.exit(1)
-        
+        if not self.active_host:
+            print(
+                "❌ Could not determine a target host. Set elastic_hostname in config/provisioning.json"
+            )
+            sys.exit(1)
+
         self.ssh_client = None
+
+    def _load_provisioning_config(self, required: bool = True) -> Optional[Dict]:
+        if not self.provision_config_path.exists():
+            if required:
+                print("❌ Missing config/provisioning.json. Run option 0 to capture settings.")
+                sys.exit(1)
+            return None
+
+        try:
+            data = json.loads(self.provision_config_path.read_text())
+        except json.JSONDecodeError as exc:
+            print(f"❌ Failed to parse {self.provision_config_path}: {exc}")
+            sys.exit(1)
+
+        # Normalize some fields
+        data['extra_ports'] = [int(p) for p in data.get('extra_ports', [])]
+        if isinstance(data.get('associate_public_ip'), str):
+            data['associate_public_ip'] = data['associate_public_ip'].lower() != 'false'
+
+        return data
+
+    def _write_provisioning_config(self, payload: Dict) -> None:
+        self.provision_config_path.parent.mkdir(parents=True, exist_ok=True)
+        self.provision_config_path.write_text(json.dumps(payload, indent=2))
+        print(f"📝 Saved provisioning config to {self.provision_config_path}")
+
+    def _get_provisioning(self) -> Dict:
+        if self.provisioning is None:
+            self.provisioning = self._load_provisioning_config(required=True)
+        return self.provisioning
+
+    def set_active_host(self, host: str, label: str, announce: bool = True) -> None:
+        host = host.strip()
+        if not host:
+            return
+        self.active_host = host
+        self.active_host_label = label
+        if announce:
+            print(f"🎯 Active target set to {host} ({label})")
 
     def check_git_branch(self):
         """Check current git branch and warn if not on main"""
@@ -66,24 +140,178 @@ class DockerDeployment:
         except Exception as e:
             print(f"⚠️  Git branch check failed: {e}")
             return True  # Continue deployment if git check fails
+
+    @staticmethod
+    def _prompt_with_default(prompt: str, default: str) -> str:
+        value = input(f"{prompt} [{default}]: ").strip()
+        return value or default
+
+    @staticmethod
+    def _prompt_int(prompt: str, default: int) -> int:
+        while True:
+            value = input(f"{prompt} [{default}]: ").strip()
+            if not value:
+                return default
+            try:
+                return int(value)
+            except ValueError:
+                print("❌ Please enter a whole number.")
+
+    def capture_provisioning_config(self):
+        """Populate config/provisioning.json using the current server as a template."""
+        print("\n" + "=" * 50)
+        print("CAPTURE EXISTING SERVER SETTINGS")
+        print("=" * 50)
+
+        existing = self.provisioning or {}
+        default_region = existing.get('aws_region') or os.getenv('AWS_REGION') or 'us-east-1'
+        region = self._prompt_with_default("AWS region", default_region)
+        default_profile = existing.get('aws_profile') or os.getenv('AWS_PROFILE') or ''
+        profile_input = input(f"AWS profile (press Enter for default) [{default_profile}]: ").strip()
+        profile = profile_input or default_profile or None
+
+        host_default = self.config['host'] or ''
+        elastic_ip_input = self._prompt_with_default(
+            "Elastic IP or hostname currently serving production",
+            host_default or '1.2.3.4'
+        )
+        try:
+            resolved_ip = socket.gethostbyname(elastic_ip_input)
+        except socket.gaierror as exc:
+            print(f"❌ Could not resolve {elastic_ip_input}: {exc}")
+            return False
+
+        session_kwargs = {'region_name': region}
+        if profile:
+            session_kwargs['profile_name'] = profile
+        session = boto3.session.Session(**session_kwargs)
+        ec2 = session.client('ec2')
+
+        try:
+            addr_resp = ec2.describe_addresses(PublicIps=[resolved_ip])
+        except ClientError as exc:
+            print(f"❌ describe_addresses failed: {exc}")
+            return False
+
+        addresses = addr_resp.get('Addresses', [])
+        if not addresses:
+            print("❌ No Elastic IP found for that address. Confirm the IP or region.")
+            return False
+
+        address = addresses[0]
+        allocation_id = address.get('AllocationId')
+        if not allocation_id:
+            print("❌ Could not determine Elastic IP allocation ID")
+            return False
+        instance_id = address.get('InstanceId')
+        if instance_id:
+            print(f"🔍 Elastic IP currently attached to instance {instance_id}")
+        else:
+            instance_id = input("Elastic IP not attached. Enter instance ID to copy config from: ").strip()
+            if not instance_id:
+                print("❌ Instance ID is required")
+                return False
+
+        try:
+            reservations = ec2.describe_instances(InstanceIds=[instance_id])['Reservations']
+        except ClientError as exc:
+            print(f"❌ describe_instances failed: {exc}")
+            return False
+
+        if not reservations or not reservations[0]['Instances']:
+            print("❌ Instance not found")
+            return False
+
+        instance = reservations[0]['Instances'][0]
+
+        block_mappings = instance.get('BlockDeviceMappings', [])
+        volume_ids = [dev['Ebs']['VolumeId'] for dev in block_mappings if dev.get('Ebs')]
+        volumes = {}
+        if volume_ids:
+            vol_resp = ec2.describe_volumes(VolumeIds=volume_ids)
+            for vol in vol_resp.get('Volumes', []):
+                volumes[vol['VolumeId']] = vol['Size']
+
+        root_device_name = instance.get('RootDeviceName', '/dev/sda1')
+        root_mapping = next((dev for dev in block_mappings if dev.get('DeviceName') == root_device_name and dev.get('Ebs')), None)
+        root_volume_size = volumes.get(root_mapping['Ebs']['VolumeId']) if root_mapping else 40
+
+        data_mapping = next((dev for dev in block_mappings if dev.get('DeviceName') != root_device_name and dev.get('Ebs')), None)
+        data_volume_size = 0
+        data_device_name = '/dev/sdf'
+        if data_mapping:
+            data_device_name = data_mapping['DeviceName']
+            data_volume_size = volumes.get(data_mapping['Ebs']['VolumeId'], 0)
+
+        instance_type_default = instance.get('InstanceType', 't3.small')
+        instance_type = self._prompt_with_default("Instance type for new servers", instance_type_default)
+        root_volume_gb = self._prompt_int("Root volume size (GB)", root_volume_size or 40)
+        data_volume_gb = self._prompt_int("Data volume size for /app/data (GB, 0 = skip)", data_volume_size or 0)
+        ssh_cidr_default = existing.get('ssh_ingress_cidr', '0.0.0.0/0')
+        ssh_cidr = self._prompt_with_default("SSH ingress CIDR", ssh_cidr_default)
+
+        security_groups = instance.get('SecurityGroups', [])
+        if not security_groups:
+            print("❌ Instance has no security groups attached")
+            return False
+        if len(security_groups) > 1:
+            print("⚠️  Multiple security groups detected; using the first one.")
+        sg_id = security_groups[0]['GroupId']
+        sg_name = security_groups[0].get('GroupName')
+
+        iam_profile = instance.get('IamInstanceProfile', {}).get('Arn')
+        iam_profile_name = iam_profile.split('/')[-1] if iam_profile else None
+
+        tags = instance.get('Tags', [])
+        tag_spec = ','.join(f"{t['Key']}={t['Value']}" for t in tags if 'Key' in t and 'Value' in t)
+
+        payload = {
+            'aws_region': region,
+            'aws_profile': profile or '',
+            'instance_type': instance_type,
+            'ami_id': instance.get('ImageId'),
+            'subnet_id': instance.get('SubnetId'),
+            'vpc_id': instance.get('VpcId'),
+            'security_group_id': sg_id,
+            'security_group_name': sg_name,
+            'key_name': instance.get('KeyName'),
+            'root_volume_gb': root_volume_gb,
+            'data_volume_gb': data_volume_gb,
+            'root_device_name': root_device_name,
+            'data_device_name': data_device_name,
+            'iam_instance_profile': iam_profile_name,
+            'tag_specification': tag_spec,
+            'associate_public_ip': True,
+            'ssh_ingress_cidr': ssh_cidr,
+            'extra_ports': [],
+            'elastic_ip_allocation_id': allocation_id,
+            'elastic_hostname': elastic_ip_input,
+            'elastic_ip_address': resolved_ip,
+        }
+
+        self._write_provisioning_config(payload)
+        self.provisioning = payload
+        print("✅ Provisioning config captured. You can now run option 1 to create a new server.")
+        return True
     
-    def connect(self):
+    def connect(self, host_override: Optional[str] = None):
         """Establish SSH connection"""
         try:
-            print(f"🔌 Connecting to {self.config['host']}...")
+            target_host = host_override or self.active_host
+            print(f"🔌 Connecting to {target_host}...")
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             
             if self.config['key_file']:
                 self.ssh_client.connect(
-                    hostname=self.config['host'],
+                    hostname=target_host,
                     username=self.config['user'],
                     port=self.config['port'],
                     key_filename=os.path.expanduser(self.config['key_file'])
                 )
             else:
                 self.ssh_client.connect(
-                    hostname=self.config['host'],
+                    hostname=target_host,
                     username=self.config['user'],
                     port=self.config['port']
                 )
@@ -183,9 +411,9 @@ class DockerDeployment:
 
         # Core cleanup actions (kept conservative; no service downtime)
         commands = [
-            ("Pruning unused Docker artifacts", "docker system prune -f"),
-            ("Pruning Docker builder cache", "docker builder prune -af"),
-            ("Pruning unused Docker volumes", "docker volume prune -f"),
+            ("Pruning unused Docker artifacts", "sudo docker system prune -f"),
+            ("Pruning Docker builder cache", "sudo docker builder prune -af"),
+            ("Pruning unused Docker volumes", "sudo docker volume prune -f"),
             (
                 "Removing stray SQLite temp files (app root)",
                 f"sudo find {app_q} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
@@ -214,8 +442,8 @@ class DockerDeployment:
         print("   Clearing large /tmp files inside Django container (best-effort)...")
         container_tmp_cleanup = (
             f"cd {app_q} && "
-            "if docker compose ps -q django | grep -q .; then "
-            "docker compose exec -T django sh -lc "
+            "if sudo docker compose ps -q django | grep -q .; then "
+            "sudo docker compose exec -T django sh -lc "
             "'find /tmp -maxdepth 1 -type f -name ""*.sqlite3*"" -delete 2>/dev/null || true; "
             " find /tmp -maxdepth 1 -type f -size +10M -delete 2>/dev/null || true'"
             " || true; "
@@ -322,37 +550,13 @@ class DockerDeployment:
             return False
         
         try:
-            app_path = self.config['app_path']
-            
             # Upload fresh code from local machine
             print("📦 Uploading fresh code from local machine...")
             if not self.upload_code():
                 return False
-            
-            # Rebuild and restart containers
-            print("🐳 Rebuilding Docker containers...")
-            success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose up --build -d"
-            )
-            if not success:
-                print(f"❌ Docker rebuild failed: {error}")
-                return False
-            
-            # Run database migrations
-            print("🔄 Running database migrations...")
-            success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose exec -T django python manage.py migrate"
-            )
-            if not success:
-                print(f"❌ Migration failed: {error}")
-                return False
-            print("✅ Migrations completed!")
 
-            # Check container status
-            print("🔍 Checking container status...")
-            success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose ps"
-            )
+            if not self.rebuild_and_restart_stack():
+                return False
 
             print("✅ Code deployment completed successfully!")
             print(f"🌐 Site should be available at: http://{self.config['host']}:{self.config['django_port']}")
@@ -434,7 +638,7 @@ class DockerDeployment:
 
             # Stop Django container to avoid database locks
             print("🛑 Stopping Django container...")
-            self.execute_command(f"cd {remote_app_path} && docker compose stop django")
+            self.execute_command(f"cd {remote_app_path} && sudo docker compose stop django")
 
             # Ensure DB directory exists and is writable for upload
             self.execute_command(f"sudo mkdir -p {remote_db_dir_q}")
@@ -485,7 +689,7 @@ class DockerDeployment:
             # Start Django container
             print("🚀 Starting Django container...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose start django"
+                f"cd {app_path} && sudo docker compose start django"
             )
             if not success:
                 print(f"❌ Failed to start Django container: {error}")
@@ -499,7 +703,7 @@ class DockerDeployment:
             # Reindex search
             print("🔍 Rebuilding search index...")
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose exec -T django python manage.py reindex_search"
+                f"cd {app_path} && sudo docker compose exec -T django python manage.py reindex_search"
             )
             if not success:
                 print(f"❌ Search reindexing failed: {error}")
@@ -543,7 +747,7 @@ class DockerDeployment:
         try:
             app_path = self.config['app_path']
             success, output, error = self.execute_command(
-                f"cd {app_path} && docker compose exec -T django python manage.py reindex_search"
+                f"cd {app_path} && sudo docker compose exec -T django python manage.py reindex_search"
             )
             
             if success:
@@ -563,7 +767,7 @@ class DockerDeployment:
     def free_disk_on_server(self):
         """Aggressively free disk on the remote host.
         Steps:
-          - docker compose down
+          - sudo docker compose down
           - remove SQLite DB at /app/data/db.sqlite3
           - remove MeiliSearch data volume(s)
           - prune docker builder cache + unused images
@@ -589,19 +793,19 @@ class DockerDeployment:
                 print(f"⚠️  Failed to read space summary (before): {exc}")
 
             cmds = [
-                ("Stopping containers", f"cd {shlex.quote(app_path)} && docker compose down"),
+                ("Stopping containers", f"cd {shlex.quote(app_path)} && sudo docker compose down"),
                 ("Removing SQLite database", f"sudo rm -f {remote_db_path_q}"),
                 (
                     "Removing MeiliSearch volume(s)",
-                    "for v in $(docker volume ls -q | grep meilisearch_data || true); do docker volume rm -f $v || true; done"
+                    "for v in $(sudo docker volume ls -q | grep meilisearch_data || true); do sudo docker volume rm -f $v || true; done"
                 ),
                 (
                     "Truncating Docker container JSON logs",
                     "sudo find /var/lib/docker/containers -type f -name '*-json.log' -exec truncate -s 0 {} + 2>/dev/null || true"
                 ),
-                ("Pruning Docker builder cache", "docker builder prune -af"),
-                ("Pruning unused Docker images", "docker image prune -af"),
-                ("Pruning unused Docker volumes", "docker volume prune -f"),
+                ("Pruning Docker builder cache", "sudo docker builder prune -af"),
+                ("Pruning unused Docker images", "sudo docker image prune -af"),
+                ("Pruning unused Docker volumes", "sudo docker volume prune -f"),
                 ("Vacuuming system journal (7d)", "sudo journalctl --vacuum-time=7d || true"),
                 ("Vacuuming system journal (cap 200M)", "sudo journalctl --vacuum-size=200M || true"),
                 ("Cleaning apt caches", "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* || true"),
@@ -628,8 +832,8 @@ class DockerDeployment:
 
             print("\n✅ Disk cleanup completed.")
             print("Next steps:")
-            print("  1) From your machine: run option 2 (Deploy Database) to upload a fresh db.sqlite3")
-            print("  2) Then run option 4 (Reindex Search) to rebuild MeiliSearch")
+            print("  1) From your machine: run option 4 (Deploy Database) to upload a fresh db.sqlite3")
+            print("  2) Then run option 6 (Reindex Search) to rebuild MeiliSearch")
             return True
 
         except Exception as e:
@@ -649,10 +853,10 @@ class DockerDeployment:
             app_path = self.config['app_path']
             
             print("🐳 Container status:")
-            self.execute_command(f"cd {app_path} && docker compose ps")
+            self.execute_command(f"cd {app_path} && sudo docker compose ps")
             
             print("\n📋 Recent logs (last 20 lines):")
-            self.execute_command(f"cd {app_path} && docker compose logs --tail=20")
+            self.execute_command(f"cd {app_path} && sudo docker compose logs --tail=20")
             
             return True
             
@@ -663,96 +867,254 @@ class DockerDeployment:
         finally:
             self.disconnect()
     
-    def run_aws_command(self, command, silent_on_error=False):
-        """Run AWS CLI command"""
-        try:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            if result.returncode != 0:
-                if not silent_on_error:
-                    print(f"❌ AWS command failed: {result.stderr}")
-                return False, result.stderr
-            return True, result.stdout.strip()
-        except Exception as e:
-            if not silent_on_error:
-                print(f"❌ AWS command error: {e}")
-            return False, str(e)
-    
-    def wait_for_instance(self):
-        """Wait for EC2 instance to be running"""
-        print(f"⏳ Waiting for instance {self.config['instance_id']} to be running...")
-        
-        max_attempts = 30
-        for attempt in range(max_attempts):
-            success, output = self.run_aws_command(
-                f"aws ec2 describe-instances --instance-ids {self.config['instance_id']} "
-                "--query 'Reservations[0].Instances[0].State.Name' --output text"
+    def _require_provision_settings(self, *keys: str) -> None:
+        config = self._get_provisioning()
+        missing = [key for key in keys if not config.get(key)]
+        if missing:
+            raise ValueError(
+                "Missing provisioning settings: " + ", ".join(missing)
             )
-            
-            if success and output == "running":
-                print("✅ Instance is running!")
-                return True
-            
-            if success:
-                print(f"   Instance state: {output}")
-            
-            time.sleep(10)
-        
-        print(f"❌ Instance didn't start within {max_attempts * 10} seconds")
-        return False
-    
-    def configure_security_group(self):
-        """Add ports to security group"""
-        print("🔒 Configuring security group...")
-        
-        # Get security group ID
-        success, sg_id = self.run_aws_command(
-            f"aws ec2 describe-instances --instance-ids {self.config['instance_id']} "
-            "--query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text"
-        )
-        
-        if not success:
-            print(f"❌ Failed to get security group ID: {sg_id}")
-            return False
-        
-        print(f"   Security Group ID: {sg_id}")
-        
-        # Add Django port
-        django_port = self.config['django_port']
-        print(f"   Adding port {django_port} (Django)...")
-        success, output = self.run_aws_command(
-            f"aws ec2 authorize-security-group-ingress --group-id {sg_id} "
-            f"--protocol tcp --port {django_port} --cidr 0.0.0.0/0",
-            silent_on_error=True
-        )
-        
-        if not success:
-            if "already exists" in output:
-                print(f"   Port {django_port} already configured ✓")
-            else:
-                print(f"❌ Failed to add port {django_port}: {output}")
-                return False
+
+    def _aws_client(self, service: str):
+        config = self._get_provisioning()
+        region = config.get('aws_region')
+        if not region:
+            raise ValueError('aws_region missing in provisioning config')
+
+        if self._aws_session is None:
+            session_kwargs = {'region_name': region}
+            profile = config.get('aws_profile') or None
+            if profile:
+                session_kwargs['profile_name'] = profile
+            self._aws_session = boto3.session.Session(**session_kwargs)
+        return self._aws_session.client(service)
+
+    def _tag_specifications(self) -> List[Dict[str, str]]:
+        raw = self._get_provisioning().get('tag_specification') or ''
+        tags: List[Dict[str, str]] = []
+        if raw:
+            for pair in raw.split(','):
+                pair = pair.strip()
+                if not pair:
+                    continue
+                if '=' not in pair:
+                    raise ValueError(f"Invalid tag spec '{pair}' (expected key=value)")
+                key, value = pair.split('=', 1)
+                tags.append({'Key': key.strip(), 'Value': value.strip()})
+
+        tags = [tag for tag in tags if tag.get('Key') != 'Name']
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
+        tags.append({'Key': 'Name', 'Value': f'vdw{timestamp}'})
+
+        return tags
+
+    def _required_ports(self) -> List[int]:
+        base_ports = {22, 80, 443, 7700}
+        try:
+            base_ports.add(int(self.config['django_port']))
+        except (TypeError, ValueError):
+            base_ports.add(8000)
+        base_ports.update(self._get_provisioning().get('extra_ports') or [])
+        return sorted(port for port in base_ports if port)
+
+    def ensure_security_group(self) -> str:
+        """Create or reuse a security group with required ports."""
+        config = self._get_provisioning()
+        ec2 = self._aws_client('ec2')
+        sg_id = config.get('security_group_id')
+        if sg_id:
+            print(f"🔒 Using existing security group {sg_id}")
         else:
-            print(f"   Port {django_port} added ✓")
-        
-        # Add port 7700 (Meilisearch)
-        print("   Adding port 7700 (Meilisearch)...")
-        success, output = self.run_aws_command(
-            f"aws ec2 authorize-security-group-ingress --group-id {sg_id} "
-            "--protocol tcp --port 7700 --cidr 0.0.0.0/0",
-            silent_on_error=True
-        )
-        
-        if not success:
-            if "already exists" in output:
-                print("   Port 7700 already configured ✓")
+            self._require_provision_settings('security_group_name', 'vpc_id')
+            sg_name = config['security_group_name']
+            vpc_id = config['vpc_id']
+            print(f"🔒 Ensuring security group '{sg_name}' in VPC {vpc_id} exists...")
+            existing = ec2.describe_security_groups(
+                Filters=[
+                    {'Name': 'group-name', 'Values': [sg_name]},
+                    {'Name': 'vpc-id', 'Values': [vpc_id]},
+                ]
+            )
+            if existing['SecurityGroups']:
+                sg_id = existing['SecurityGroups'][0]['GroupId']
+                print(f"   Found existing group {sg_id}")
             else:
-                print(f"❌ Failed to add port 7700: {output}")
-                return False
-        else:
-            print("   Port 7700 added ✓")
-        
-        print("✅ Security group configured!")
-        return True
+                response = ec2.create_security_group(
+                    GroupName=sg_name,
+                    Description='VDW Server security group',
+                    VpcId=vpc_id,
+                )
+                sg_id = response['GroupId']
+                tags = self._tag_specifications()
+                if tags:
+                    ec2.create_tags(Resources=[sg_id], Tags=tags)
+                print(f"   Created security group {sg_id}")
+
+        ssh_cidr = config.get('ssh_ingress_cidr') or '0.0.0.0/0'
+        for port in self._required_ports():
+            cidr = ssh_cidr if port == 22 else '0.0.0.0/0'
+            permission = {
+                'IpProtocol': 'tcp',
+                'FromPort': port,
+                'ToPort': port,
+                'IpRanges': [{'CidrIp': cidr}],
+            }
+            try:
+                ec2.authorize_security_group_ingress(
+                    GroupId=sg_id,
+                    IpPermissions=[permission],
+                )
+                print(f"   Opened port {port}/tcp")
+            except ClientError as exc:
+                if exc.response['Error']['Code'] != 'InvalidPermission.Duplicate':
+                    raise
+        print("✅ Security group ready!")
+        return sg_id
+
+    def launch_instance(self, security_group_id: str) -> str:
+        """Launch a fresh EC2 instance with the configured settings."""
+        config = self._get_provisioning()
+        self._require_provision_settings('ami_id', 'instance_type', 'subnet_id', 'key_name')
+        ec2 = self._aws_client('ec2')
+
+        block_devices = [
+            {
+                'DeviceName': config.get('root_device_name') or '/dev/sda1',
+                'Ebs': {
+                    'VolumeSize': int(config.get('root_volume_gb') or 40),
+                    'VolumeType': 'gp3',
+                    'DeleteOnTermination': True,
+                },
+            }
+        ]
+
+        data_volume_gb = int(config.get('data_volume_gb') or 0)
+        if data_volume_gb > 0:
+            block_devices.append({
+                'DeviceName': config.get('data_device_name') or '/dev/sdf',
+                'Ebs': {
+                    'VolumeSize': data_volume_gb,
+                    'VolumeType': 'gp3',
+                    'DeleteOnTermination': False,
+                },
+            })
+
+        associate_public_ip = (
+            str(config.get('associate_public_ip') or 'true').lower() != 'false'
+        )
+
+        network_interfaces = [{
+            'DeviceIndex': 0,
+            'SubnetId': config['subnet_id'],
+            'AssociatePublicIpAddress': associate_public_ip,
+            'Groups': [security_group_id],
+            'DeleteOnTermination': True,
+        }]
+
+        tag_specifications = []
+        tags = self._tag_specifications()
+        if tags:
+            tag_specifications.append({'ResourceType': 'instance', 'Tags': tags})
+            tag_specifications.append({'ResourceType': 'volume', 'Tags': tags})
+
+        params = {
+            'ImageId': config['ami_id'],
+            'InstanceType': config['instance_type'],
+            'KeyName': config['key_name'],
+            'BlockDeviceMappings': block_devices,
+            'MaxCount': 1,
+            'MinCount': 1,
+            'NetworkInterfaces': network_interfaces,
+        }
+        if tag_specifications:
+            params['TagSpecifications'] = tag_specifications
+        profile = config.get('iam_instance_profile')
+        if profile:
+            params['IamInstanceProfile'] = {'Name': profile}
+
+        print("🚀 Launching EC2 instance...")
+        response = ec2.run_instances(**params)
+        instance_id = response['Instances'][0]['InstanceId']
+        print(f"   Instance {instance_id} is provisioning")
+        return instance_id
+
+    def _wait_for_instance_running(self, instance_id: str) -> None:
+        ec2 = self._aws_client('ec2')
+        print("⏳ Waiting for instance to enter running state...")
+        waiter = ec2.get_waiter('instance_running')
+        waiter.wait(InstanceIds=[instance_id])
+        print("   Instance is running")
+
+    def _wait_for_instance_status_ok(self, instance_id: str) -> None:
+        ec2 = self._aws_client('ec2')
+        print("⏳ Waiting for system checks to pass...")
+        waiter = ec2.get_waiter('instance_status_ok')
+        waiter.wait(InstanceIds=[instance_id])
+        print("   Instance checks passed")
+
+    def describe_instance(self, instance_id: str) -> Dict:
+        ec2 = self._aws_client('ec2')
+        reservations = ec2.describe_instances(InstanceIds=[instance_id])['Reservations']
+        if not reservations or not reservations[0]['Instances']:
+            raise RuntimeError(f"Instance {instance_id} not found")
+        return reservations[0]['Instances'][0]
+
+    def _wait_for_ssh(self, host: str, timeout: int = 600) -> None:
+        print(f"⏳ Waiting for SSH on {host}:{self.config['port']}...")
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                with socket.create_connection((host, self.config['port']), timeout=10):
+                    print("   SSH reachable")
+                    return
+            except OSError:
+                time.sleep(5)
+        raise TimeoutError(f"Timed out waiting for SSH on {host}")
+
+    def _write_provision_state(self, state: Dict) -> None:
+        self.provision_state_path.parent.mkdir(parents=True, exist_ok=True)
+        state['written_at'] = datetime.now(timezone.utc).isoformat()
+        self.provision_state_path.write_text(json.dumps(state, indent=2))
+        self.latest_state = state
+        print(f"📝 Saved provision details to {self.provision_state_path}")
+
+    def _load_provision_state(self) -> Optional[Dict]:
+        if not self.provision_state_path.exists():
+            return None
+        try:
+            return json.loads(self.provision_state_path.read_text())
+        except json.JSONDecodeError:
+            return None
+
+    def choose_active_host(self) -> None:
+        options = []
+        if self.production_host:
+            options.append(('p', self.production_host, 'production (Elastic IP)'))
+        latest = self._load_provision_state()
+        latest_ip = latest.get('public_ip') if latest else None
+        if latest_ip:
+            ts = latest.get('written_at')
+            label = 'latest provisioned'
+            if ts:
+                label += f" ({ts})"
+            options.append(('l', latest_ip, label))
+
+        if not options:
+            print("❌ No alternate hosts available (capture provisioning config or provision first)")
+            return
+
+        print("\nAvailable targets:")
+        for key, host, description in options:
+            marker = '*' if host == self.active_host else ' '
+            print(f"  [{key}] {host} {description} {marker}")
+
+        choice = input("Select target (p/l): ").strip().lower()
+        for key, host, description in options:
+            if choice == key:
+                label = 'production' if key == 'p' else 'latest provisioned'
+                self.set_active_host(host, label)
+                return
+        print("❌ Invalid target selection")
     
     def install_docker(self):
         """Install Docker and Docker Compose on the server"""
@@ -785,6 +1147,60 @@ class DockerDeployment:
         print("✅ Docker installed successfully!")
         return True
     
+    def install_nginx(self) -> bool:
+        """Install nginx if needed"""
+        print("🌐 Installing nginx...")
+        success, _, _ = self.execute_command("nginx -v", show_output=False)
+        if success:
+            print("✅ nginx already installed")
+            return True
+
+        commands = [
+            "sudo apt-get update",
+            "sudo apt-get install -y nginx",
+            "sudo systemctl enable nginx",
+        ]
+
+        for cmd in commands:
+            success, _, error = self.execute_command(cmd, show_output=False)
+            if not success:
+                print(f"❌ Failed to run '{cmd}': {error}")
+                return False
+        print("✅ nginx installed")
+        return True
+
+    def configure_nginx_proxy(self) -> bool:
+        """Upload nginx reverse proxy config and reload service."""
+        print("📝 Configuring nginx reverse proxy...")
+        local_conf = Path('nginx_config')
+        if not local_conf.exists():
+            print("❌ nginx_config file is missing in the project root")
+            return False
+
+        remote_tmp = '/tmp/vdw_nginx.conf'
+        try:
+            with SCPClient(self.ssh_client.get_transport()) as scp:
+                scp.put(str(local_conf), remote_tmp)
+        except Exception as exc:
+            print(f"❌ Failed to upload nginx config: {exc}")
+            return False
+
+        commands = [
+            f"sudo mv {remote_tmp} /etc/nginx/sites-available/vdw",
+            "sudo ln -sf /etc/nginx/sites-available/vdw /etc/nginx/sites-enabled/vdw",
+            "sudo rm -f /etc/nginx/sites-enabled/default",
+            "sudo nginx -t",
+            "sudo systemctl reload nginx",
+        ]
+
+        for cmd in commands:
+            success, _, error = self.execute_command(cmd, show_output=False)
+            if not success:
+                print(f"❌ Failed to configure nginx: {error}")
+                return False
+        print("✅ nginx reverse proxy configured")
+        return True
+
     def setup_environment(self):
         """Set up environment variables"""
         print("🔧 Setting up environment...")
@@ -806,53 +1222,165 @@ class DockerDeployment:
             print(f"❌ Failed to upload .env: {e}")
             return False
     
-    def provision_server(self):
-        """Complete server provisioning"""
-        print("\n🚀 Starting server provisioning...\n")
-        
-        # Check for EC2 instance ID
-        if not self.config['instance_id']:
-            raise ValueError("EC2_INSTANCE_ID not set in .env file (required for provisioning)")
-        
-        # Step 1: Wait for instance to be running
-        if not self.wait_for_instance():
-            return False
-        
-        # Step 2: Configure security group
-        if not self.configure_security_group():
-            return False
-        
-        # Step 3: Connect via SSH
-        if not self.connect():
-            return False
-        
-        try:
-            # Step 4: Install Docker
-            if not self.install_docker():
-                return False
-            
-            # Step 5: Upload application code
-            if not self.upload_code():
-                return False
-            
-            # Step 6: Set up environment
-            if not self.setup_environment():
-                return False
-            
-            print("\n🎉 Server provisioning completed successfully!")
-            print(f"🌐 Server ready at: {self.config['host']}:{self.config['django_port']}")
-            print("📋 Next steps:")
-            print("   1. Wait ~30 seconds for Docker group changes to take effect")
-            print("   2. Use option 3 (Full Deploy) to deploy your application")
-            
+    def prepare_data_volume(self) -> bool:
+        data_volume_gb = int(self._get_provisioning().get('data_volume_gb') or 0)
+        if data_volume_gb <= 0:
             return True
-            
-        except Exception as e:
-            print(f"❌ Provisioning failed: {e}")
+
+        print("💽 Preparing dedicated data volume mount at /app/data ...")
+        remote_user = shlex.quote(self.config['user'])
+        script = r"""
+set -euo pipefail
+ROOT_SRC=$(findmnt -n -o SOURCE /)
+ROOT_DISK=$(lsblk -no PKNAME "$ROOT_SRC")
+DATA_DEVICE=$(lsblk -ndo NAME,TYPE,MOUNTPOINT | awk -v root="$ROOT_DISK" '$2=="disk" && $3=="" && $1!=root {print "/dev/"$1; exit}')
+if [ -z "$DATA_DEVICE" ]; then
+  echo "No secondary disk detected" >&2
+  exit 1
+fi
+TARGET=/app/data
+if mountpoint -q "$TARGET"; then
+  exit 0
+fi
+if ! sudo blkid "$DATA_DEVICE" >/dev/null 2>&1; then
+  sudo mkfs.ext4 -F "$DATA_DEVICE"
+fi
+UUID=$(sudo blkid -s UUID -o value "$DATA_DEVICE")
+sudo mkdir -p "$TARGET"
+if ! grep -q "$UUID" /etc/fstab; then
+  echo "UUID=$UUID $TARGET ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab >/dev/null
+fi
+sudo mount "$TARGET"
+sudo chown %s:%s "$TARGET"
+""" % (remote_user, remote_user)
+
+        success, _, error = self.execute_command(f"bash -c {shlex.quote(script)}", show_output=False)
+        if not success:
+            print(f"❌ Failed to prepare data volume: {error}")
             return False
-        
-        finally:
-            self.disconnect()
+        print("✅ Data volume mounted at /app/data")
+        return True
+
+    def rebuild_and_restart_stack(self) -> bool:
+        app_path = shlex.quote(self.config['app_path'])
+        steps = [
+            ("🐳 Rebuilding Docker containers", f"cd {app_path} && sudo docker compose up --build -d"),
+            ("🔄 Running database migrations", f"cd {app_path} && sudo docker compose exec -T django python manage.py migrate"),
+            ("🔍 Checking container status", f"cd {app_path} && sudo docker compose ps"),
+        ]
+
+        for description, cmd in steps:
+            print(f"   {description}...")
+            success, _, error = self.execute_command(cmd)
+            if not success:
+                print(f"❌ Failed during {description}: {error}")
+                return False
+        return True
+
+    def provision_server(self):
+        """Provision a brand-new EC2 instance and bootstrap Docker/nginx."""
+        print("\n🚀 Starting new server provisioning...\n")
+        try:
+            sg_id = self.ensure_security_group()
+            instance_id = self.launch_instance(sg_id)
+            self.config['instance_id'] = instance_id
+            self._wait_for_instance_running(instance_id)
+            self._wait_for_instance_status_ok(instance_id)
+            instance = self.describe_instance(instance_id)
+            public_ip = instance.get('PublicIpAddress')
+            private_ip = instance.get('PrivateIpAddress')
+            if not public_ip:
+                raise RuntimeError("Instance does not have a public IP (check subnet settings)")
+
+            print(f"🌐 Temporary public IP: {public_ip}")
+            print(f"🔐 Private IP: {private_ip}")
+            self._wait_for_ssh(public_ip)
+
+            # Bootstrap remote host using temporary IP
+            if not self.connect(host_override=public_ip):
+                return False
+            try:
+                if not self.install_docker():
+                    return False
+                if not self.install_nginx():
+                    return False
+                if not self.prepare_data_volume():
+                    return False
+                if not self.upload_code():
+                    return False
+                if not self.setup_environment():
+                    return False
+                if not self.configure_nginx_proxy():
+                    return False
+                if not self.rebuild_and_restart_stack():
+                    return False
+            finally:
+                self.disconnect()
+
+            data_volume_id = None
+            target_device = self._get_provisioning().get('data_device_name')
+            for device in instance.get('BlockDeviceMappings', []):
+                if device.get('DeviceName') == target_device:
+                    data_volume_id = device.get('Ebs', {}).get('VolumeId')
+
+            self._write_provision_state({
+                'instance_id': instance_id,
+                'public_ip': public_ip,
+                'private_ip': private_ip,
+                'security_group_id': sg_id,
+                'data_volume_id': data_volume_id,
+                'app_path': self.config['app_path'],
+            })
+            self.set_active_host(public_ip, 'latest provisioned')
+
+            print("\n🎉 Provisioning complete!")
+            print("Next steps:")
+            print(f"  • Test the site via http://{public_ip}")
+            print("  • Update your /etc/hosts entry temporarily if needed")
+            print("  • Once satisfied, run menu option 1 (Associate Elastic IP) to swap traffic")
+            return True
+
+        except Exception as exc:
+            print(f"❌ Provisioning failed: {exc}")
+            return False
+
+    def associate_elastic_ip(self):
+        """Attach the pre-allocated Elastic IP to the last provisioned instance."""
+        allocation_id = self._get_provisioning().get('elastic_ip_allocation_id')
+        if not allocation_id:
+            print("❌ PROVISION_ELASTIC_IP_ALLOCATION_ID is not set")
+            return False
+
+        state = self._load_provision_state() or {}
+        default_instance = state.get('instance_id')
+        prompt = f"Enter instance ID to associate with Elastic IP [{default_instance or ''}]: "
+        target_instance = input(prompt).strip() or default_instance
+        if not target_instance:
+            print("❌ No instance ID provided")
+            return False
+
+        ec2 = self._aws_client('ec2')
+        address = ec2.describe_addresses(AllocationIds=[allocation_id])['Addresses'][0]
+        current_instance = address.get('InstanceId')
+        public_ip = address.get('PublicIp')
+
+        print(f"Elastic IP {public_ip} currently attached to: {current_instance or 'none'}")
+        if input(f"Associate {public_ip} with {target_instance}? (y/n): ").lower() != 'y':
+            print("❌ Operation cancelled")
+            return False
+
+        ec2.associate_address(
+            AllocationId=allocation_id,
+            InstanceId=target_instance,
+            AllowReassociation=True,
+        )
+        print(f"✅ Elastic IP {public_ip} now points to {target_instance}")
+
+        if current_instance and current_instance != target_instance:
+            if input(f"Terminate previous instance {current_instance}? (y/n): ").lower() == 'y':
+                ec2.terminate_instances(InstanceIds=[current_instance])
+                print(f"🗑️ Termination requested for {current_instance}")
+        return True
 
 def print_header():
     """Print script header"""
@@ -860,20 +1388,24 @@ def print_header():
     print("    VDW Server Docker Deployment")
     print("=" * 50)
 
-def print_menu():
+def print_menu(active_host: str, label: str):
     """Print deployment menu"""
-    print(f"\n🌐 Server: {os.getenv('DEPLOY_HOST', 'not configured')}")
+    banner = f"{active_host} ({label})" if label else active_host
+    print(f"\n🌐 Active Host: {banner}")
     print(f"📁 App path: {os.getenv('DEPLOY_APP_PATH', '/app')}\n")
     
     print("Select deployment option:\n")
-    print("0. Provision Server (initial setup: install Docker, upload code, configure, creates empty db)")
-    print("1. Deploy Code from Local (upload code + retain db + run migrations + rebuild containers)")
-    print("2. Deploy Database from Local (retain code + upload db + reindex search)")
-    print("3. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
-    print("4. Reindex Search on Server")
-    print("5. Free Disk on Server (stop containers, delete DB, remove Meili volume, prune caches)")
-    print("6. Troubleshoot on Server")
-    print("7. Exit")
+    print("0. Capture provisioning config from current server")
+    print("1. Provision + Bootstrap new server (Phase 1)")
+    print("2. Associate Elastic IP with last provisioned server")
+    print("3. Deploy Code from Local (upload code + retain db + run migrations + rebuild containers)")
+    print("4. Deploy Database from Local (retain code + upload db + reindex search)")
+    print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
+    print("6. Reindex Search on Server")
+    print("7. Free Disk on Server (stop containers, delete DB, remove Meili volume, prune caches)")
+    print("8. Troubleshoot on Server")
+    print("9. Switch active host (production vs latest)")
+    print("10. Exit")
     print()
 
 def main():
@@ -894,24 +1426,30 @@ def main():
     deployer = DockerDeployment()
     
     while True:
-        print_menu()
-        choice = input("Enter choice [0-7]: ").strip()
+        print_menu(deployer.active_host, deployer.active_host_label)
+        choice = input("Enter choice [0-10]: ").strip()
         
         if choice == '0':
+            deployer.capture_provisioning_config()
+        elif choice == '1':
             print("\n" + "=" * 50)
-            print("SERVER PROVISIONING")
+            print("SERVER PROVISIONING (NEW INSTANCE)")
             print("=" * 50)
             print("This will:")
-            print("  • Wait for EC2 instance to be running")
-            print("  • Configure security group ports")
-            print("  • Install Docker and Docker Compose")
-            print("  • Upload application code")
-            print("  • Set up environment variables")
+            print("  • Create a brand-new EC2 instance with configured sizes")
+            print("  • Install Docker, docker compose, and nginx")
+            print("  • Upload application code + .env, then start containers")
+            print("  • Leave Elastic IP unassigned so you can test safely")
             
             if input("\nProceed? (y/n): ").lower() == 'y':
                 deployer.provision_server()
-        
-        elif choice == '1':
+        elif choice == '2':
+            print("\n" + "=" * 50)
+            print("ASSOCIATE ELASTIC IP")
+            print("=" * 50)
+            print("This will move the configured Elastic IP to a chosen instance.")
+            deployer.associate_elastic_ip()
+        elif choice == '3':
             print("\n" + "=" * 50)
             print("CODE DEPLOYMENT")
             print("=" * 50)
@@ -922,14 +1460,12 @@ def main():
             
             if input("\nProceed? (y/n): ").lower() == 'y':
                 deployer.deploy_code()
-        
-        elif choice == '2':
+        elif choice == '4':
             print("\n" + "=" * 50)
             print("DATABASE DEPLOYMENT")
             print("=" * 50)
             deployer.deploy_database()
-        
-        elif choice == '3':
+        elif choice == '5':
             print("\n" + "=" * 50)
             print("FULL DEPLOYMENT")
             print("=" * 50)
@@ -939,22 +1475,20 @@ def main():
             
             if input("\nProceed? (y/n): ").lower() == 'y':
                 deployer.deploy_full()
-        
-        elif choice == '4':
+        elif choice == '6':
             deployer.reindex_search()
-        
-        elif choice == '5':
+        elif choice == '7':
             print("\n" + "=" * 50)
             print("FREE DISK CLEANUP (DANGEROUS)")
             print("=" * 50)
             print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data volume\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
             if input("\nProceed? (y/n): ").lower() == 'y':
                 deployer.free_disk_on_server()
-
-        elif choice == '6':
+        elif choice == '8':
             deployer.show_status()
-        
-        elif choice == '7':
+        elif choice == '9':
+            deployer.choose_active_host()
+        elif choice == '10':
             print("\n👋 Goodbye!")
             break
         

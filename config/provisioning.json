@@ -1,0 +1,23 @@
+{
+  "aws_region": "us-west-2",
+  "aws_profile": "",
+  "instance_type": "t2.medium",
+  "ami_id": "ami-00f46ccd1cbfb363e",
+  "subnet_id": "subnet-0a4832ee906cf3b50",
+  "vpc_id": "vpc-0c6711fd2003242f1",
+  "security_group_id": "sg-0d8006896cbc20eee",
+  "security_group_name": "launch-wizard-5",
+  "key_name": "vdw2",
+  "root_volume_gb": 16,
+  "data_volume_gb": 16,
+  "root_device_name": "/dev/sda1",
+  "data_device_name": "/dev/sdf",
+  "iam_instance_profile": null,
+  "tag_specification": "",
+  "associate_public_ip": true,
+  "ssh_ingress_cidr": "0.0.0.0/0",
+  "extra_ports": [],
+  "elastic_ip_allocation_id": "eipalloc-0e7e9365dbb014588",
+  "elastic_hostname": "44.228.184.247",
+  "elastic_ip_address": "44.228.184.247"
+}
