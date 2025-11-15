@@ -18,7 +18,11 @@
             autocorrect="off"
             spellcheck="false"
         />
-        <div class="search-dropdown" id="search-dropdown">
+        <div 
+            class="search-dropdown{% if search_results_display_mode == 'title_only' %} title-only{% endif %}"
+            id="search-dropdown"
+            data-display-mode="{{ search_results_display_mode }}"
+        >
             <div class="search-loading" id="search-loading" style="display: none;">Searching...</div>
             <div class="search-results" id="search-results"></div>
         </div>
@@ -160,6 +164,19 @@
     line-height: 1.4;
 }
 
+.search-dropdown.title-only .search-result-item {
+    padding: 8px 14px;
+}
+
+.search-dropdown.title-only .result-title {
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+.search-dropdown.title-only .result-snippet {
+    display: none;
+}
+
 .no-results {
     padding: 16px;
     text-align: center;
@@ -249,6 +266,8 @@ body {
     const dropdown = document.getElementById('search-dropdown');
     const loading = document.getElementById('search-loading');
     const results = document.getElementById('search-results');
+    const displayMode = (dropdown?.dataset?.displayMode || 'full').toLowerCase();
+    const isTitleOnlyMode = displayMode === 'title_only';
     
     let searchTimeout;
     let currentHighlight = -1;
@@ -310,10 +329,11 @@ body {
             const title = hit._formatted?.title || hit.title;
             const content = hit._formatted?.content || hit.content || '';
             const snippet = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+
+            const snippetHtml = isTitleOnlyMode ? '' : `\n    <div class="result-snippet">${snippet}</div>`;
             
             return `<div class="search-result-item" data-url="/pages/${hit.slug}/">
-    <div class="result-title">${title}</div>
-    <div class="result-snippet">${snippet}</div>
+    <div class="result-title">${title}</div>${snippetHtml}
 </div>`;
         }).join('');
         

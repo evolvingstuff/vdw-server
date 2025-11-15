@@ -74,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'vdw_server.context_processors.search_preferences',
             ],
         },
     },
@@ -161,3 +162,13 @@ MARKDOWNX_EDITOR_RESIZABLE = True
 MEILISEARCH_URL = os.getenv('MEILISEARCH_URL', 'http://localhost:7700')
 MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY')
 MEILISEARCH_INDEX_NAME = os.getenv('MEILISEARCH_INDEX_NAME', 'pages')
+
+# Search dropdown presentation options (extend as new modes are added)
+SEARCH_RESULTS_DISPLAY_MODE = (os.getenv('SEARCH_RESULTS_DISPLAY_MODE', 'full') or 'full').strip().lower()
+_valid_display_modes = {'full', 'title_only'}
+if SEARCH_RESULTS_DISPLAY_MODE not in _valid_display_modes:
+    raise ValueError(
+        'SEARCH_RESULTS_DISPLAY_MODE must be one of %s (got %r)'
+        % (sorted(_valid_display_modes), SEARCH_RESULTS_DISPLAY_MODE)
+    )
+del _valid_display_modes

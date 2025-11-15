@@ -42,6 +42,9 @@ AWS_STORAGE_BUCKET_NAME=your-bucket
 MEILISEARCH_URL=http://localhost:7700
 MEILISEARCH_MASTER_KEY=your_master_key
 MEILISEARCH_INDEX_NAME=pages
+
+# Search Presentation
+SEARCH_RESULTS_DISPLAY_MODE=full  # Options: full, title_only
 ```
 
 ### Step 3: Deploy to Server
