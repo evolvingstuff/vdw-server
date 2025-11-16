@@ -32,11 +32,18 @@ DEBUG = True  # TODO: setting to False BREAKS server on AWS, not sure why
 
 ALLOWED_HOSTS = ['*']  # Allow any host for now
 
+_extra_csrf_trusted_origins = [
+    origin.strip()
+    for origin in os.getenv('VDW_EXTRA_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
 CSRF_TRUSTED_ORIGINS = [
     'https://vitamindwiki.com',
     'https://www.vitamindwiki.com',
     'https://44.228.184.247',
+    *_extra_csrf_trusted_origins,
 ]
+del _extra_csrf_trusted_origins
 
 
 # Application definition
