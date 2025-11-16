@@ -10,6 +10,7 @@ import shlex
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +25,8 @@ from scp import SCPClient
 
 # Load environment variables
 load_dotenv()
+
+MANUAL_BACKUP_PREFIX = "db_backups/manual_backups"
 
 class DockerDeployment:
     def __init__(self):
@@ -810,6 +813,137 @@ class DockerDeployment:
         
         finally:
             self.disconnect()
+
+    def restore_local_db_from_s3(self) -> bool:
+        """Download an S3 backup and swap it into the local db.sqlite3 path."""
+        print("\n☁️  Restoring local database from S3 backup...")
+
+        bucket = os.getenv('AWS_STORAGE_BUCKET_NAME')
+        if not bucket:
+            print("❌ AWS_STORAGE_BUCKET_NAME is not set in your environment")
+            return False
+
+        local_db = Path(self.config['local_db'])
+        prefix = f"{MANUAL_BACKUP_PREFIX.rstrip('/')}/"
+
+        try:
+            s3 = boto3.client('s3')
+        except Exception as exc:
+            print(f"❌ Failed to initialize S3 client: {exc}")
+            return False
+
+        backups = []
+        continuation = None
+        while True:
+            request = {'Bucket': bucket, 'Prefix': prefix}
+            if continuation:
+                request['ContinuationToken'] = continuation
+            try:
+                response = s3.list_objects_v2(**request)
+            except ClientError as exc:
+                print(f"❌ Failed to list backups: {exc}")
+                return False
+
+            for obj in response.get('Contents', []):
+                key = obj.get('Key') or ''
+                if not key or key.endswith('/'):
+                    continue
+                name = key.split('/')[-1]
+                backups.append(
+                    {
+                        'key': key,
+                        'name': name,
+                        'size': obj.get('Size', 0),
+                        'modified': obj.get('LastModified'),
+                    }
+                )
+
+            if not response.get('IsTruncated'):
+                break
+            continuation = response.get('NextContinuationToken')
+
+        if not backups:
+            print(f"❌ No backups found under s3://{bucket}/{MANUAL_BACKUP_PREFIX}/")
+            return False
+
+        backups.sort(key=lambda item: item['name'])
+
+        print("\nAvailable backups:")
+        for idx, entry in enumerate(backups, start=1):
+            size_mb = entry['size'] / (1024 * 1024) if entry['size'] else 0
+            modified = entry['modified']
+            if modified is not None:
+                if modified.tzinfo:
+                    modified_str = modified.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+                else:
+                    modified_str = f"{modified.strftime('%Y-%m-%d %H:%M:%S')} (no tz)"
+            else:
+                modified_str = 'unknown'
+            print(f"  [{idx}] {entry['name']} — {size_mb:.1f} MB — {modified_str}")
+
+        selection = None
+        while selection is None:
+            raw = input(f"Select backup [1-{len(backups)}] or 'q' to cancel: ").strip()
+            if raw.lower() == 'q':
+                print("❌ Restore cancelled")
+                return False
+            try:
+                choice = int(raw)
+            except ValueError:
+                print("❌ Please enter a valid number")
+                continue
+            if choice < 1 or choice > len(backups):
+                print("❌ Selection out of range")
+                continue
+            selection = backups[choice - 1]
+
+        size_mb = selection['size'] / (1024 * 1024) if selection['size'] else 0
+        print("\nYou selected:")
+        print(f"  Key: {selection['key']}")
+        print(f"  Size: {size_mb:.1f} MB")
+        confirm = input("Overwrite local db.sqlite3 with this backup? (y/n): ").lower()
+        if confirm != 'y':
+            print("❌ Restore cancelled")
+            return False
+
+        fd, tmp_name = tempfile.mkstemp(suffix='.sqlite3')
+        os.close(fd)
+        tmp_path = Path(tmp_name)
+        try:
+            with tmp_path.open('wb') as handle:
+                s3.download_fileobj(bucket, selection['key'], handle)
+        except ClientError as exc:
+            print(f"❌ Failed to download backup: {exc}")
+            tmp_path.unlink(missing_ok=True)
+            return False
+        except Exception as exc:
+            print(f"❌ Unexpected error while downloading backup: {exc}")
+            tmp_path.unlink(missing_ok=True)
+            return False
+
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        local_backup_path = None
+        try:
+            local_db.parent.mkdir(parents=True, exist_ok=True)
+            if local_db.exists():
+                local_backup_path = local_db.with_name(
+                    f"{local_db.name}.pre_s3_restore_{timestamp}"
+                )
+                print(f"💾 Saving current local DB to {local_backup_path}")
+                local_db.replace(local_backup_path)
+
+            tmp_path.replace(local_db)
+        except Exception as exc:
+            print(f"❌ Failed to install downloaded backup: {exc}")
+            if local_backup_path and local_backup_path.exists() and not local_db.exists():
+                local_backup_path.replace(local_db)
+            tmp_path.unlink(missing_ok=True)
+            return False
+
+        print(f"✅ Local database updated from {selection['name']}")
+        if local_backup_path:
+            print(f"   Previous copy saved at: {local_backup_path}")
+        return True
 
     def free_disk_on_server(self):
         """Aggressively free disk on the remote host.
@@ -1735,7 +1869,8 @@ def print_menu(active_host: str, label: str):
     print("10. Issue HTTPS certificate (manual DNS-01)")
     print("11. Reset HTTPS configuration")
     print("12. Update /etc/hosts for testing")
-    print("13. Exit")
+    print("13. Restore local database from S3 backup")
+    print("14. Exit")
     print()
 
 def main():
@@ -1745,7 +1880,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-13]: ").strip()
+        choice = input("Enter choice [0-14]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -1813,6 +1948,8 @@ def main():
         elif choice == '12':
             deployer.update_hosts_file()
         elif choice == '13':
+            deployer.restore_local_db_from_s3()
+        elif choice == '14':
             print("\n👋 Goodbye!")
             break
         
