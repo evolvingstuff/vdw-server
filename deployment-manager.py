@@ -1154,6 +1154,99 @@ class DockerDeployment:
         print("✅ Security group ready!")
         return sg_id
 
+    def _resolve_security_group_for_host(self, host: str) -> Optional[str]:
+        ec2 = self._aws_client('ec2')
+        try:
+            response = ec2.describe_instances(Filters=[{'Name': 'ip-address', 'Values': [host]}])
+        except ClientError as exc:
+            print(f"⚠️  Failed to inspect instance for host {host}: {exc}")
+            response = {'Reservations': []}
+
+        groups = []
+        for reservation in response.get('Reservations', []):
+            for instance in reservation.get('Instances', []):
+                if instance.get('PublicIpAddress') != host:
+                    continue
+                for sg in instance.get('SecurityGroups', []):
+                    groups.append((sg['GroupId'], sg.get('GroupName')))
+
+        if not groups:
+            return self._get_provisioning().get('security_group_id')
+
+        if len(groups) == 1:
+            return groups[0][0]
+
+        print("\nMultiple security groups found on the selected host:")
+        for idx, (group_id, name) in enumerate(groups, start=1):
+            label = f"{group_id} ({name})" if name else group_id
+            print(f"  [{idx}] {label}")
+
+        while True:
+            choice = input(f"Select group to lock [1-{len(groups)}]: ").strip()
+            if not choice:
+                print("❌ Selection required")
+                continue
+            try:
+                idx = int(choice)
+            except ValueError:
+                print("❌ Enter a number")
+                continue
+            if 1 <= idx <= len(groups):
+                return groups[idx - 1][0]
+            print("❌ Invalid selection")
+
+    def lock_security_group_https_only(self, host: str) -> bool:
+        """Restrict ingress rules to SSH and HTTPS only for the selected host."""
+        sg_id = self._resolve_security_group_for_host(host)
+        if not sg_id:
+            print('❌ Could not determine security group for the selected host. Update config/provisioning.json or ensure the instance has a public IP.')
+            return False
+
+        print(f"\n🔒 Locking security group {sg_id} (host {host}) to SSH (22) and HTTPS (443) only...")
+        ec2 = self._aws_client('ec2')
+        try:
+            response = ec2.describe_security_groups(GroupIds=[sg_id])
+            security_group = response['SecurityGroups'][0]
+        except ClientError as exc:
+            print(f"❌ Failed to describe security group: {exc}")
+            return False
+
+        current_permissions = security_group.get('IpPermissions', [])
+        if current_permissions:
+            try:
+                ec2.revoke_security_group_ingress(GroupId=sg_id, IpPermissions=current_permissions)
+                print("   Removed existing ingress rules")
+            except ClientError as exc:
+                print(f"❌ Failed to remove existing rules: {exc}")
+                return False
+        else:
+            print("   No existing ingress rules to remove")
+
+        ssh_cidr = self._get_provisioning().get('ssh_ingress_cidr') or '0.0.0.0/0'
+        allowed_rules = [
+            {
+                'IpProtocol': 'tcp',
+                'FromPort': 22,
+                'ToPort': 22,
+                'IpRanges': [{'CidrIp': ssh_cidr}],
+            },
+            {
+                'IpProtocol': 'tcp',
+                'FromPort': 443,
+                'ToPort': 443,
+                'IpRanges': [{'CidrIp': '0.0.0.0/0'}],
+            },
+        ]
+
+        try:
+            ec2.authorize_security_group_ingress(GroupId=sg_id, IpPermissions=allowed_rules)
+        except ClientError as exc:
+            print(f"❌ Failed to add SSH/HTTPS rules: {exc}")
+            return False
+
+        print("✅ Security group locked down. Ports 80, 8000, 7700, etc. are now closed.")
+        return True
+
     def launch_instance(self, security_group_id: str) -> str:
         """Launch a fresh EC2 instance with the configured settings."""
         config = self._get_provisioning()
@@ -1870,7 +1963,8 @@ def print_menu(active_host: str, label: str):
     print("11. Reset HTTPS configuration")
     print("12. Update /etc/hosts for testing")
     print("13. Restore local database from S3 backup")
-    print("14. Exit")
+    print("14. Lock security group to SSH + HTTPS only")
+    print("15. Exit")
     print()
 
 def main():
@@ -1880,7 +1974,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-14]: ").strip()
+        choice = input("Enter choice [0-15]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -1950,6 +2044,17 @@ def main():
         elif choice == '13':
             deployer.restore_local_db_from_s3()
         elif choice == '14':
+            try:
+                host = deployer.prompt_host_for_operation('lock security group (HTTPS only)')
+            except RuntimeError:
+                continue
+            prompt = (
+                "\nThis will REMOVE all existing inbound rules except 22/443 "
+                f"on host {host}. Proceed? (y/n): "
+            )
+            if input(prompt).lower() == 'y':
+                deployer.lock_security_group_https_only(host)
+        elif choice == '15':
             print("\n👋 Goodbye!")
             break
         

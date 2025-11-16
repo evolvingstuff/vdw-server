@@ -139,7 +139,16 @@ python deployment-manager.py
 ### 11. Reset HTTPS Configuration
 - Removes the existing Let's Encrypt files on the selected host and reverts nginx to HTTP-only mode so you can re-issue certificates from scratch.
 
-### 12. Exit
+### 12. Update /etc/hosts for testing
+- Adds an entry on your local machine so vitamindwiki.com (and alternate domains) resolve to the selected host, writing a backup copy at `/etc/hosts.vdw-backup` so you can revert later.
+
+### 13. Restore Local Database from S3 Backup
+- Lists manual backups stored under `s3://<bucket>/db_backups/manual_backups/`, downloads the selected file, and swaps it into `DEPLOY_LOCAL_DB` so you can inspect production data locally.
+
+### 14. Lock Security Group to SSH + HTTPS Only
+- Prompts you to pick the prod/test host, inspects that instance’s attached security group (letting you choose if multiple are present), removes all existing inbound rules, then recreates just two: port 22/tcp (respecting `ssh_ingress_cidr`) and port 443/tcp for everyone. Run this once nginx or your load balancer handles HTTPS so no other ports stay open publicly.
+
+### 15. Exit
 - Leaves the tool
 
 ## Typical Workflows
