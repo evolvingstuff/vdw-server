@@ -42,6 +42,11 @@ MEILISEARCH_INDEX_NAME=pages
 
 # Search Presentation
 SEARCH_RESULTS_DISPLAY_MODE=full  # Options: full, title_only
+
+# HTTPS / DNS (Phase 2)
+PRIMARY_DOMAIN=example.com
+ALT_DOMAINS=www.example.com  # comma-separated list
+CERTBOT_EMAIL=admin@example.com
 ```
 
 ### Step 3: Capture Provisioning Config (one time)
@@ -66,14 +71,20 @@ Example `config/provisioning.json` (placeholder values):
   "data_device_name": "/dev/sdf",
   "ssh_ingress_cidr": "0.0.0.0/0",
   "extra_ports": [8000, 7700],
-  "elastic_ip_allocation_id": "eipalloc-0123456789abcdef0"
+  "elastic_ip_allocation_id": "eipalloc-0123456789abcdef0",
+  "primary_domain": "example.com",
+  "alt_domains": ["www.example.com"],
+  "certbot_email": "admin@example.com",
+  "ssl_certificate_path": "",
+  "ssl_certificate_key_path": "",
+  "ssl_trusted_path": ""
 }
 ```
 
-Edit this file directly if you ever need to change defaults (AMI, sizes, etc.).
+Edit this file directly if you ever need to change defaults (AMI, sizes, domains, etc.).
 You never need to add a `Name=` tag here—the provisioner automatically tags each instance as `vdw<YYYYMMDDHHMMSS>` (UTC timestamp) so every server is clearly labeled.
 
-Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly.
+Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly. HTTPS commands (options 10/11) follow the same prompt.
 
 ### Step 4: Deploy to Server
 
@@ -122,7 +133,13 @@ python deployment-manager.py
 ### 9. Switch Active Host
 - Toggle between the production Elastic-IP host and the latest provisioned (temporary) host for subsequent commands.
 
-### 10. Exit
+### 10. Issue HTTPS Certificate (manual DNS-01)
+- Installs Certbot (if needed), runs the manual DNS-01 workflow for the selected host, and automatically updates nginx to listen on 443 using the newly issued certificates.
+
+### 11. Reset HTTPS Configuration
+- Removes the existing Let's Encrypt files on the selected host and reverts nginx to HTTP-only mode so you can re-issue certificates from scratch.
+
+### 12. Exit
 - Leaves the tool
 
 ## Typical Workflows
@@ -159,6 +176,20 @@ python deployment-manager.py
 3. Select: Option 5 (Full Deploy)
 ```
 
+### Phase 2 – HTTPS (DNS-01) Workflow
+```
+1. Make sure `primary_domain`, `alt_domains`, and `certbot_email` are set in config/provisioning.json
+2. Run: python deployment-manager.py
+3. Select: Option 10 (Issue HTTPS Certificate)
+4. When prompted, choose `[1] test` (or `[0] prod` if you're refreshing the live box)
+5. For each domain, add the requested TXT record in your DNS provider and press Enter once it propagates
+6. After nginx reloads, hit https://<primary-domain> while manually pointing that domain at the new server's IP (e.g., via your hosts file) to confirm HTTPS works before touching real DNS
+7. When satisfied, run Option 2 (Associate Elastic IP) to move real traffic
+8. If you ever need to re-issue from scratch, run Option 11 (Reset HTTPS Configuration) and repeat the steps above
+```
+
+**Tip:** If you provision a brand-new server frequently, you can copy `/etc/letsencrypt/{live,archive,renewal}` from the previous server before cutting over. Once the files are in place, `certbot.timer` on the new server will continue renewing automatically without re-running the DNS-01 flow.
+
 ## How It Works
 
 ### Provisioning Config File
@@ -166,6 +197,7 @@ python deployment-manager.py
 - Created automatically via option 0 (or by editing manually)
 - Captures immutable infrastructure identifiers (AMI, subnet, VPC, security group, key pair, Elastic IP allocation) plus tunables like instance type and disk sizes
 - Read by option 1 so provisioning never prompts for those details again
+- Also stores TLS metadata (`primary_domain`, `alt_domains`, `certbot_email`, optional custom cert paths) used by options 10/11
 
 ### Phase 1 – Provision + Bootstrap
 1. Use boto3 to create (or reuse) the configured security group; opens ports 22/80/443 plus Django/Meilisearch/extra ports.

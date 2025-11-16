@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
+import io
 
 import boto3
 import paramiko
@@ -54,9 +55,9 @@ class DockerDeployment:
         self.active_host_label = ''
         latest_ip = (self.latest_state or {}).get('public_ip')
         if latest_ip:
-            self.set_active_host(latest_ip, 'latest provisioned', announce=False)
+            self.set_active_host(latest_ip, 'test', announce=False)
         elif self.production_host:
-            self.set_active_host(self.production_host, 'production', announce=False)
+            self.set_active_host(self.production_host, 'prod', announce=False)
 
         # Validate required config for general deploy actions
         required_fields = ['user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
@@ -101,6 +102,41 @@ class DockerDeployment:
         if self.provisioning is None:
             self.provisioning = self._load_provisioning_config(required=True)
         return self.provisioning
+
+    def _domain_config(self) -> Dict:
+        config = self._get_provisioning()
+        primary = (config.get('primary_domain') or '').strip()
+        alt_domains = config.get('alt_domains') or []
+        if isinstance(alt_domains, str):
+            alt_domains = [d.strip() for d in alt_domains.split(',') if d.strip()]
+        email = (config.get('certbot_email') or '').strip()
+        return {
+            'primary': primary,
+            'alts': alt_domains,
+            'email': email,
+        }
+
+    def _all_domains(self) -> List[str]:
+        cfg = self._domain_config()
+        domains = []
+        if cfg['primary']:
+            domains.append(cfg['primary'])
+        domains.extend(d for d in cfg['alts'] if d)
+        return domains
+
+    def _ssl_paths(self) -> Dict[str, str]:
+        config = self._get_provisioning()
+        cfg = self._domain_config()
+        primary = cfg['primary']
+        base_path = f"/etc/letsencrypt/live/{primary}"
+        cert_path = config.get('ssl_certificate_path') or f"{base_path}/fullchain.pem"
+        key_path = config.get('ssl_certificate_key_path') or f"{base_path}/privkey.pem"
+        chain_path = config.get('ssl_trusted_path') or f"{base_path}/chain.pem"
+        return {
+            'cert': cert_path,
+            'key': key_path,
+            'chain': chain_path,
+        }
 
     def set_active_host(self, host: str, label: str, announce: bool = True) -> None:
         host = host.strip()
@@ -1158,14 +1194,162 @@ class DockerDeployment:
             print(f"  [{key}] {host} {description}{marker}")
 
         prompt_keys = '/'.join(key for key, _, _ in options)
-        choice = input(f"Select target ({prompt_keys}): ").strip().lower()
-        for key, host, description in options:
-            if choice == key:
-                label = 'prod' if key == '0' else 'test'
-                self.set_active_host(host, label)
-                return host
+        while True:
+            choice = input(f"Select target ({prompt_keys}) [Enter to cancel]: ").strip().lower()
+            if not choice:
+                raise RuntimeError("Operation cancelled by user")
+            for key, host, description in options:
+                if choice == key:
+                    label = 'prod' if key == '0' else 'test'
+                    self.set_active_host(host, label)
+                    return host
+            print("❌ Invalid selection; please try again.")
 
-        raise RuntimeError("Invalid host selection; deploy aborted")
+    def _run_certbot_dns01(self, host: str) -> bool:
+        domains = self._all_domains()
+        cfg = self._domain_config()
+        if not domains or not cfg['email']:
+            raise ValueError("primary_domain and certbot_email must be set in config/provisioning.json")
+
+        domain_args = ' '.join(f"-d {shlex.quote(domain)}" for domain in domains)
+        command = (
+            "sudo certbot certonly --manual --preferred-challenges dns "
+            "--manual-public-ip-logging-ok --agree-tos --no-eff-email "
+            f"-m {shlex.quote(cfg['email'])} {domain_args}"
+        )
+
+        print("\n🚧 Running Certbot (manual DNS-01 challenge)...")
+        transport = self.ssh_client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.exec_command(command)
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('r')
+
+        try:
+            awaiting_value = False
+            current_name = ''
+            for raw_line in stdout:
+                print(raw_line, end='')
+                line = raw_line.strip()
+                if line.startswith('_acme-challenge'):
+                    current_name = line.rstrip('.')
+                elif line == 'with the following value:':
+                    awaiting_value = True
+                    continue
+                elif awaiting_value and line:
+                    awaiting_value = False
+                    challenge_value = line
+                    print("\n🚨 ACTION REQUIRED")
+                    print(f"Add TXT record for {current_name} with value:\n{challenge_value}")
+                    print("Use a DNS checker (e.g., https://www.whatsmydns.net/#TXT/" + current_name + ") to confirm propagation.")
+                    input("After the record propagates globally, press Enter here to let Certbot continue...")
+                    try:
+                        stdin.write('\n')
+                        stdin.flush()
+                    except OSError as exc:
+                        print("⚠️  SSH channel closed while sending input; re-run option 10 if needed.")
+                        raise
+                elif 'Press Enter to Continue' in line:
+                    input("Press Enter to continue...")
+                    try:
+                        stdin.write('\n')
+                        stdin.flush()
+                    except OSError as exc:
+                        print("⚠️  SSH channel closed while sending input; re-run option 10 if needed.")
+                        raise
+        finally:
+            stdout.close()
+            stdin.close()
+        exit_status = channel.recv_exit_status()
+        if exit_status == 0:
+            print("✅ Certbot completed successfully")
+            return True
+        print("❌ Certbot failed. Check output above for details.")
+        return False
+
+    def issue_https_certificate(self):
+        host = self.prompt_host_for_operation('issue HTTPS certificate')
+        cfg = self._domain_config()
+        if not cfg['primary'] or not cfg['email']:
+            print("❌ primary_domain and certbot_email must be set in config/provisioning.json")
+            return False
+
+        if not self.connect(host_override=host):
+            return False
+
+        try:
+            if not self.install_certbot():
+                return False
+            if self._run_certbot_dns01(host) is False:
+                return False
+            content = self._render_https_nginx()
+            if not self.configure_nginx_proxy(content=content):
+                return False
+            print("🎉 HTTPS configuration complete. Test https://{} before swapping DNS.".format(cfg['primary']))
+            return True
+        finally:
+            self.disconnect()
+
+    def reset_https_configuration(self):
+        host = self.prompt_host_for_operation('reset HTTPS configuration')
+        cfg = self._domain_config()
+        if not cfg['primary']:
+            print("❌ primary_domain must be set in config/provisioning.json")
+            return False
+
+        if not self.connect(host_override=host):
+            return False
+
+        try:
+            primary = cfg['primary']
+            cleanup_commands = [
+                f"sudo rm -rf /etc/letsencrypt/live/{shlex.quote(primary)}",
+                f"sudo rm -rf /etc/letsencrypt/archive/{shlex.quote(primary)}",
+                f"sudo rm -f /etc/letsencrypt/renewal/{shlex.quote(primary)}.conf",
+            ]
+            for cmd in cleanup_commands:
+                self.execute_command(cmd, show_output=False)
+
+            if not self.configure_nginx_proxy():
+                return False
+            print("✅ HTTPS configuration reset. Run the issue command once you're ready to request new certificates.")
+            return True
+        finally:
+            self.disconnect()
+
+    def update_hosts_file(self):
+        host = self.prompt_host_for_operation('update /etc/hosts entry')
+        cfg = self._domain_config()
+        if not cfg['primary']:
+            print("❌ primary_domain must be set in config/provisioning.json")
+            return False
+
+        domains = self._all_domains()
+        entry = f"{host} {' '.join(domains)}"
+        hosts_path = Path('/etc/hosts')
+        backup_path = Path('/etc/hosts.vdw-backup')
+
+        if not hosts_path.exists():
+            print("❌ Could not find /etc/hosts on this machine.")
+            return False
+
+        try:
+            if not backup_path.exists():
+                backup_path.write_text(hosts_path.read_text())
+                print(f"💾 Backup saved to {backup_path}")
+
+            lines = hosts_path.read_text().splitlines()
+            filtered = [line for line in lines if 'vitamindwiki.com' not in line]
+            filtered.append(entry)
+            hosts_path.write_text('\n'.join(filtered) + '\n')
+            print(f"✅ /etc/hosts updated with: {entry}")
+            print("(Use the backup at /etc/hosts.vdw-backup to restore your original file.)")
+            print("🌐 Now visit: https://{} (remember your browser will resolve it to {} until you restore /etc/hosts)".format(cfg['primary'], host))
+            return True
+        except PermissionError:
+            print("❌ Permission denied updating /etc/hosts. Run this script with sudo or update manually.")
+            return False
     
     def install_docker(self):
         """Install Docker and Docker Compose on the server"""
@@ -1197,6 +1381,27 @@ class DockerDeployment:
         
         print("✅ Docker installed successfully!")
         return True
+
+    def install_certbot(self) -> bool:
+        """Install Certbot and dependencies"""
+        print("🔐 Installing Certbot...")
+        success, _, _ = self.execute_command("certbot --version", show_output=False)
+        if success:
+            print("✅ Certbot already installed")
+            return True
+
+        commands = [
+            "sudo apt-get update",
+            "sudo apt-get install -y certbot python3-certbot-nginx",
+        ]
+
+        for cmd in commands:
+            success, _, error = self.execute_command(cmd, show_output=False)
+            if not success:
+                print(f"❌ Failed to run '{cmd}': {error}")
+                return False
+        print("✅ Certbot installed")
+        return True
     
     def install_nginx(self) -> bool:
         """Install nginx if needed"""
@@ -1220,18 +1425,20 @@ class DockerDeployment:
         print("✅ nginx installed")
         return True
 
-    def configure_nginx_proxy(self) -> bool:
+    def configure_nginx_proxy(self, content: Optional[str] = None) -> bool:
         """Upload nginx reverse proxy config and reload service."""
         print("📝 Configuring nginx reverse proxy...")
-        local_conf = Path('nginx_config')
-        if not local_conf.exists():
-            print("❌ nginx_config file is missing in the project root")
-            return False
-
         remote_tmp = '/tmp/vdw_nginx.conf'
         try:
             with SCPClient(self.ssh_client.get_transport()) as scp:
-                scp.put(str(local_conf), remote_tmp)
+                if content is None:
+                    local_conf = Path('nginx_config')
+                    if not local_conf.exists():
+                        print("❌ nginx_config file is missing in the project root")
+                        return False
+                    scp.put(str(local_conf), remote_tmp)
+                else:
+                    scp.putfo(io.BytesIO(content.encode('utf-8')), remote_tmp)
         except Exception as exc:
             print(f"❌ Failed to upload nginx config: {exc}")
             return False
@@ -1251,6 +1458,52 @@ class DockerDeployment:
                 return False
         print("✅ nginx reverse proxy configured")
         return True
+
+    def _render_https_nginx(self) -> str:
+        domains = self._all_domains()
+        server_names = ' '.join(domains) if domains else '_'
+        paths = self._ssl_paths()
+        static_block = """
+    location /static/ {
+        alias /app/static/;
+    }
+
+    location /media/ {
+        alias /app/media/;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+"""
+        ssl_directives = """
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+    add_header Strict-Transport-Security "max-age=31536000" always;
+"""
+
+        return f"""server {{
+    listen 80;
+    server_name {server_names};
+    return 301 https://$host$request_uri;
+}}
+
+server {{
+    listen 443 ssl http2;
+    server_name {server_names};
+    client_max_body_size 100M;
+    ssl_certificate {paths['cert']};
+    ssl_certificate_key {paths['key']};
+{ssl_directives}
+{static_block}}}
+"""
 
     def setup_environment(self):
         """Set up environment variables"""
@@ -1479,7 +1732,10 @@ def print_menu(active_host: str, label: str):
     print("7. Free Disk (stop containers, delete DB, remove Meili volume, prune caches)")
     print("8. Troubleshoot (docker ps + logs)")
     print("9. Switch active host (production vs latest)")
-    print("10. Exit")
+    print("10. Issue HTTPS certificate (manual DNS-01)")
+    print("11. Reset HTTPS configuration")
+    print("12. Update /etc/hosts for testing")
+    print("13. Exit")
     print()
 
 def main():
@@ -1489,7 +1745,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-10]: ").strip()
+        choice = input("Enter choice [0-13]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -1551,6 +1807,12 @@ def main():
         elif choice == '9':
             deployer.choose_active_host()
         elif choice == '10':
+            deployer.issue_https_certificate()
+        elif choice == '11':
+            deployer.reset_https_configuration()
+        elif choice == '12':
+            deployer.update_hosts_file()
+        elif choice == '13':
             print("\n👋 Goodbye!")
             break
         

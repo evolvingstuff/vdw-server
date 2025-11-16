@@ -19,5 +19,11 @@
   "extra_ports": [],
   "elastic_ip_allocation_id": "eipalloc-0e7e9365dbb014588",
   "elastic_hostname": "44.228.184.247",
-  "elastic_ip_address": "44.228.184.247"
+  "elastic_ip_address": "44.228.184.247",
+  "primary_domain": "vitamindwiki.com",
+  "alt_domains": ["www.vitamindwiki.com"],
+  "certbot_email": "hlahore@gmail.com",
+  "ssl_certificate_path": "",
+  "ssl_certificate_key_path": "",
+  "ssl_trusted_path": ""
 }
