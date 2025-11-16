@@ -40,8 +40,8 @@ MEILISEARCH_URL=http://localhost:7700
 MEILISEARCH_MASTER_KEY=your_master_key
 MEILISEARCH_INDEX_NAME=pages
 
-# Search Presentation
-SEARCH_RESULTS_DISPLAY_MODE=full  # Options: full, title_only
+# Search Presentation (default is title_only)
+SEARCH_RESULTS_DISPLAY_MODE=title_only  # Options: full, title_only
 
 # HTTPS / DNS (Phase 2)
 PRIMARY_DOMAIN=example.com

@@ -178,7 +178,7 @@ MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY')
 MEILISEARCH_INDEX_NAME = os.getenv('MEILISEARCH_INDEX_NAME', 'pages')
 
 # Search dropdown presentation options (extend as new modes are added)
-SEARCH_RESULTS_DISPLAY_MODE = (os.getenv('SEARCH_RESULTS_DISPLAY_MODE', 'full') or 'full').strip().lower()
+SEARCH_RESULTS_DISPLAY_MODE = (os.getenv('SEARCH_RESULTS_DISPLAY_MODE', 'title_only') or 'title_only').strip().lower()
 _valid_display_modes = {'full', 'title_only'}
 if SEARCH_RESULTS_DISPLAY_MODE not in _valid_display_modes:
     raise ValueError(
