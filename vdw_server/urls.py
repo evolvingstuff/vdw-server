@@ -36,6 +36,8 @@ urlpatterns = [
     # Legacy URLs for backwards compatibility
     path('posts/', RedirectView.as_view(pattern_name='page_list', permanent=True)),
     path('posts/<slug:slug>/', RedirectView.as_view(pattern_name='page_detail', permanent=True)),
+    path('VitaminDWiki', RedirectView.as_view(pattern_name='homepage', permanent=True)),
+    path('VitaminDWiki/', RedirectView.as_view(pattern_name='homepage', permanent=True)),
     path('tags/', include('tags.urls')),  # Tags filtering
     path('markdownx/', include('markdownx.urls')),
 

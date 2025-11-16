@@ -32,6 +32,12 @@ DEBUG = True  # TODO: setting to False BREAKS server on AWS, not sure why
 
 ALLOWED_HOSTS = ['*']  # Allow any host for now
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://vitamindwiki.com',
+    'https://www.vitamindwiki.com',
+    'https://44.228.184.247',
+]
+
 
 # Application definition
 
