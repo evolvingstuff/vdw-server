@@ -1,13 +1,92 @@
 import re
 from pathlib import Path
+from typing import Iterable, Optional
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from pages.alias_cache import load_alias_redirects, lookup_path, lookup_plain
 from pages.models import Page
 from site_pages.models import SitePage
+
+
+class LegacyAliasRedirectMiddleware:
+    """Redirect legacy aliases (including tiki query params) to `/pages/<slug>/`."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        load_alias_redirects()
+
+    def __call__(self, request):
+        if self._should_skip(request):
+            return self.get_response(request)
+
+        slug = lookup_path(request.path)
+        if not slug and self._is_tiki_index(request.path):
+            slug = self._match_tiki_query(request)
+
+        if slug:
+            target_url = reverse('page_detail', args=[slug])
+            return HttpResponsePermanentRedirect(target_url)
+
+        return self.get_response(request)
+
+    def _should_skip(self, request) -> bool:
+        path = request.path or ''
+        if request.method not in ('GET', 'HEAD'):
+            return True
+        for prefix in ('/admin/', '/static/', '/media/', '/markdownx/', '/pages/', '/search/'):
+            if path.startswith(prefix):
+                return True
+        return False
+
+    def _is_tiki_index(self, path: str) -> bool:
+        normalized = (path or '').lstrip('/')
+        return normalized.startswith('tiki-index.php')
+
+    def _match_tiki_query(self, request) -> Optional[str]:
+        raw_params = self._parse_raw_query(request.META.get('QUERY_STRING', ''))
+
+        page_slug = self._lookup_plain_from_params('page', request, raw_params)
+        if page_slug:
+            return page_slug
+
+        return self._lookup_plain_from_params('page_id', request, raw_params)
+
+    def _lookup_plain_from_params(self, key: str, request, raw_params) -> Optional[str]:
+        candidates = []
+        candidates.extend(request.GET.getlist(key))
+        candidates.extend(raw_params.get(key, []))
+
+        for candidate in self._expand_query_candidates(candidates):
+            slug = lookup_plain(candidate)
+            if slug:
+                return slug
+        return None
+
+    def _expand_query_candidates(self, values) -> Iterable[str]:
+        seen = set()
+        for value in values:
+            trimmed = (value or '').strip()
+            if not trimmed:
+                continue
+            for variant in (trimmed, trimmed.replace(' ', '+')):
+                if variant and variant not in seen:
+                    seen.add(variant)
+                    yield variant
+
+    def _parse_raw_query(self, query_string: str):
+        params = {}
+        if not query_string:
+            return params
+        for chunk in query_string.split('&'):
+            if not chunk:
+                continue
+            key, _, value = chunk.partition('=')
+            params.setdefault(key, []).append(value)
+        return params
 
 
 class AdminPageRedirectMiddleware:
