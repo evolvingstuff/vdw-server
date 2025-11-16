@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+import re
+import string
 from typing import Dict, Optional
+from urllib.parse import unquote
 
 from django.db.models import QuerySet
 
@@ -14,6 +17,8 @@ logger = logging.getLogger(__name__)
 _alias_path_map: Dict[str, str] = {}
 _alias_plain_map: Dict[str, str] = {}
 _loaded = False
+
+_ALLOWED_ALIAS_CHARS = set('/+-_.') | set(string.ascii_letters) | set(string.digits)
 
 
 def load_alias_redirects(force: bool = False) -> None:
@@ -85,32 +90,72 @@ def _register_alias(mapping: Dict[str, str], key: str, slug: str, source: str) -
     if not key:
         return
 
+    if 'childhood+asthma' in key.lower():
+        logger.warning("Childhood alias mapped: %s -> %s (source %s)", key, slug, source)
     existing = mapping.get(key)
     if existing and existing != slug:
         logger.warning(
-            "Alias %s already registered for %s, ignoring duplicate for %s from %s",
+            "Alias %s already registered for %s, overriding with %s from %s",
             key,
             existing,
             slug,
             source,
         )
-        return
 
-    mapping.setdefault(key, slug)
+    mapping[key] = slug
 
 
 def _normalize_path(path: str) -> str:
     trimmed = (path or '').strip()
     if not trimmed:
         return ''
+
+    trimmed = unquote(trimmed)
+    trimmed = _decode_unicode_escapes(trimmed)
+
     if not trimmed.startswith('/'):
         trimmed = '/' + trimmed
-    return trimmed
+
+    if '?' in trimmed:
+        without_prefix = trimmed[1:]
+        if not without_prefix.lower().startswith('tiki'):
+            # Non-tiki aliases copied from the old site often contain
+            # throwaway query strings like `?refresh=1`; strip them so the
+            # cached key lines up with the normalized Django request path.
+            trimmed = trimmed.split('?', 1)[0]
+
+    return _strip_disallowed_chars(trimmed)
 
 
 def _normalize_plain(value: str) -> str:
-    trimmed = (value or '').strip().lstrip('/')
-    return trimmed
+    trimmed = (value or '').strip()
+    if not trimmed:
+        return ''
+
+    trimmed = unquote(trimmed)
+    trimmed = _decode_unicode_escapes(trimmed)
+    trimmed = _strip_disallowed_chars(trimmed)
+    return trimmed.lstrip('/')
+
+
+def _decode_unicode_escapes(value: str) -> str:
+    if '\\u' not in value and '\\U' not in value:
+        return value
+
+    def _replace(match: re.Match[str]) -> str:
+        digits = match.group(1)
+        try:
+            return chr(int(digits, 16))
+        except ValueError:
+            return match.group(0)
+
+    return re.sub(r'\\u([0-9a-fA-F]{4})', _replace, value)
+
+
+def _strip_disallowed_chars(value: str) -> str:
+    if not value:
+        return ''
+    return ''.join(ch for ch in value if ch in _ALLOWED_ALIAS_CHARS)
 
 
 def get_cached_alias_count() -> int:

@@ -1,5 +1,6 @@
 from datetime import datetime
 from unittest.mock import patch
+from urllib.parse import unquote
 
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponse
@@ -173,6 +174,23 @@ class AliasCacheTests(TestCase):
         self.assertEqual(lookup_plain('99999'), page.slug)
         self.assertEqual(lookup_path('/99999'), page.slug)
 
+    def test_tiki_alias_retains_query_string(self):
+        page = Page.objects.create(
+            title='Vitamin D and Magnesium',
+            slug='vitamin-d-and-magnesium',
+            content_md='Body text',
+            status='published',
+            aliases='/tiki-index.php?page=Vitamin+D+and+Magnesium',
+        )
+
+        reload_alias_redirects()
+
+        self.assertIsNone(lookup_path('/tiki-index.php'))
+        self.assertEqual(
+            lookup_path('/tiki-index.php?page=Vitamin+D+and+Magnesium'),
+            page.slug,
+        )
+
 
 class LegacyAliasRedirectMiddlewareTests(TestCase):
     def setUp(self):
@@ -239,3 +257,4 @@ class LegacyAliasRedirectMiddlewareTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'ok')
+
