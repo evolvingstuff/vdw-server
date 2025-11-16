@@ -5,9 +5,9 @@ Load all legacy URL aliases from the database at startup, keep them in memory, a
 
 ## Steps
 1. **Alias Data Model Analysis**
-   - Enumerate how aliases are stored on `Page.aliases` (newline-separated, leading `/`).
-   - Define normalization rules so `/foo`, `foo`, and tiki query-string aliases resolve deterministically.
-   - Decide canonical redirect target (likely `page_detail`), HTTP status (permanent 301), and collision behavior (log + first-write wins).
+   - Confirm aliases sit on `Page.aliases` as newline-separated strings exactly as provided in front matter (already quoted/unquoted correctly, usually with a leading `/`).
+   - Define the minimal normalization we still need: trim whitespace, and accept tiki query-string variants that might omit the slash while keeping the stored alias text untouched.
+   - Decide canonical redirect target (always `page_detail` → `/pages/<slug>/`), HTTP status (permanent 301), and collision behavior (log + first-write wins).
    - Success: documented normalization/redirect decisions baked into helper module docstring/tests.
 
 2. **In-memory Alias Cache**
