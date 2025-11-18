@@ -22,14 +22,14 @@ DISALLOWED_TAG_NAMES = {
 
 def delete_database():
     """Delete existing SQLite database"""
-    db_path = Path('db.sqlite3')
+    db_path = Path('../db.sqlite3')
     if db_path.exists():
         print(f"Deleting existing database: {db_path}")
         db_path.unlink()
 
 def setup_django():
     """Setup Django environment"""
-    sys.path.append('.')
+    sys.path.append('..')
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vdw_server.settings')
     
     import django
@@ -242,8 +242,8 @@ def main():
     start_meilisearch()
 
     # Step 7: Find all markdown files
-    pages_dir = Path('../vdw-posts/posts')
-    pages_tiki_dir = Path('../vdw-posts/posts_tiki')
+    pages_dir = Path('../../vdw-posts/posts')
+    pages_tiki_dir = Path('../../vdw-posts/posts_tiki')
     markdown_files = list(pages_dir.glob('*.md'))
     
     if not markdown_files:

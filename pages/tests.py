@@ -1,6 +1,5 @@
 from datetime import datetime
 from unittest.mock import patch
-from urllib.parse import unquote
 
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponse
@@ -8,7 +7,7 @@ from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.utils import timezone
 from django.utils.text import slugify
 
-from conversion_md_to_db import get_created_and_modified_dates, process_tags
+from _retired.conversion_md_to_db import get_created_and_modified_dates, process_tags
 from pages.alias_cache import lookup_path, lookup_plain, reload_alias_redirects
 from pages.admin import PageAdmin
 from pages.models import Page
