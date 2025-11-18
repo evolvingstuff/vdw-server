@@ -16,6 +16,7 @@ DEFAULT_MARKDOWN_EXTRAS: Iterable[str] = (
     'tables',
     'strike',
     'footnotes',
+    'markdown-in-html',
 )
 
 FOOTNOTE_REF_RE = re.compile(
