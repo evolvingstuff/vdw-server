@@ -114,3 +114,11 @@ Anchor[^6]
 
         self.assertIn('<ol>', html)
         self.assertIn('<li>Child</li>', html)
+
+    def test_markdown_inside_html_block_renders(self) -> None:
+        markdown = '<div markdown="1">\n[Acne](/pages/acne/)\n</div>'
+
+        html = render_markdown(markdown)
+
+        self.assertIn('<a href="/pages/acne/">Acne</a>', html)
+        self.assertNotIn('[Acne]', html)
