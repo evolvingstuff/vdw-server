@@ -206,7 +206,16 @@ def _restore_backup(s3_path: str) -> None:
 
 
 def _download_backup_to_tempfile(s3_path: str) -> Path:
-    fd, tmp_name = tempfile.mkstemp(suffix=".sqlite3")
+    db_settings = settings.DATABASES["default"]
+    db_path = Path(db_settings.get("NAME"))
+    restore_dir = db_path.parent
+    restore_dir.mkdir(parents=True, exist_ok=True)
+
+    fd, tmp_name = tempfile.mkstemp(
+        suffix=".sqlite3",
+        prefix=f".{db_path.stem}_restore_",
+        dir=str(restore_dir),
+    )
     os.close(fd)
     tmp_path = Path(tmp_name)
 

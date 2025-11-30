@@ -906,7 +906,22 @@ class DockerDeployment:
             print("❌ Restore cancelled")
             return False
 
-        fd, tmp_name = tempfile.mkstemp(suffix='.sqlite3')
+        restore_dir = local_db.parent
+        try:
+            restore_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            print(f"❌ Failed to prepare restore directory {restore_dir}: {exc}")
+            return False
+
+        try:
+            fd, tmp_name = tempfile.mkstemp(
+                dir=str(restore_dir),
+                prefix=f".{local_db.stem}_restore_",
+                suffix='.sqlite3'
+            )
+        except OSError as exc:
+            print(f"❌ Failed to create temporary file in {restore_dir}: {exc}")
+            return False
         os.close(fd)
         tmp_path = Path(tmp_name)
         try:
@@ -924,7 +939,6 @@ class DockerDeployment:
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         local_backup_path = None
         try:
-            local_db.parent.mkdir(parents=True, exist_ok=True)
             if local_db.exists():
                 local_backup_path = local_db.with_name(
                     f"{local_db.name}.pre_s3_restore_{timestamp}"
