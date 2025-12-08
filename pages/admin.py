@@ -115,7 +115,7 @@ class PageAdmin(admin.ModelAdmin):
             return "Save this page to generate its markdown link."
 
         url = reverse('page_detail', args=[obj.slug])
-        markdown_link = f'[{obj.title}|{url}]'
+        markdown_link = f'[{obj.title}]({url})'
         return format_html(
             '<div class="vdw-copy-markdown-field">'
             '  <code class="vdw-copy-markdown-preview">{}</code>'
@@ -134,7 +134,7 @@ class PageAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #ccc;">—</span>')
 
         url = reverse('page_detail', args=[obj.slug])
-        markdown_link = f'[{obj.title}|{url}]'
+        markdown_link = f'[{obj.title}]({url})'
         return format_html(
             '<button type="button" class="vdw-copy-link-icon" data-copy-markdown="{}" '
             'data-copy-label="🔗" data-copy-success="Copied!" aria-label="Copy markdown link for {}" '
