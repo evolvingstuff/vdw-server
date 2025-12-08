@@ -34,13 +34,14 @@ class RedactedOnlyFilter(SimpleListFilter):
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
-    list_display = ['title', 'status', 'chars_display', 'redacted_indicator', 'tags_count', 'live_link', 'created_date_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'title', 'status', 'chars_display', 'redacted_indicator', 'tags_count', 'live_link', 'created_date_display', 'modified_date_display']
+    list_display_links = ('title',)
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
-    readonly_fields = ['live_link', 'tiki_markdown_comparison']
+    readonly_fields = ['live_link', 'markdown_link_helper', 'tiki_markdown_comparison']
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -51,7 +52,7 @@ class PageAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Content', {
-                'fields': ('title', 'slug', 'status', 'live_link', 'content_md', 'notes')
+                'fields': ('title', 'slug', 'status', 'live_link', 'markdown_link_helper', 'content_md', 'notes')
             }),
         ]
         
@@ -108,6 +109,41 @@ class PageAdmin(admin.ModelAdmin):
         else:
             return "Save first"
     live_link.short_description = "Live URL"
+
+    def markdown_link_helper(self, obj):
+        if not obj or not obj.pk or not obj.slug:
+            return "Save this page to generate its markdown link."
+
+        url = reverse('page_detail', args=[obj.slug])
+        markdown_link = f'[{obj.title}|{url}]'
+        return format_html(
+            '<div class="vdw-copy-markdown-field">'
+            '  <code class="vdw-copy-markdown-preview">{}</code>'
+            '  <button type="button" class="button vdw-copy-markdown-button" '
+            'data-copy-markdown="{}" data-copy-label="Copy Markdown link" data-copy-success="Copied!">'
+            'Copy Markdown Link'
+            '  </button>'
+            '</div>',
+            markdown_link,
+            markdown_link,
+        )
+    markdown_link_helper.short_description = "Markdown link"
+
+    def markdown_link_shortcut(self, obj):
+        if not obj.pk or not obj.slug:
+            return format_html('<span style="color: #ccc;">—</span>')
+
+        url = reverse('page_detail', args=[obj.slug])
+        markdown_link = f'[{obj.title}|{url}]'
+        return format_html(
+            '<button type="button" class="vdw-copy-link-icon" data-copy-markdown="{}" '
+            'data-copy-label="🔗" data-copy-success="Copied!" aria-label="Copy markdown link for {}" '
+            'title="Copy markdown link for {}" style="border: none; background: none; padding: 0 4px; cursor: pointer; font-size: 16px;">🔗</button>',
+            markdown_link,
+            obj.title,
+            obj.title,
+        )
+    markdown_link_shortcut.short_description = "Copy"
     
     def redacted_indicator(self, obj):
         if obj.redacted_count > 0:
@@ -145,3 +181,6 @@ class PageAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
+    class Media:
+        js = ('pages/admin/copy_page_link.js',)
