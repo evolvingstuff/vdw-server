@@ -12,11 +12,11 @@
             {% csrf_token %}
             <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
         </form>
+        <a href="{% url 'manual_restore' %}" class="manual-restore-button" id="manual-restore-button">Restore Backup</a>
         <form method="post" action="{% url 'refresh_sitemap' %}" class="refresh-sitemap-form" id="refresh-sitemap-form">
             {% csrf_token %}
             <button type="submit" class="refresh-sitemap-button" id="refresh-sitemap-button">Refresh Sitemap</button>
         </form>
-        <a href="{% url 'manual_restore' %}" class="manual-restore-button" id="manual-restore-button">Restore Backup</a>
     </div>
     {% endif %}
 </div>
@@ -41,6 +41,9 @@
 #site-name .manual-backup-form,
 #site-name .refresh-sitemap-form {
     margin: 0;
+}
+#site-name .refresh-sitemap-form {
+    margin-left: 1.25rem;
 }
 #site-name .manual-backup-button {
     background-color: #0b7dda;
