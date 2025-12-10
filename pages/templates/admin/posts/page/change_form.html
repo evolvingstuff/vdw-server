@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success && data.url) {
                         // Replace loading text with actual URL using appropriate markdown syntax
                         const insertedMarkup = isImage
-                            ? `<img src="${data.url}" alt="image" />`
+                            ? `<img src="${data.url}" alt="image" width="400" />`
                             : `[${fileName}](${data.url})`;
                         textarea.value = textarea.value.replace(loadingText, insertedMarkup);
                         
