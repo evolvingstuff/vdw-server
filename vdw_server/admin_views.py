@@ -95,12 +95,21 @@ def manual_backup(request: HttpRequest) -> HttpResponse:
     return redirect(reverse("admin:index"))
 
 
+def _resolve_sitemap_base_url(request: HttpRequest | None = None) -> str:
+    configured = (getattr(settings, "SITE_BASE_URL", "") or "").strip()
+    if configured:
+        return configured
+    if request is None:
+        raise RuntimeError("SITE_BASE_URL is not configured; unable to refresh sitemap automatically")
+    return request.build_absolute_uri('/')
+
+
 @staff_member_required
 def refresh_sitemap(request: HttpRequest) -> HttpResponse:
     if request.method != "POST":
         return redirect(reverse("admin:index"))
 
-    base_url = request.build_absolute_uri('/')
+    base_url = _resolve_sitemap_base_url(request)
     sitemap_path = regenerate_sitemap(base_url)
 
     messages.success(request, f"Sitemap refreshed at {sitemap_path}")

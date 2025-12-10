@@ -5,12 +5,13 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
 from pages.models import Page
 from site_pages.models import SitePage
 from vdw_server.sitemap_utils import refresh_sitemap
+from vdw_server import startup
 
 
 class SitemapGenerationTests(TestCase):
@@ -87,3 +88,21 @@ class SitemapGenerationTests(TestCase):
             response = self.client.get('/sitemap.xml')
 
         self.assertEqual(response.status_code, 404)
+
+
+class SitemapStartupTests(SimpleTestCase):
+    def setUp(self):
+        super().setUp()
+        startup._sitemap_refresh_attempted = False
+
+    @override_settings(SITE_BASE_URL='https://example.com')
+    @patch('vdw_server.startup.refresh_sitemap')
+    def test_refresh_runs_when_configured(self, mock_refresh):
+        startup._refresh_sitemap_if_configured()
+        mock_refresh.assert_called_once_with('https://example.com')
+
+    @override_settings(SITE_BASE_URL='')
+    @patch('vdw_server.startup.refresh_sitemap')
+    def test_skip_when_base_url_missing(self, mock_refresh):
+        startup._refresh_sitemap_if_configured()
+        mock_refresh.assert_not_called()
