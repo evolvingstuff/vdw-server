@@ -23,6 +23,8 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
+from vdw_server.sitemap_utils import refresh_sitemap as regenerate_sitemap
+
 logger = logging.getLogger(__name__)
 
 BACKUP_PREFIX = "db_backups/manual_backups"
@@ -90,6 +92,27 @@ def manual_backup(request: HttpRequest) -> HttpResponse:
 
     logger.info("Manual SQLite backup uploaded to S3 at %s", saved_path)
     messages.success(request, f"Backup uploaded to S3: {saved_path}")
+    return redirect(reverse("admin:index"))
+
+
+def _resolve_sitemap_base_url(request: HttpRequest | None = None) -> str:
+    configured = (getattr(settings, "SITE_BASE_URL", "") or "").strip()
+    if configured:
+        return configured
+    if request is None:
+        raise RuntimeError("SITE_BASE_URL is not configured; unable to refresh sitemap automatically")
+    return request.build_absolute_uri('/')
+
+
+@staff_member_required
+def refresh_sitemap(request: HttpRequest) -> HttpResponse:
+    if request.method != "POST":
+        return redirect(reverse("admin:index"))
+
+    base_url = _resolve_sitemap_base_url(request)
+    sitemap_path = regenerate_sitemap(base_url)
+
+    messages.success(request, f"Sitemap refreshed at {sitemap_path}")
     return redirect(reverse("admin:index"))
 
 

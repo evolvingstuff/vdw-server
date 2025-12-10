@@ -152,6 +152,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
+SITEMAP_FILE_PATH = BASE_DIR / 'sitemap.xml'
+SITE_BASE_URL = 'https://vitamindwiki.com'
 
 # Media files - Always use S3 for storage
 from .storage_settings import *

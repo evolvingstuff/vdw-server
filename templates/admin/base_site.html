@@ -13,6 +13,10 @@
             <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
         </form>
         <a href="{% url 'manual_restore' %}" class="manual-restore-button" id="manual-restore-button">Restore Backup</a>
+        <form method="post" action="{% url 'refresh_sitemap' %}" class="refresh-sitemap-form" id="refresh-sitemap-form">
+            {% csrf_token %}
+            <button type="submit" class="refresh-sitemap-button" id="refresh-sitemap-button">Refresh Sitemap</button>
+        </form>
     </div>
     {% endif %}
 </div>
@@ -34,8 +38,12 @@
     align-items: center;
     gap: 0.75rem;
 }
-#site-name .manual-backup-form {
+#site-name .manual-backup-form,
+#site-name .refresh-sitemap-form {
     margin: 0;
+}
+#site-name .refresh-sitemap-form {
+    margin-left: 1.25rem;
 }
 #site-name .manual-backup-button {
     background-color: #0b7dda;
@@ -49,6 +57,24 @@
 #site-name .manual-backup-button:hover,
 #site-name .manual-backup-button:focus {
     background-color: #095fa7;
+}
+#site-name .refresh-sitemap-button {
+    background-color: #059669;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+}
+#site-name .refresh-sitemap-button:hover,
+#site-name .refresh-sitemap-button:focus {
+    background-color: #047857;
+}
+#site-name .refresh-sitemap-button[disabled] {
+    background-color: #0f5132;
+    cursor: wait;
+    opacity: 0.85;
 }
 #site-name .manual-restore-button {
     background-color: #1f2937;
@@ -105,31 +131,48 @@
 {{ block.super }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('manual-backup-form');
-    if (!form) {
-        return;
-    }
-    form.addEventListener('submit', function () {
-        const button = document.getElementById('manual-backup-button');
-        if (!button) {
+    function attachAsyncForm(formId, options) {
+        const form = document.getElementById(formId);
+        if (!form) {
             return;
         }
-        button.disabled = true;
-        button.dataset.originalText = button.textContent;
-        button.textContent = 'Backing up...';
-        const status = document.createElement('span');
-        status.className = 'manual-backup-status';
-        status.textContent = ' Working...';
-        button.insertAdjacentElement('afterend', status);
+        form.addEventListener('submit', function () {
+            const button = document.getElementById(options.buttonId);
+            if (button) {
+                button.disabled = true;
+                button.dataset.originalText = button.textContent;
+                button.textContent = options.busyButtonText;
+                if (options.statusText) {
+                    const status = document.createElement('span');
+                    status.className = 'manual-backup-status';
+                    status.textContent = options.statusText;
+                    button.insertAdjacentElement('afterend', status);
+                }
+            }
 
-        const overlay = document.createElement('div');
-        overlay.className = 'manual-backup-overlay';
-        const label = document.createElement('div');
-        label.className = 'manual-backup-overlay__label';
-        label.textContent = 'Creating manual backup...';
-        overlay.appendChild(label);
-        document.body.appendChild(overlay);
-    }, { once: true });
+            const overlay = document.createElement('div');
+            overlay.className = 'manual-backup-overlay';
+            const label = document.createElement('div');
+            label.className = 'manual-backup-overlay__label';
+            label.textContent = options.overlayText;
+            overlay.appendChild(label);
+            document.body.appendChild(overlay);
+        }, { once: true });
+    }
+
+    attachAsyncForm('manual-backup-form', {
+        buttonId: 'manual-backup-button',
+        busyButtonText: 'Backing up...',
+        statusText: ' Working...',
+        overlayText: 'Creating manual backup...',
+    });
+
+    attachAsyncForm('refresh-sitemap-form', {
+        buttonId: 'refresh-sitemap-button',
+        busyButtonText: 'Refreshing...',
+        statusText: ' Working...',
+        overlayText: 'Refreshing sitemap...',
+    });
 });
 </script>
 {% endblock %}

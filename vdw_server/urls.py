@@ -22,15 +22,18 @@ from django.views.generic import RedirectView
 from pages.views import preview_markdown, page_list, page_detail, upload_media
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
-from vdw_server.admin_views import manual_backup, manual_restore
+from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
+from vdw_server.views import sitemap_xml
 
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/upload-media/', upload_media, name='upload_media'),
     path('admin/manual-backup/', admin.site.admin_view(manual_backup), name='manual_backup'),
     path('admin/manual-restore/', admin.site.admin_view(manual_restore), name='manual_restore'),
+    path('admin/refresh-sitemap/', admin.site.admin_view(refresh_sitemap), name='refresh_sitemap'),
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('pages/', page_list, name='page_list'),
     path('pages/<slug:slug>/', page_detail, name='page_detail'),
     # Legacy URLs for backwards compatibility
