@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Choose markdown syntax based on file type
                 const isImage = file.type.startsWith('image/');
-                const loadingText = isImage
+                const loadingText = isImage 
                     ? `![Uploading ${fileName}...](uploading)`
                     : `[Uploading ${fileName}...](uploading)`;
 
@@ -613,10 +613,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     if (data.success && data.url) {
                         // Replace loading text with actual URL using appropriate markdown syntax
-                        const markdown = isImage
-                            ? `![${fileName}](${data.url})`
+                        const insertedMarkup = isImage
+                            ? `<img src="${data.url}" alt="image" />`
                             : `[${fileName}](${data.url})`;
-                        textarea.value = textarea.value.replace(loadingText, markdown);
+                        textarea.value = textarea.value.replace(loadingText, insertedMarkup);
 
                         // Update preview
                         if (textarea === contentField) {
