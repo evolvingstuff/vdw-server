@@ -177,6 +177,55 @@
             }
         }
 
+        /* Floating scroll buttons */
+        .scroll-controls {
+            position: fixed;
+            right: 24px;
+            top: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .scroll-button {
+            border: none;
+            border-radius: 999px;
+            width: 48px;
+            height: 48px;
+            background: rgba(52, 152, 219, 0.9);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+
+        .scroll-button:hover,
+        .scroll-button:focus-visible {
+            background: #2980b9;
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .scroll-button:active {
+            transform: translateY(1px);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-controls {
+                right: 10px;
+                top: auto;
+                bottom: 20px;
+                flex-direction: row;
+            }
+
+            .scroll-button {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
         /* Additional styles can be added by child templates */
         {% block extra_css %}{% endblock %}
     </style>
@@ -190,6 +239,12 @@
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Floating scroll controls -->
+    <div class="scroll-controls" aria-label="Scroll controls">
+        <button class="scroll-button" id="scroll-to-top" type="button" title="Scroll to top" aria-label="Scroll to top">↑</button>
+        <button class="scroll-button" id="scroll-to-bottom" type="button" title="Scroll to bottom" aria-label="Scroll to bottom">↓</button>
+    </div>
 
     <!-- Additional JavaScript can be added by child templates -->
     <script>
@@ -298,6 +353,35 @@
             document.addEventListener('DOMContentLoaded', linkifyUrls);
         } else {
             linkifyUrls();
+        }
+    })();
+    </script>
+    <script>
+    (function() {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const scrollToTopButton = document.getElementById('scroll-to-top');
+        const scrollToBottomButton = document.getElementById('scroll-to-bottom');
+
+        function smoothScroll(options) {
+            if (prefersReducedMotion) {
+                window.scrollTo(0, options.top);
+                return;
+            }
+
+            window.scrollTo({ top: options.top, behavior: 'smooth' });
+        }
+
+        if (scrollToTopButton) {
+            scrollToTopButton.addEventListener('click', function() {
+                smoothScroll({ top: 0 });
+            });
+        }
+
+        if (scrollToBottomButton) {
+            scrollToBottomButton.addEventListener('click', function() {
+                const bottomTarget = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+                smoothScroll({ top: bottomTarget });
+            });
         }
     })();
     </script>
