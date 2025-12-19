@@ -1,6 +1,7 @@
 import os
 import re
 import json
+from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -33,6 +34,15 @@ def page_detail(request, slug):
     page.content_html = add_file_icons_to_html(page.content_html)
 
     return render(request, 'pages/page_detail.html', {'page': page})
+
+
+@staff_member_required
+def page_preview(request, slug):
+    page = get_object_or_404(Page, slug=slug)
+
+    page.content_html = add_file_icons_to_html(page.content_html)
+
+    return render(request, 'pages/page_detail.html', {'page': page, 'is_preview': True})
 
 
 def add_file_icons_to_html(html):
@@ -180,8 +190,6 @@ def upload_media(request):
     folder = content_type_map[uploaded_file.content_type]
     
     # Generate filename - use original name if available, otherwise timestamp
-    import uuid
-    from datetime import datetime
     original_name = uploaded_file.name
     name_part, file_ext = os.path.splitext(original_name)
     

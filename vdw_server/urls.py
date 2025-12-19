@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from pages.views import preview_markdown, page_list, page_detail, upload_media
+from pages.views import preview_markdown, page_list, page_detail, page_preview, upload_media
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
@@ -35,6 +35,7 @@ urlpatterns = [
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('pages/', page_list, name='page_list'),
+    path('pages/<slug:slug>/preview/', page_preview, name='page_preview'),
     path('pages/<slug:slug>/', page_detail, name='page_detail'),
     # Legacy URLs for backwards compatibility
     path('posts/', RedirectView.as_view(pattern_name='page_list', permanent=True)),

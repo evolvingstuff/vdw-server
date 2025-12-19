@@ -50,7 +50,7 @@ del _extra_csrf_trusted_origins
 
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'django.contrib.auth',
+    'vdw_server.apps.VdwAuthConfig',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
