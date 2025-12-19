@@ -31,6 +31,7 @@
             data-display-mode="{{ search_results_display_mode }}"
         >
             <div class="search-loading" id="search-loading" style="display: none;">Searching...</div>
+            <div class="search-results-count" id="search-results-count" style="display: none;"></div>
             <div class="search-results" id="search-results"></div>
         </div>
     </div>
@@ -144,6 +145,17 @@
     text-align: center;
     color: #666;
     font-style: italic;
+}
+
+.search-results-count {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 1px solid #f0f0f0;
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .search-result-item {
@@ -276,187 +288,341 @@ body {
     const searchInput = document.getElementById('global-search-input');
     const dropdown = document.getElementById('search-dropdown');
     const loading = document.getElementById('search-loading');
+    const resultsCount = document.getElementById('search-results-count');
     const results = document.getElementById('search-results');
     const displayMode = (dropdown?.dataset?.displayMode || 'full').toLowerCase();
     const isTitleOnlyMode = displayMode === 'title_only';
-    
+
+    const PAGE_SIZE = 50;
+    const MAX_HITS = 1000;
+    const LOAD_MORE_THRESHOLD_PX = 200;
+
     let searchTimeout;
     let currentHighlight = -1;
-    let currentResults = [];
-    
+    let currentQuery = '';
+    let currentOffset = 0;
+    let totalHits = null;
+    let hasMore = false;
+    let isFetchingMore = false;
+    let searchToken = 0;
+
+    let restoreTargetOffset = null;
+    let restoreTargetScroll = null;
+
     // Detect if this page load is from back/forward navigation
     const navEntries = (typeof performance !== 'undefined' && performance.getEntriesByType)
         ? performance.getEntriesByType('navigation')
         : [];
     const isBackNav = (navEntries && navEntries[0] && navEntries[0].type === 'back_forward') ||
         (performance && performance.navigation && performance.navigation.type === 2);
-    
-    // Debounced search function
-    function performSearch(query) {
-        if (!query || query.length < 2) {
-            hideDropdown();
+
+    function formatTotalHitsDisplay(count) {
+        if (typeof count !== 'number') {
+            return '';
+        }
+        if (count >= MAX_HITS) {
+            return `${MAX_HITS}+`;
+        }
+        return String(count);
+    }
+
+    function setCount(count) {
+        const display = formatTotalHitsDisplay(count);
+        if (!display) {
+            resultsCount.style.display = 'none';
+            resultsCount.textContent = '';
             return;
         }
-        
-        showLoading();
-        
-        // TODO: There's a visual bug with limit > 20 where results get progressively
-        // more indented in blocks of ~20. The indentation seems to correlate with 
-        // <em> highlight tags in the results. Issue needs investigation.
-        fetch(`/search/api/?q=${encodeURIComponent(query)}&limit=20`)
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                displayResults(data.hits || []);
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Search error:', error);
-                showError();
-            });
+        resultsCount.textContent = `Found ${display} results`;
+        resultsCount.style.display = 'block';
     }
-    
-    function showLoading() {
+
+    function showLoading(message = 'Searching...', clearResults = true) {
+        loading.textContent = message;
         loading.style.display = 'block';
-        results.innerHTML = '';
+        if (clearResults) {
+            results.innerHTML = '';
+        }
+        resultsCount.style.display = 'none';
         dropdown.classList.add('show');
     }
-    
+
     function hideLoading() {
         loading.style.display = 'none';
+        loading.textContent = 'Searching...';
     }
-    
-    function displayResults(hits) {
-        currentResults = hits;
-        currentHighlight = -1;
-        
-        if (hits.length === 0) {
-            results.innerHTML = '<div class="no-results">No results found</div>';
-            dropdown.classList.add('show');
-            return;
-        }
-        
-        const html = hits.map(hit => {
-            const title = hit._formatted?.title || hit.title;
-            const content = hit._formatted?.content || hit.content || '';
-            const snippet = content.substring(0, 120) + (content.length > 120 ? '...' : '');
 
-            const snippetHtml = isTitleOnlyMode ? '' : `\n    <div class="result-snippet">${snippet}</div>`;
-            
-            return `<div class="search-result-item" data-url="/pages/${hit.slug}/">
-    <div class="result-title">${title}</div>${snippetHtml}
-</div>`;
-        }).join('');
-        
-        results.innerHTML = html;
-        dropdown.classList.add('show');
-        
-        // If restoring from back navigation, restore scroll position once
-        try {
-            const savedScroll = sessionStorage.getItem('lastSearchScroll');
-            const restoreFlag = sessionStorage.getItem('restoreOnBack');
-            if (isBackNav && restoreFlag === '1' && savedScroll !== null) {
-                const y = parseInt(savedScroll, 10);
-                if (!Number.isNaN(y)) {
-                    results.scrollTop = y;
-                }
-                sessionStorage.removeItem('lastSearchScroll');
-                sessionStorage.removeItem('restoreOnBack');
-            }
-        } catch (e) {}
-        
-        // Add click handlers
-        results.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('click', () => {
-                try {
-                    sessionStorage.setItem('lastSearch', (searchInput.value || '').trim());
-                    sessionStorage.setItem('lastSearchScroll', String(results.scrollTop || 0));
-                    sessionStorage.setItem('restoreOnBack', '1');
-                } catch (e) {}
-                window.location.href = item.dataset.url;
-            });
-        });
-    }
-    
-    function showError() {
-        results.innerHTML = '<div class="no-results">Search error. Please try again.</div>';
+    function showNoResults() {
+        results.innerHTML = '<div class="no-results">No results found</div>';
+        setCount(0);
         dropdown.classList.add('show');
     }
-    
+
     function hideDropdown() {
         dropdown.classList.remove('show');
         currentHighlight = -1;
     }
-    
+
+    function computeHasMore() {
+        if (typeof totalHits === 'number') {
+            return currentOffset < Math.min(totalHits, MAX_HITS);
+        }
+        return currentOffset < MAX_HITS;
+    }
+
+    function renderHits(hits, append = false) {
+        if (!Array.isArray(hits) || hits.length === 0) {
+            return;
+        }
+
+        const html = hits.map(hit => {
+            const title = hit._formatted?.title || hit.title || '';
+            const snippetSource = hit._formatted?.content || hit.content || '';
+            const snippetHtml = isTitleOnlyMode ? '' : `
+    <div class="result-snippet">${snippetSource}</div>`;
+
+            return `<div class="search-result-item" data-url="/pages/${hit.slug}/">
+    <div class="result-title">${title}</div>${snippetHtml}
+</div>`;
+        }).join('');
+
+        if (append) {
+            results.insertAdjacentHTML('beforeend', html);
+        } else {
+            results.innerHTML = html;
+        }
+    }
+
+    function extractTotalHits(data) {
+        if (data && typeof data.totalHits === 'number') {
+            return data.totalHits;
+        }
+        if (data && typeof data.estimatedTotalHits === 'number') {
+            return data.estimatedTotalHits;
+        }
+        if (data && typeof data.nbHits === 'number') {
+            return data.nbHits;
+        }
+        return null;
+    }
+
+    function fetchPage(query, offset, { append = false, showSpinner = true, token } = {}) {
+        const normalizedQuery = (query || '').trim();
+        if (!normalizedQuery || normalizedQuery.length < 2) {
+            hideDropdown();
+            return Promise.resolve();
+        }
+
+        if (append && isFetchingMore) {
+            return Promise.resolve();
+        }
+
+        const limit = Math.min(PAGE_SIZE, MAX_HITS - offset);
+        if (limit <= 0) {
+            hasMore = false;
+            return Promise.resolve();
+        }
+
+        const activeToken = typeof token === 'number' ? token : searchToken;
+        if (append) {
+            isFetchingMore = true;
+        }
+
+        if (showSpinner) {
+            showLoading(append ? 'Loading more...' : 'Searching...', !append);
+        }
+
+        return fetch(`/search/api/?q=${encodeURIComponent(normalizedQuery)}&limit=${limit}&offset=${offset}`)
+            .then(response => response.json())
+            .then(data => {
+                if (activeToken !== searchToken) {
+                    return;
+                }
+
+                const responseTotal = extractTotalHits(data);
+                if (responseTotal !== null) {
+                    totalHits = responseTotal;
+                }
+
+                const hits = Array.isArray(data?.hits) ? data.hits : [];
+
+                if (!append) {
+                    currentQuery = normalizedQuery;
+                    currentOffset = 0;
+                    currentHighlight = -1;
+                    dropdown.scrollTop = 0;
+                }
+
+                if (!append && hits.length === 0) {
+                    showNoResults();
+                    hasMore = false;
+                    return;
+                }
+
+                if (append && hits.length === 0) {
+                    hasMore = false;
+                    return;
+                }
+
+                renderHits(hits, append);
+                currentOffset = offset + hits.length;
+
+                setCount(typeof totalHits === 'number' ? totalHits : null);
+                dropdown.classList.add('show');
+                hasMore = computeHasMore();
+
+                if (!append && restoreTargetOffset !== null) {
+                    const targetOffset = restoreTargetOffset;
+                    restoreTargetOffset = null;
+                    loadUntilOffset(targetOffset);
+                } else if (!append && restoreTargetScroll !== null) {
+                    dropdown.scrollTop = restoreTargetScroll;
+                    restoreTargetScroll = null;
+                }
+            })
+            .catch(error => {
+                if (activeToken !== searchToken) {
+                    return;
+                }
+                console.error('Search error:', error);
+                results.innerHTML = '<div class="no-results">Search error. Please try again.</div>';
+                dropdown.classList.add('show');
+            })
+            .finally(() => {
+                if (append) {
+                    isFetchingMore = false;
+                }
+                if (showSpinner) {
+                    hideLoading();
+                }
+            });
+    }
+
+    function loadUntilOffset(targetOffset) {
+        if (currentOffset >= targetOffset || !hasMore) {
+            if (restoreTargetScroll !== null) {
+                dropdown.scrollTop = restoreTargetScroll;
+                restoreTargetScroll = null;
+            }
+            return;
+        }
+
+        fetchPage(currentQuery, currentOffset, { append: true, showSpinner: false }).then(() => {
+            loadUntilOffset(targetOffset);
+        });
+    }
+
+    function performSearch(query) {
+        searchToken += 1;
+        totalHits = null;
+        currentOffset = 0;
+        currentHighlight = -1;
+        hasMore = false;
+        return fetchPage(query, 0, { append: false, showSpinner: true, token: searchToken });
+    }
+
     function highlightResult(index) {
         const items = results.querySelectorAll('.search-result-item');
         items.forEach(item => item.classList.remove('highlighted'));
-        
+
         if (index >= 0 && index < items.length) {
             items[index].classList.add('highlighted');
             currentHighlight = index;
         }
     }
-    
+
+    function saveSearchStateForBackNav() {
+        try {
+            sessionStorage.setItem('lastSearch', (currentQuery || '').trim());
+            sessionStorage.setItem('lastSearchScroll', String(dropdown.scrollTop || 0));
+            sessionStorage.setItem('lastSearchOffset', String(currentOffset || 0));
+            sessionStorage.setItem('restoreOnBack', '1');
+        } catch (e) {}
+    }
+
     // Event listeners
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
-        
+
         clearTimeout(searchTimeout);
-        
+
         if (query.length < 2) {
             hideDropdown();
             return;
         }
-        
+
         searchTimeout = setTimeout(() => {
             performSearch(query);
         }, 300);
     });
-    
+
+    // Scroll-to-load-more
+    dropdown.addEventListener('scroll', function() {
+        if (!dropdown.classList.contains('show')) {
+            return;
+        }
+        if (!currentQuery || currentQuery.length < 2) {
+            return;
+        }
+        if (isFetchingMore || !hasMore) {
+            return;
+        }
+
+        const distanceToBottom = dropdown.scrollHeight - dropdown.scrollTop - dropdown.clientHeight;
+        if (distanceToBottom < LOAD_MORE_THRESHOLD_PX) {
+            fetchPage(currentQuery, currentOffset, { append: true, showSpinner: false });
+        }
+    });
+
+    // Click results (event delegation)
+    results.addEventListener('click', function(e) {
+        const item = e.target.closest('.search-result-item');
+        if (!item) {
+            return;
+        }
+        saveSearchStateForBackNav();
+        window.location.href = item.dataset.url;
+    });
+
     // Keyboard navigation
     searchInput.addEventListener('keydown', function(e) {
         const items = results.querySelectorAll('.search-result-item');
-        
-        switch(e.key) {
+
+        switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
                 currentHighlight = Math.min(currentHighlight + 1, items.length - 1);
                 highlightResult(currentHighlight);
                 break;
-                
+
             case 'ArrowUp':
                 e.preventDefault();
                 currentHighlight = Math.max(currentHighlight - 1, -1);
                 highlightResult(currentHighlight);
                 break;
-                
+
             case 'Enter':
                 e.preventDefault();
                 if (currentHighlight >= 0 && items[currentHighlight]) {
-                    try {
-                        sessionStorage.setItem('lastSearch', (searchInput.value || '').trim());
-                        sessionStorage.setItem('lastSearchScroll', String(results.scrollTop || 0));
-                        sessionStorage.setItem('restoreOnBack', '1');
-                    } catch (err) {}
+                    saveSearchStateForBackNav();
                     window.location.href = items[currentHighlight].dataset.url;
                 }
                 break;
-                
+
             case 'Escape':
                 hideDropdown();
                 this.blur();
                 break;
         }
     });
-    
+
     // Click outside to close
     document.addEventListener('click', function(e) {
         if (!document.getElementById('global-search-bar').contains(e.target)) {
             hideDropdown();
         }
     });
-    
+
     // Focus search with Ctrl+K or Cmd+K
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -464,18 +630,40 @@ body {
             searchInput.focus();
         }
     });
+
     // Restore previous search only on back/forward navigation
     try {
-        const lastSearch = sessionStorage.getItem('lastSearch');
         const restoreFlag = sessionStorage.getItem('restoreOnBack');
+        const lastSearch = sessionStorage.getItem('lastSearch');
+        const lastSearchScroll = sessionStorage.getItem('lastSearchScroll');
+        const lastSearchOffset = sessionStorage.getItem('lastSearchOffset');
+
         if (isBackNav && restoreFlag === '1' && lastSearch) {
             searchInput.value = lastSearch;
+
+            if (lastSearchScroll !== null) {
+                const y = parseInt(lastSearchScroll, 10);
+                if (!Number.isNaN(y)) {
+                    restoreTargetScroll = y;
+                }
+            }
+
+            if (lastSearchOffset !== null) {
+                const targetOffset = parseInt(lastSearchOffset, 10);
+                if (!Number.isNaN(targetOffset)) {
+                    restoreTargetOffset = targetOffset;
+                }
+            }
+
             performSearch(lastSearch);
-            // Keep restoreOnBack for scroll restoration in displayResults; remove lastSearch now
+
             sessionStorage.removeItem('lastSearch');
+            sessionStorage.removeItem('lastSearchScroll');
+            sessionStorage.removeItem('lastSearchOffset');
         }
     } catch (e) {}
 })();
+
 
 // Dynamic admin link based on current page
 (function() {

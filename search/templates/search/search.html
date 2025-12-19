@@ -9,7 +9,7 @@
     {% if query %}
         <h1>Search Results for "{{ query }}"</h1>
         {% if results %}
-            <p class="search-info">Found {{ result_count }} result{{ result_count|pluralize }}</p>
+            <p class="search-info">Found {{ result_total_display }} result{% if result_total != 1 %}s{% endif %}</p>
             
             <div class="search-results">
                 {% for result in results %}
