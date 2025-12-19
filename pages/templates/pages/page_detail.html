@@ -7,10 +7,12 @@
     <h1>{{ page.title }}</h1>
     
     <div class="post-meta">
-        Created {{ page.created_date|date:"F Y" }}
-        {% if page.modified_date != page.created_date %}
-            • Updated {{ page.modified_date|date:"F d, Y" }}
-        {% endif %}
+        {% with created_month=page.created_date|date:"F Y" updated_month=page.modified_date|date:"F Y" %}
+            Created {{ created_month }}
+            {% if updated_month != created_month %}
+                • Updated {{ updated_month }}
+            {% endif %}
+        {% endwith %}
     </div>
 
     <nav class="post-toc" id="post-toc" style="margin: 1.5em 0 2em 0; padding: 1em; background: #f8f9fa; border: 1px solid #e1e5e9; border-radius: 8px; display: none;">
