@@ -1,5 +1,7 @@
 {% extends "admin/base.html" %}
 
+{% load static %}
+
 {% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
 {% block branding %}
@@ -129,6 +131,9 @@
 
 {% block extrahead %}
 {{ block.super }}
+
+<link rel="icon" type="image/x-icon" href="{% static 'pages/favicon_admin/favicon.ico' %}">
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     function attachAsyncForm(formId, options) {
