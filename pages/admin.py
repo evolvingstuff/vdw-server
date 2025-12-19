@@ -3,6 +3,7 @@ from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
 from django.contrib.admin import SimpleListFilter
+from django.db.models import Count
 from .models import Page
 
 
@@ -34,7 +35,7 @@ class RedactedOnlyFilter(SimpleListFilter):
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
-    list_display = ['markdown_link_shortcut', 'title', 'status', 'chars_display', 'redacted_indicator', 'tags_count', 'live_link', 'created_date_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ('title',)
@@ -45,7 +46,6 @@ class PageAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        from django.db.models import Count
         queryset = queryset.annotate(tags_count_annotation=Count('tags'))
         return queryset.prefetch_related('tags')
 
@@ -110,6 +110,18 @@ class PageAdmin(admin.ModelAdmin):
             return "Save first"
     live_link.short_description = "Live URL"
 
+    def status_link(self, obj):
+        assert obj.slug, 'Page.slug missing; cannot build status link'
+
+        if obj.status == 'published':
+            url = reverse('page_detail', args=[obj.slug])
+        else:
+            url = reverse('page_preview', args=[obj.slug])
+
+        return format_html('<a href="{}" target="_blank">{}</a>', url, obj.get_status_display())
+    status_link.short_description = 'Status'
+    status_link.admin_order_field = 'status'
+
     def markdown_link_helper(self, obj):
         if not obj or not obj.pk or not obj.slug:
             return "Save this page to generate its markdown link."
@@ -161,13 +173,13 @@ class PageAdmin(admin.ModelAdmin):
     chars_display.admin_order_field = 'character_count'
 
     def created_date_display(self, obj):
-        return obj.created_date.strftime('%B %d, %Y')
-    created_date_display.short_description = "Created Date"
+        return obj.created_date.strftime('%m/%y')
+    created_date_display.short_description = "Created"
     created_date_display.admin_order_field = 'created_date'
 
     def modified_date_display(self, obj):
-        return obj.modified_date.strftime('%B %d, %Y')
-    modified_date_display.short_description = "Modified Date"
+        return obj.modified_date.strftime('%m/%y')
+    modified_date_display.short_description = "Modified"
     modified_date_display.admin_order_field = 'modified_date'
 
     def tags_count(self, obj):
