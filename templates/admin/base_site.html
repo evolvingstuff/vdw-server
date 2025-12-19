@@ -126,6 +126,32 @@
 #site-name .home-link a:hover {
     text-decoration: none;
 }
+
+#nav-filter,
+.nav-filter {
+    display: none !important;
+}
+
+#nav-sidebar {
+    flex: 0 0 160px;
+    left: -161px;
+    margin-left: -161px;
+}
+
+[dir="rtl"] #nav-sidebar {
+    left: 0;
+    margin-left: 0;
+    right: -161px;
+    margin-right: -161px;
+}
+
+.main.shifted > #nav-sidebar + .content {
+    max-width: calc(100% - 184px);
+}
+
+[dir="rtl"] .main.shifted > #nav-sidebar + .content {
+    max-width: calc(100% - 184px);
+}
 </style>
 {% endblock %}
 
