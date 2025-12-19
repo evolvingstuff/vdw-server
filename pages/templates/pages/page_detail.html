@@ -82,9 +82,14 @@
             const link = document.createElement('a');
             link.href = '#' + heading.id;
             link.textContent = heading.textContent;
-            link.style.cssText = 'color: #3498db; text-decoration: none; font-size: 0.95em; display: inline-block;';
+            link.style.cssText = 'color: #3498db; text-decoration: none; display: inline-block;';
             link.style.fontWeight = depth === 0 ? '600' : '400';
             link.style.fontStyle = depth >= 2 ? 'italic' : 'normal';
+            link.style.setProperty(
+                'font-size',
+                depth === 0 ? '1.12em' : (depth >= 2 ? '0.86em' : '0.96em'),
+                'important'
+            );
 
             link.addEventListener('click', function(e) {
                 e.preventDefault();
