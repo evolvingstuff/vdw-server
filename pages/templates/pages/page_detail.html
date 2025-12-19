@@ -3,36 +3,38 @@
 {% block title %}{{ page.title }} - VitaminDWiki{% endblock %}
 
 {% block content %}
-<article>
-    <h1>{{ page.title }}</h1>
-    
-    <div class="post-meta">
-        {% with created_month=page.created_date|date:"F Y" updated_month=page.modified_date|date:"F Y" %}
-            Created {{ created_month }}
-            {% if updated_month != created_month %}
-                • Updated {{ updated_month }}
-            {% endif %}
-        {% endwith %}
-    </div>
+	<article>
+	    <h1>{{ page.title }}</h1>
 
-    <nav class="post-toc" id="post-toc" style="margin: 1.5em 0 2em 0; padding: 1em; background: #f8f9fa; border: 1px solid #e1e5e9; border-radius: 8px; display: none;">
-        <div style="font-size: 0.9em; font-weight: 600; color: #666; margin-bottom: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">On this page</div>
-        <ul id="toc-list" style="margin: 0; padding: 0; list-style: none;"></ul>
-    </nav>
+	    <nav class="post-toc" id="post-toc" style="margin: 1.5em 0 2em 0; padding: 1em; background: #f8f9fa; border: 1px solid #e1e5e9; border-radius: 8px; display: none;">
+	        <div style="font-size: 0.9em; font-weight: 600; color: #666; margin-bottom: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">On this page</div>
+	        <ul id="toc-list" style="margin: 0; padding: 0; list-style: none;"></ul>
+	    </nav>
 
-    <div class="markdown-content">
-        {{ page.content_html|safe }}
-    </div>
-    
-    {% if page.tags.all %}
-    <div class="tags">
-        <strong>Tags:</strong>
-        {% for tag in page.tags.all %}
-        <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
-        {% endfor %}
-    </div>
-    {% endif %}
- </article>
+	    <div class="markdown-content">
+	        {{ page.content_html|safe }}
+	    </div>
+
+	    <footer class="post-footer">
+	        <div class="post-meta">
+	            {% with created_month=page.created_date|date:"F Y" updated_month=page.modified_date|date:"F Y" %}
+	                Created {{ created_month }}
+	                {% if updated_month != created_month %}
+	                    • Updated {{ updated_month }}
+	                {% endif %}
+	            {% endwith %}
+	        </div>
+
+	        {% if page.tags.all %}
+	        <div class="tags">
+	            <strong>Tags:</strong>
+	            {% for tag in page.tags.all %}
+	            <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
+	            {% endfor %}
+	        </div>
+	        {% endif %}
+	    </footer>
+	 </article>
 
 <script>
 (function() {
