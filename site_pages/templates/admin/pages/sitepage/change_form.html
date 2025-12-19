@@ -118,9 +118,14 @@
     }
 
     .fullscreen-title {
+        flex: 1;
         font-size: 18px;
         font-weight: bold;
         color: #333;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .fullscreen-close {
@@ -283,6 +288,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const contentField = document.querySelector('#id_content_md');
 
     if (contentField) {
+        const titleField = document.querySelector('#id_title');
+        const adminHeading = document.querySelector('#content > h1');
+        const originalDocumentTitle = document.title;
+        const originalAdminHeading = adminHeading ? adminHeading.textContent.trim() : '';
+
         // Store original parent before any DOM manipulation
         const originalParent = contentField.parentNode;
 
@@ -311,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fullscreenOverlay.className = 'fullscreen-overlay';
         fullscreenOverlay.innerHTML = `
             <div class="fullscreen-header">
-                <div class="fullscreen-title">Markdown Editor - Fullscreen Mode</div>
+                <div class="fullscreen-title">Markdown Editor (Fullscreen)</div>
                 <div class="fullscreen-buttons">
                     <button type="button" class="fullscreen-save-close">💾 Save and Close</button>
                     <button type="button" class="fullscreen-close">✕ Close</button>
@@ -362,6 +372,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullscreenPreview = fullscreenOverlay.querySelector('.fullscreen-preview');
         const fullscreenClose = fullscreenOverlay.querySelector('.fullscreen-close');
         const fullscreenSaveClose = fullscreenOverlay.querySelector('.fullscreen-save-close');
+
+        function updateTitleContext() {
+            const pageTitle = titleField ? titleField.value.trim() : '';
+            const fullscreenTitle = fullscreenOverlay.querySelector('.fullscreen-title');
+
+            if (pageTitle) {
+                document.title = `${pageTitle} — ${originalDocumentTitle}`;
+                if (adminHeading && originalAdminHeading) {
+                    adminHeading.textContent = `${originalAdminHeading} — ${pageTitle}`;
+                }
+                if (fullscreenTitle) {
+                    fullscreenTitle.textContent = `Markdown Editor (Fullscreen) — ${pageTitle}`;
+                }
+                return;
+            }
+
+            document.title = originalDocumentTitle;
+            if (adminHeading && originalAdminHeading) {
+                adminHeading.textContent = originalAdminHeading;
+            }
+            if (fullscreenTitle) {
+                fullscreenTitle.textContent = 'Markdown Editor (Fullscreen)';
+            }
+        }
+
+        updateTitleContext();
+        if (titleField) {
+            titleField.addEventListener('input', updateTitleContext);
+            titleField.addEventListener('change', updateTitleContext);
+        }
 
         // Modal elements
         const confirmSaveBtn = confirmModal.querySelector('.confirm-save-btn');
@@ -437,6 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fullscreenOverlay.classList.add('active');
             fullscreenTextarea.value = contentField.value;
             originalContent = contentField.value;  // Store original content
+            updateTitleContext();
             updatePreview(fullscreenPreview);
             fullscreenTextarea.focus();
             if (typeof fullscreenTextarea.setSelectionRange === 'function') {
