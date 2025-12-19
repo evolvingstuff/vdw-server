@@ -47,6 +47,18 @@
             return;
         }
 
+        const indentationStep = 25; // pixels per heading depth relative to shallowest level
+        const headingLevels = Array.from(headings).map(h => {
+            const numeric = parseInt(h.tagName.substring(1), 10);
+            return Number.isNaN(numeric) ? null : numeric;
+        }).filter(level => level !== null);
+
+        const uniqueLevels = Array.from(new Set(headingLevels)).sort((a, b) => a - b);
+        const levelIndentLookup = new Map();
+        uniqueLevels.forEach((level, index) => {
+            levelIndentLookup.set(level, index * indentationStep);
+        });
+
         headings.forEach((heading, index) => {
             if (!heading.id) {
                 const text = heading.textContent || '';
@@ -57,13 +69,23 @@
             }
 
             const li = document.createElement('li');
-            li.style.cssText = 'margin: 0.4em 0; padding: 0 0 0 1.2em; position: relative;';
-            li.innerHTML = '•';
+            li.style.cssText = 'margin: 0.4em 0; padding: 0 0 0 1.5em; position: relative;';
+
+            const bullet = document.createElement('span');
+            bullet.textContent = '•';
+            bullet.setAttribute('aria-hidden', 'true');
+            bullet.style.cssText = 'position: absolute; left: 0; top: 0.45em; transform: translateY(-50%); color: #3498db; font-size: 1em;';
+            li.appendChild(bullet);
+
+            const headingLevel = parseInt(heading.tagName.substring(1), 10);
+            const indent = levelIndentLookup.get(headingLevel) || 0;
+            li.style.marginLeft = indent + 'px';
 
             const link = document.createElement('a');
             link.href = '#' + heading.id;
             link.textContent = heading.textContent;
-            link.style.cssText = 'color: #3498db; text-decoration: none; font-size: 0.95em; margin-left: 0.5em;';
+            link.style.cssText = 'color: #3498db; text-decoration: none; font-size: 0.95em; display: inline-block;';
+            link.style.fontWeight = indent === 0 ? '600' : '400';
 
             link.addEventListener('click', function(e) {
                 e.preventDefault();
