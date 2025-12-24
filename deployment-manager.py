@@ -550,7 +550,7 @@ class DockerDeployment:
 
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 # Upload all important files
-                for pattern in ['*.py', '*.txt', '*.yml', '*.yaml', 'Dockerfile', '.dockerignore']:
+                for pattern in ['*.py', '*.txt', '*.yml', '*.yaml', 'Dockerfile', '.dockerignore', 'google*.html']:
                     for file_path in Path('.').glob(pattern):
                         if file_path.name not in ['.env', 'db.sqlite3']:
                             print(f"   Uploading {file_path}...")
