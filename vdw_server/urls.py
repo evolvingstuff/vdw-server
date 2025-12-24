@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
@@ -23,7 +23,7 @@ from pages.views import preview_markdown, page_list, page_detail, page_preview, 
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
-from vdw_server.views import sitemap_xml
+from vdw_server.views import google_site_verification, sitemap_xml
 
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
@@ -34,6 +34,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
+    re_path(r'^google(?P<token>[A-Za-z0-9]+)\.html$', google_site_verification, name='google_site_verification'),
     path('pages/', page_list, name='page_list'),
     path('pages/<slug:slug>/preview/', page_preview, name='page_preview'),
     path('pages/<slug:slug>/', page_detail, name='page_detail'),

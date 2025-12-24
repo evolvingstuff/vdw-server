@@ -20,3 +20,17 @@ def sitemap_xml(request):
     response = FileResponse(sitemap_path.open('rb'), content_type='application/xml')
     response['Content-Disposition'] = 'inline; filename="sitemap.xml"'
     return response
+
+
+def google_site_verification(request, token):
+    """Serve the google<token>.html verification file from the project root."""
+    verification_dir = Path(getattr(settings, 'GOOGLE_VERIFICATION_DIR', settings.BASE_DIR))
+    filename = f'google{token}.html'
+    verification_path = verification_dir / filename
+
+    if not verification_path.exists():
+        raise Http404("Verification file not found.")
+
+    response = FileResponse(verification_path.open('rb'), content_type='text/html')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
