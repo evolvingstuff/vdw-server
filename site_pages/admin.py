@@ -73,3 +73,6 @@ class SitePageAdmin(admin.ModelAdmin):
         return obj.modified_date.strftime('%B %d, %Y')
     modified_date_display.short_description = "Modified Date"
     modified_date_display.admin_order_field = 'modified_date'
+
+    class Media:
+        js = ('pages/admin/form_edit_guard.js',)
