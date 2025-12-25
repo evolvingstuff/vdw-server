@@ -9,6 +9,12 @@ class SitePageAdminForm(forms.ModelForm):
         model = SitePage
         fields = '__all__'
         widgets = {
+            'title': forms.Textarea(attrs={
+                'rows': 2,
+                'cols': 80,
+                'style': 'min-height: 48px; min-width: 320px;',
+                'spellcheck': 'true',
+            }),
             'content_md': forms.Textarea(attrs={'rows': 25, 'cols': 80}),
         }
 
