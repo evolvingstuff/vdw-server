@@ -201,4 +201,8 @@ class PageAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     class Media:
-        js = ('pages/admin/form_edit_guard.js', 'pages/admin/copy_page_link.js')
+        js = (
+            'pages/admin/form_edit_guard.js',
+            'pages/admin/copy_page_link.js',
+            'pages/admin/title_length_warning.js',
+        )
