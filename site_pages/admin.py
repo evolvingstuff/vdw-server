@@ -81,4 +81,7 @@ class SitePageAdmin(admin.ModelAdmin):
     modified_date_display.admin_order_field = 'modified_date'
 
     class Media:
-        js = ('pages/admin/form_edit_guard.js',)
+        js = (
+            'pages/admin/form_edit_guard.js',
+            'pages/admin/title_length_warning.js',
+        )
