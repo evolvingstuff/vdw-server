@@ -163,7 +163,7 @@ class PageAdmin(admin.ModelAdmin):
             obj.title,
             obj.title,
         )
-    markdown_link_shortcut.short_description = "Copy"
+    markdown_link_shortcut.short_description = "MD"
 
     def html_link_helper(self, obj):
         if not obj or not obj.pk or not obj.slug:
