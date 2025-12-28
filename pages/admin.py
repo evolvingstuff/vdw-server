@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django import forms
+from django.conf import settings
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, escape
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Count
+from urllib.parse import urljoin
 from .models import Page
 
 
@@ -41,14 +43,14 @@ class RedactedOnlyFilter(SimpleListFilter):
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
-    list_display = ['markdown_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
     list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
-    readonly_fields = ['live_link', 'markdown_link_helper', 'tiki_markdown_comparison']
+    readonly_fields = ['live_link', 'markdown_link_helper', 'html_link_helper', 'tiki_markdown_comparison']
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -58,7 +60,7 @@ class PageAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Content', {
-                'fields': ('title', 'slug', 'status', 'live_link', 'markdown_link_helper', 'content_md', 'notes')
+                'fields': ('title', 'slug', 'status', 'live_link', 'markdown_link_helper', 'html_link_helper', 'content_md', 'notes')
             }),
         ]
         
@@ -162,6 +164,55 @@ class PageAdmin(admin.ModelAdmin):
             obj.title,
         )
     markdown_link_shortcut.short_description = "Copy"
+
+    def html_link_helper(self, obj):
+        if not obj or not obj.pk or not obj.slug:
+            return "Save this page to generate its HTML link."
+
+        path = reverse('page_detail', args=[obj.slug])
+        base_url = (getattr(settings, 'SITE_BASE_URL', '') or '').strip()
+
+        if not base_url:
+            raise RuntimeError('SITE_BASE_URL is not configured; cannot generate an absolute HTML link.')
+
+        absolute_url = urljoin(base_url.rstrip('/') + '/', path.lstrip('/'))
+        html_link = f'<a href="{escape(absolute_url)}">{escape(obj.title)}</a>'
+        return format_html(
+            '<div class="vdw-copy-html-field">'
+            '  <code class="vdw-copy-html-preview">{}</code>'
+            '  <button type="button" class="button vdw-copy-html-button" '
+            'data-copy-html="{}" data-copy-plain="{}" data-copy-label="Copy HTML link" data-copy-success="Copied!">'
+            'Copy HTML Link'
+            '  </button>'
+            '</div>',
+            html_link,
+            html_link,
+            absolute_url,
+        )
+    html_link_helper.short_description = "HTML link"
+
+    def html_link_shortcut(self, obj):
+        if not obj.pk or not obj.slug:
+            return format_html('<span style="color: #ccc;">—</span>')
+
+        path = reverse('page_detail', args=[obj.slug])
+        base_url = (getattr(settings, 'SITE_BASE_URL', '') or '').strip()
+
+        if not base_url:
+            raise RuntimeError('SITE_BASE_URL is not configured; cannot generate an absolute HTML link.')
+
+        absolute_url = urljoin(base_url.rstrip('/') + '/', path.lstrip('/'))
+        html_link = f'<a href="{escape(absolute_url)}">{escape(obj.title)}</a>'
+        return format_html(
+            '<button type="button" class="vdw-copy-link-icon" data-copy-html="{}" data-copy-plain="{}" '
+            'data-copy-label="⟨/⟩" data-copy-success="Copied!" aria-label="Copy HTML link for {}" '
+            'title="Copy HTML link for {}" style="border: none; background: none; padding: 0 4px; cursor: pointer; font-size: 13px;">⟨/⟩</button>',
+            html_link,
+            absolute_url,
+            obj.title,
+            obj.title,
+        )
+    html_link_shortcut.short_description = "HTML"
     
     def redacted_indicator(self, obj):
         if obj.redacted_count > 0:

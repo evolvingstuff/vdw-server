@@ -26,13 +26,31 @@
         });
     }
 
-    function copyMarkdown(text) {
+    function copyText(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             return navigator.clipboard.writeText(text).catch(function () {
                 return fallbackCopy(text);
             });
         }
         return fallbackCopy(text);
+    }
+
+    function copyHtml(html, plainText) {
+        var plain = plainText || '';
+        if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem && window.Blob) {
+            var payload = {
+                'text/html': new Blob([html], { type: 'text/html' }),
+            };
+            if (plain) {
+                payload['text/plain'] = new Blob([plain], { type: 'text/plain' });
+            }
+
+            return navigator.clipboard.write([new ClipboardItem(payload)]).catch(function () {
+                return copyText(plain || html);
+            });
+        }
+
+        return copyText(plain || html);
     }
 
     function setButtonState(button, copied) {
@@ -61,7 +79,7 @@
     }
 
     function handleCopyClick(event) {
-        var trigger = event.target.closest('[data-copy-markdown]');
+        var trigger = event.target.closest('[data-copy-markdown], [data-copy-html]');
         if (!trigger) {
             return;
         }
@@ -69,12 +87,25 @@
         event.preventDefault();
 
         var markdown = trigger.getAttribute('data-copy-markdown');
-        if (!markdown) {
+        if (markdown) {
+            copyText(markdown)
+                .then(function () {
+                    setButtonState(trigger, true);
+                })
+                .catch(function () {
+                    setButtonState(trigger, false);
+                });
+            return;
+        }
+
+        var html = trigger.getAttribute('data-copy-html');
+        if (!html) {
             setButtonState(trigger, false);
             return;
         }
 
-        copyMarkdown(markdown)
+        var plain = trigger.getAttribute('data-copy-plain') || '';
+        copyHtml(html, plain)
             .then(function () {
                 setButtonState(trigger, true);
             })
