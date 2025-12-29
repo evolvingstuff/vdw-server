@@ -3,7 +3,6 @@ from django import forms
 from django.conf import settings
 from django.urls import reverse
 from django.utils.html import format_html, escape
-from django.contrib.admin import SimpleListFilter
 from django.db.models import Count
 from urllib.parse import urljoin
 from .models import Page
@@ -24,28 +23,12 @@ class PageAdminForm(forms.ModelForm):
         }
 
 
-
-class RedactedOnlyFilter(SimpleListFilter):
-    title = 'redacted content'
-    parameter_name = 'has_redacted'
-    
-    def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Redacted only'),
-        )
-    
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(redacted_count__gt=0)
-        return queryset
-
-
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
     list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
-    list_filter = ['status', RedactedOnlyFilter, 'created_date', 'modified_date', 'tags']
+    list_filter = ['status', 'created_date', 'modified_date', 'tags']
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
@@ -213,16 +196,6 @@ class PageAdmin(admin.ModelAdmin):
             obj.title,
         )
     html_link_shortcut.short_description = "HTML"
-    
-    def redacted_indicator(self, obj):
-        if obj.redacted_count > 0:
-            return format_html(
-                '<span style="color: #f66; font-weight: bold;" title="{} censored sections">⚠️ {}</span>',
-                obj.redacted_count, obj.redacted_count
-            )
-        return format_html('<span style="color: #ccc;">—</span>')
-    redacted_indicator.short_description = "Redacted"
-    redacted_indicator.admin_order_field = 'redacted_count'
 
     def chars_display(self, obj):
         return obj.character_count
