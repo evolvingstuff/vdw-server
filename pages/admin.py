@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.html import format_html, escape
 from django.db.models import Count
 from urllib.parse import urljoin
+from core.admin_filters import DateRangeFieldListFilter
 from .models import Page
 
 
@@ -28,7 +29,12 @@ class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
     list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
-    list_filter = ['status', 'created_date', 'modified_date', 'tags']
+    list_filter = [
+        'status',
+        ('created_date', DateRangeFieldListFilter),
+        ('modified_date', DateRangeFieldListFilter),
+        'tags',
+    ]
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
