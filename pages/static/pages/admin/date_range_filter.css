@@ -1,0 +1,43 @@
+.vdw-date-range-filter {
+  margin: 0;
+  padding: 0.35rem 0.6rem 0.6rem;
+}
+
+#changelist-filter .vdw-date-range-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+}
+
+#changelist-filter .vdw-date-range-label {
+  display: block;
+  font-size: 12px;
+  color: var(--body-quiet-color);
+  margin-bottom: 0.15rem;
+}
+
+#changelist-filter .vdw-date-range-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#changelist-filter .vdw-date-range-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+#changelist-filter .vdw-date-range-actions .button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#changelist-filter .vdw-date-range-actions a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--button-fg, #fff) !important;
+  text-decoration: none;
+}

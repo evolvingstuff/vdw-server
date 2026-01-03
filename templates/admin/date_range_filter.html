@@ -1,0 +1,44 @@
+{% load i18n %}
+
+<details data-filter-title="{{ title }}" open>
+  <summary>
+    {% blocktranslate with filter_title=title %} By {{ filter_title }} {% endblocktranslate %}
+  </summary>
+
+  {% with choice=choices.0 %}
+    <form method="get" class="vdw-date-range-filter">
+      {% for key, value in choice.other_params %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endfor %}
+
+      <div class="vdw-date-range-fields">
+        <div class="vdw-date-range-field">
+          <label class="vdw-date-range-label" for="{{ choice.from_parameter_name }}">{% translate 'From' %}</label>
+          <input
+            class="vdw-date-range-input"
+            id="{{ choice.from_parameter_name }}"
+            name="{{ choice.from_parameter_name }}"
+            type="date"
+            value="{{ choice.from_value }}"
+          >
+        </div>
+
+        <div class="vdw-date-range-field">
+          <label class="vdw-date-range-label" for="{{ choice.to_parameter_name }}">{% translate 'To' %}</label>
+          <input
+            class="vdw-date-range-input"
+            id="{{ choice.to_parameter_name }}"
+            name="{{ choice.to_parameter_name }}"
+            type="date"
+            value="{{ choice.to_value }}"
+          >
+        </div>
+      </div>
+
+      <div class="vdw-date-range-actions">
+        <button type="submit" class="button">{% translate 'Apply' %}</button>
+        <a class="button" href="{{ choice.reset_query_string|iriencode }}">{% translate 'Reset' %}</a>
+      </div>
+    </form>
+  {% endwith %}
+</details>

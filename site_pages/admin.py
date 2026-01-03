@@ -3,6 +3,7 @@ from django import forms
 from django.conf import settings
 from django.utils.html import format_html, escape
 from urllib.parse import urljoin
+from core.admin_filters import DateRangeFieldListFilter
 from .models import SitePage
 
 
@@ -25,7 +26,11 @@ class SitePageAdminForm(forms.ModelForm):
 class SitePageAdmin(admin.ModelAdmin):
     form = SitePageAdminForm
     list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'page_type', 'slug', 'is_published', 'chars_display', 'modified_date_display']
-    list_filter = ['page_type', 'is_published', 'modified_date']
+    list_filter = [
+        'page_type',
+        'is_published',
+        ('modified_date', DateRangeFieldListFilter),
+    ]
     search_fields = ['title', 'content_md', 'meta_description']
 
     def get_prepopulated_fields(self, request, obj=None):
