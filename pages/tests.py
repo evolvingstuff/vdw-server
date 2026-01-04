@@ -1,7 +1,10 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from django.contrib.admin import helpers
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.utils import timezone
@@ -257,3 +260,77 @@ class LegacyAliasRedirectMiddlewareTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'ok')
 
+
+class PageAdminBulkTagActionTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.site = AdminSite()
+        self.admin = PageAdmin(Page, self.site)
+
+        user_model = get_user_model()
+        self.user = user_model.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password",
+        )
+
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def _attach_messages(self, request):
+        request.user = self.user
+        request.session = self.client.session
+        request._messages = FallbackStorage(request)
+
+    def test_add_tags_action_renders_confirmation_form(self):
+        page = Page.objects.create(title="P1", content_md="Body", status="draft")
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "action": "add_tags_to_selected",
+                helpers.ACTION_CHECKBOX_NAME: [str(page.pk)],
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, Page.objects.filter(pk=page.pk))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.template_name, "admin/posts/page/add_tags.html")
+
+    def test_add_tags_action_adds_existing_and_new_tags(self):
+        existing = Tag.objects.create(name="Existing", slug="existing")
+        Tag.objects.create(name="Slug Taken", slug="beta")
+
+        page_1 = Page.objects.create(title="P1", content_md="Body", status="draft")
+        page_2 = Page.objects.create(title="P2", content_md="Body", status="draft")
+        queryset = Page.objects.filter(pk__in=[page_1.pk, page_2.pk])
+
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "apply": "1",
+                "tags": [str(existing.pk)],
+                "new_tags": "Beta, Gamma",
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, queryset)
+
+        self.assertIsNone(response)
+        self.assertTrue(Tag.objects.filter(name="Beta").exists())
+        self.assertEqual(Tag.objects.get(name="Beta").slug, "beta-2")
+
+        for page in [page_1, page_2]:
+            self.assertEqual(page.tags.count(), 3)
+            self.assertEqual(page.derived_tags.count(), 3)
+            self.assertTrue(page.tags.filter(name="Existing").exists())
+            self.assertTrue(page.tags.filter(name="Beta").exists())
+            self.assertTrue(page.tags.filter(name="Gamma").exists())

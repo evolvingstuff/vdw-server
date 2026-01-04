@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  {{ form.media }}
+{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  <p>{% blocktrans %}Select tags to add to the {{ queryset|length }} selected page(s).{% endblocktrans %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    {% for obj in queryset %}
+      <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">
+    {% endfor %}
+
+    <input type="hidden" name="action" value="{{ action_name }}">
+
+    {% if select_across %}
+      <input type="hidden" name="select_across" value="{{ select_across }}">
+    {% endif %}
+
+    <div class="submit-row">
+      <input type="submit" name="apply" value="Apply tags" class="default">
+      <a href="{% url 'admin:posts_page_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+  </form>
+
+  <h2>Selected pages</h2>
+  <ul>
+    {% for obj in queryset %}
+      <li>{{ obj.title }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+

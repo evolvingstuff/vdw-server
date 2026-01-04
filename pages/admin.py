@@ -1,12 +1,76 @@
-from django.contrib import admin
+import re
+from urllib.parse import urljoin
+
+from django.contrib import admin, messages
+from django.contrib.admin import helpers
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django import forms
 from django.conf import settings
+from django.db import transaction
 from django.urls import reverse
 from django.utils.html import format_html, escape
+from django.utils.text import slugify
 from django.db.models import Count
-from urllib.parse import urljoin
+from django.template.response import TemplateResponse
+
 from core.admin_filters import DateRangeFieldListFilter
 from .models import Page
+from tags.models import Tag
+
+
+def _parse_tag_names(raw: str) -> list[str]:
+    parts = [part.strip() for part in re.split(r"[\n,]", raw or "")]
+    return [part for part in parts if part]
+
+
+def _create_tag_with_unique_slug(*, name: str) -> Tag:
+    name = " ".join((name or "").split()).strip()
+    assert name, "Tag name required"
+
+    existing = Tag.objects.filter(name=name).first()
+    if existing:
+        return existing
+
+    base_slug = slugify(name)
+    assert base_slug, f"Unable to slugify tag name: {name!r}"
+
+    slug = base_slug
+    counter = 2
+    while Tag.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    return Tag.objects.create(name=name, slug=slug)
+
+
+class BulkTagPagesActionForm(forms.Form):
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        required=False,
+        widget=FilteredSelectMultiple("Tags", is_stacked=False),
+        help_text="Select existing tags to add.",
+    )
+    new_tags = forms.CharField(
+        required=False,
+        label="Create new tags",
+        help_text="Comma- or newline-separated tag names.",
+        widget=forms.Textarea(attrs={"rows": 3, "cols": 60}),
+    )
+
+    def clean_new_tags(self) -> list[str]:
+        return _parse_tag_names(self.cleaned_data.get("new_tags", ""))
+
+    def clean(self):
+        cleaned = super().clean()
+
+        has_existing = bool(cleaned.get("tags"))
+        has_new = bool(cleaned.get("new_tags"))
+        if not has_existing and not has_new:
+            raise forms.ValidationError(
+                "Select at least one existing tag or enter a new tag name."
+            )
+
+        return cleaned
 
 
 class PageAdminForm(forms.ModelForm):
@@ -40,6 +104,7 @@ class PageAdmin(admin.ModelAdmin):
     filter_horizontal = ['tags']
     date_hierarchy = 'created_date'
     readonly_fields = ['live_link', 'markdown_link_helper', 'html_link_helper', 'tiki_markdown_comparison']
+    actions = ['add_tags_to_selected']
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -229,6 +294,61 @@ class PageAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
+    def add_tags_to_selected(self, request, queryset):
+        if request.POST.get("apply"):
+            form = BulkTagPagesActionForm(request.POST)
+            if form.is_valid():
+                existing_tags = list(form.cleaned_data["tags"])
+                new_tag_names = list(form.cleaned_data["new_tags"])
+
+                created_tags = [_create_tag_with_unique_slug(name=name) for name in new_tag_names]
+                all_tags = [*existing_tags, *created_tags]
+
+                page_ids = list(queryset.values_list("pk", flat=True))
+                tag_ids = [tag.pk for tag in all_tags]
+                assert all(tag_ids), "All tags must be saved before bulk-add"
+
+                tags_through = Page.tags.through
+                derived_through = Page.derived_tags.through
+
+                tags_links = [
+                    tags_through(page_id=page_id, tag_id=tag_id)
+                    for page_id in page_ids
+                    for tag_id in tag_ids
+                ]
+                derived_links = [
+                    derived_through(page_id=page_id, tag_id=tag_id)
+                    for page_id in page_ids
+                    for tag_id in tag_ids
+                ]
+
+                with transaction.atomic():
+                    tags_through.objects.bulk_create(tags_links, ignore_conflicts=True)
+                    derived_through.objects.bulk_create(derived_links, ignore_conflicts=True)
+
+                self.message_user(
+                    request,
+                    f"Added {len(tag_ids)} tag(s) to {len(page_ids)} page(s).",
+                    messages.SUCCESS,
+                )
+                return None
+        else:
+            form = BulkTagPagesActionForm()
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Add tags to selected pages",
+            "queryset": queryset,
+            "form": form,
+            "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            "action_name": "add_tags_to_selected",
+            "select_across": request.POST.get("select_across"),
+        }
+
+        return TemplateResponse(request, "admin/posts/page/add_tags.html", context)
+
+    add_tags_to_selected.short_description = "Add tag(s) to selected pages"
 
     class Media:
         js = (
