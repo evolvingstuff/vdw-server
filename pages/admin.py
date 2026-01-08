@@ -12,6 +12,7 @@ from django.utils.html import format_html, escape
 from django.utils.text import slugify
 from django.db.models import Count
 from django.template.response import TemplateResponse
+from django.utils import timezone
 
 from core.admin_filters import DateRangeFieldListFilter
 from .models import Page
@@ -274,12 +275,12 @@ class PageAdmin(admin.ModelAdmin):
     chars_display.admin_order_field = 'character_count'
 
     def created_date_display(self, obj):
-        return obj.created_date.strftime('%m/%y')
+        return timezone.localtime(obj.created_date).strftime('%Y/%m/%d')
     created_date_display.short_description = "Created"
     created_date_display.admin_order_field = 'created_date'
 
     def modified_date_display(self, obj):
-        return obj.modified_date.strftime('%m/%y')
+        return timezone.localtime(obj.modified_date).strftime('%Y/%m/%d')
     modified_date_display.short_description = "Modified"
     modified_date_display.admin_order_field = 'modified_date'
 

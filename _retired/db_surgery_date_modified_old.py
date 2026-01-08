@@ -457,13 +457,13 @@ def build_parser() -> argparse.ArgumentParser:
         'diagnose',
         help='Read-only report comparing JSON page_id values vs posts_post link ids',
     )
-    diagnose_parser.add_argument('--db', type=Path, default=Path('db.sqlite3'))
+    diagnose_parser.add_argument('--db', type=Path, default=Path('../db.sqlite3'))
     diagnose_parser.add_argument(
         '--json',
         type=Path,
-        default=Path('../vdw-external-data/tiki_pages_2025-10-03.json'),
+        default=Path('../../vdw-external-data/tiki_pages_2025-10-03.json'),
     )
-    diagnose_parser.add_argument('--out-dir', type=Path, default=Path('tmp'))
+    diagnose_parser.add_argument('--out-dir', type=Path, default=Path('../tmp'))
     diagnose_parser.add_argument('--table', type=str, default='posts_post')
     diagnose_parser.add_argument(
         '--link-field',
@@ -478,13 +478,13 @@ def build_parser() -> argparse.ArgumentParser:
         'update-modified-date',
         help='Update posts_post.modified_date from JSON lastModif (interactive confirm by default)',
     )
-    update_parser.add_argument('--db', type=Path, default=Path('db.sqlite3'))
+    update_parser.add_argument('--db', type=Path, default=Path('../db.sqlite3'))
     update_parser.add_argument(
         '--json',
         type=Path,
-        default=Path('../vdw-external-data/tiki_pages_2025-10-03.json'),
+        default=Path('../../vdw-external-data/tiki_pages_2025-10-03.json'),
     )
-    update_parser.add_argument('--out-dir', type=Path, default=Path('tmp'))
+    update_parser.add_argument('--out-dir', type=Path, default=Path('../tmp'))
     update_parser.add_argument('--table', type=str, default='posts_post')
     update_parser.add_argument(
         '--link-field',
