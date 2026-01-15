@@ -203,6 +203,32 @@ class AdminPageRedirectMiddleware:
         return response
 
 
+class AdminHttpsOnlyMiddleware:
+    """Redirect insecure admin traffic to HTTPS when enabled."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not getattr(settings, "ADMIN_REQUIRE_HTTPS", False):
+            return self.get_response(request)
+
+        path = request.path or ""
+        if not path.startswith("/admin/"):
+            return self.get_response(request)
+
+        if request.is_secure():
+            return self.get_response(request)
+
+        forwarded_proto = (request.META.get("HTTP_X_FORWARDED_PROTO") or "").lower()
+        if forwarded_proto == "https":
+            return self.get_response(request)
+
+        host = request.get_host()
+        target = f"https://{host}{request.get_full_path()}"
+        return HttpResponsePermanentRedirect(target)
+
+
 class MaintenanceModeMiddleware:
     """Return 503 responses while a maintenance sentinel file exists."""
 

@@ -3,6 +3,24 @@
     var SAVE_THROTTLE_MS = 800;
     var DRAFT_KEY_PREFIX = 'vdw_admin_draft:';
 
+    function stableSerializeValues(values) {
+        var keys = Object.keys(values || {}).sort();
+        var pairs = [];
+
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var value = values[key];
+            if (Array.isArray(value)) {
+                var sorted = value.slice().sort();
+                pairs.push([key, sorted]);
+            } else {
+                pairs.push([key, value]);
+            }
+        }
+
+        return JSON.stringify(pairs);
+    }
+
     function parseAdminChangePath(pathname) {
         var changeMatch = pathname.match(/\/admin\/([^/]+)\/([^/]+)\/([^/]+)\/change\/$/);
         if (changeMatch) {
@@ -44,6 +62,13 @@
             return true;
         }
 
+        // Django admin's filter_horizontal widget renames the original
+        // select to "<field>_old" and creates a new "<field>" select.
+        // The *_old field is not a real form value.
+        if (field.name.length > 4 && field.name.slice(-4) === '_old') {
+            return true;
+        }
+
         if (field.disabled) {
             return true;
         }
@@ -63,6 +88,51 @@
         }
 
         return false;
+    }
+
+    function isSelectFilterChosenSelect(form, field) {
+        if (!form || !field || !field.name) {
+            return false;
+        }
+
+        if (!(field.id && field.id.length > 3 && field.id.slice(-3) === '_to')) {
+            return false;
+        }
+
+        return Boolean(form.querySelector('select[name="' + field.name + '_old"]'));
+    }
+
+    function collectSelectMultipleValues(form, field) {
+        if (isSelectFilterChosenSelect(form, field)) {
+            if (
+                window.SelectBox &&
+                window.SelectBox.cache &&
+                window.SelectBox.cache[field.id] &&
+                Array.isArray(window.SelectBox.cache[field.id])
+            ) {
+                var cached = window.SelectBox.cache[field.id];
+                var cachedValues = [];
+                for (var i = 0; i < cached.length; i++) {
+                    cachedValues.push(cached[i].value);
+                }
+                return cachedValues;
+            }
+
+            var allValues = [];
+            for (var j = 0; j < field.options.length; j++) {
+                allValues.push(field.options[j].value);
+            }
+            return allValues;
+        }
+
+        var selected = [];
+        for (var k = 0; k < field.options.length; k++) {
+            var option = field.options[k];
+            if (option.selected) {
+                selected.push(option.value);
+            }
+        }
+        return selected;
     }
 
     function collectFormValues(form) {
@@ -90,14 +160,7 @@
             }
 
             if (field.tagName && field.tagName.toLowerCase() === 'select' && field.multiple) {
-                var selected = [];
-                for (var j = 0; j < field.options.length; j++) {
-                    var option = field.options[j];
-                    if (option.selected) {
-                        selected.push(option.value);
-                    }
-                }
-                values[field.name] = selected;
+                values[field.name] = collectSelectMultipleValues(form, field);
                 continue;
             }
 
@@ -135,6 +198,49 @@
 
             if (field.tagName && field.tagName.toLowerCase() === 'select' && field.multiple) {
                 var selectedValues = Array.isArray(storedValue) ? storedValue : [];
+
+                if (isSelectFilterChosenSelect(form, field)) {
+                    var fromId = field.id.slice(0, -3) + '_from';
+                    var toId = field.id;
+
+                    if (
+                        window.SelectBox &&
+                        window.SelectBox.cache &&
+                        window.SelectBox.cache[fromId] &&
+                        window.SelectBox.cache[toId]
+                    ) {
+                        var desired = {};
+                        for (var k = 0; k < selectedValues.length; k++) {
+                            desired[selectedValues[k]] = true;
+                        }
+
+                        var combined = [];
+                        combined = combined.concat(window.SelectBox.cache[fromId]);
+                        combined = combined.concat(window.SelectBox.cache[toId]);
+
+                        window.SelectBox.cache[fromId] = [];
+                        window.SelectBox.cache[toId] = [];
+
+                        for (var l = 0; l < combined.length; l++) {
+                            var node = combined[l];
+                            var entry = {
+                                value: node.value,
+                                text: node.text,
+                                displayed: 1,
+                            };
+                            if (desired[node.value]) {
+                                window.SelectBox.cache[toId].push(entry);
+                            } else {
+                                window.SelectBox.cache[fromId].push(entry);
+                            }
+                        }
+
+                        window.SelectBox.redisplay(fromId);
+                        window.SelectBox.redisplay(toId);
+                        continue;
+                    }
+                }
+
                 for (var j = 0; j < field.options.length; j++) {
                     var option = field.options[j];
                     option.selected = selectedValues.indexOf(option.value) !== -1;
@@ -302,13 +408,14 @@
         maybeClearDraftAfterSave(adminInfo, draftKey);
 
         var initialValues = collectFormValues(form);
-        var initialSerialized = JSON.stringify(initialValues);
+        var initialSerialized = stableSerializeValues(initialValues);
 
         var isSubmitting = false;
+        var isNavigatingAway = false;
         var isDirty = false;
 
         function updateDirtyState() {
-            var currentSerialized = JSON.stringify(collectFormValues(form));
+            var currentSerialized = stableSerializeValues(collectFormValues(form));
             isDirty = currentSerialized !== initialSerialized;
         }
 
@@ -337,7 +444,7 @@
 
         var existingDraft = readDraft(draftKey);
         if (existingDraft && existingDraft.values) {
-            var draftSerialized = JSON.stringify(existingDraft.values);
+            var draftSerialized = stableSerializeValues(existingDraft.values);
             if (draftSerialized !== initialSerialized) {
                 renderDraftBanner(
                     existingDraft,
@@ -375,7 +482,7 @@
 
         window.addEventListener('beforeunload', function (event) {
             updateDirtyState();
-            if (!isDirty || isSubmitting) {
+            if (!isDirty || isSubmitting || isNavigatingAway) {
                 return;
             }
 
@@ -386,6 +493,17 @@
         document.addEventListener('click', function (event) {
             var anchor = event.target && event.target.closest ? event.target.closest('a') : null;
             if (!anchor || !anchor.href) {
+                return;
+            }
+
+            if (
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                (anchor.target && anchor.target.toLowerCase() !== '_self') ||
+                anchor.hasAttribute('download')
+            ) {
                 return;
             }
 
@@ -402,7 +520,10 @@
             if (!shouldLeave) {
                 event.preventDefault();
                 event.stopPropagation();
+                return;
             }
+
+            isNavigatingAway = true;
         });
 
         window.setInterval(saveDraft, AUTO_SAVE_INTERVAL_MS);
@@ -414,4 +535,3 @@
         init();
     }
 })();
-
