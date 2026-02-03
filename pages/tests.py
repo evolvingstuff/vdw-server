@@ -61,6 +61,22 @@ class PageAdminSearchTests(TestCase):
         self.assertNotIn(self.content_hit, results)
 
 
+class DerivedTagsFromTitleTests(TestCase):
+    def test_title_implies_existing_tags(self):
+        Tag.objects.create(name="Alcohol", slug="alcohol")
+        Tag.objects.create(name="Vitamin D", slug="vitamin-d")
+
+        page = Page.objects.create(
+            title="Alcohol and Vitamin D",
+            content_md="Body",
+            status="draft",
+        )
+
+        derived_slugs = set(page.derived_tags.values_list("slug", flat=True))
+        self.assertIn("alcohol", derived_slugs)
+        self.assertIn("vitamin-d", derived_slugs)
+
+
 class ConversionDateParsingTests(SimpleTestCase):
     def test_lastmod_used_when_present(self):
         frontmatter = {

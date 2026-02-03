@@ -5,6 +5,14 @@ from core.models import ContentBase
 from tags.models import Tag
 
 
+def _title_slug_haystack(title: str) -> str:
+    assert isinstance(title, str), f"title must be str, got {type(title)}"
+    title_slug = slugify(title)
+    if not title_slug:
+        return ''
+    return f"-{title_slug}-"
+
+
 class Page(ContentBase):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -51,9 +59,31 @@ class Page(ContentBase):
         # Call parent save (ContentBase) which handles markdown processing
         super().save(*args, **kwargs)
 
-        # Copy tags to derived_tags (for now, until ontology is implemented)
+        # Sync derived_tags (explicit tags + implied tags from title)
         if self.pk:  # Only if the page has been saved
-            self.derived_tags.set(self.tags.all())
+            self.update_derived_tags()
+
+    def update_derived_tags(self) -> None:
+        assert self.pk, "Page must be saved before updating derived tags"
+
+        explicit_tags = list(self.tags.all())
+        explicit_ids = {tag.pk for tag in explicit_tags}
+        title_haystack = _title_slug_haystack(self.title)
+
+        if not title_haystack:
+            self.derived_tags.set(explicit_tags)
+            return
+
+        implied_tags = []
+        for tag in Tag.objects.only('id', 'slug'):
+            if tag.pk in explicit_ids:
+                continue
+            if not tag.slug:
+                continue
+            if f"-{tag.slug}-" in title_haystack:
+                implied_tags.append(tag)
+
+        self.derived_tags.set([*explicit_tags, *implied_tags])
     
     def __str__(self):
         return self.title

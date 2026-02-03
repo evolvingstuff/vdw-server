@@ -39,6 +39,7 @@ def sync_page_to_search_on_tags_change(sender, instance, action, **kwargs):
     """Re-index page when tags are added or removed"""
     # Only re-index after tags have been added/removed/cleared
     if action in ['post_add', 'post_remove', 'post_clear']:
+        instance.update_derived_tags()
         if instance.status == 'published':
             try:
                 index_page(instance)

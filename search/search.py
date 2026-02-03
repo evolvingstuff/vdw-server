@@ -28,7 +28,6 @@ def initialize_search_index():
         [
             'title',
             'tags',
-            'content',  # Plain text version for searching
         ]
     )
 
@@ -136,9 +135,15 @@ def is_overview_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
     return 'overview' in title_casefold or any('overview' in tag for tag in tags_casefold)
 
 
-def is_many_studies_hit(title_casefold: str) -> bool:
+def is_many_studies_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
     assert isinstance(title_casefold, str), f"title_casefold must be str, got {type(title_casefold)}"
-    return 'many studies' in title_casefold
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    many_studies_token = 'many studies'
+    if many_studies_token in title_casefold:
+        return True
+    return any(many_studies_token in tag for tag in tags_casefold)
 
 
 def is_category_hit(tags_casefold: list[str]) -> bool:
@@ -170,7 +175,7 @@ def sort_hits_by_priority(hits: list[dict], query: str) -> list[dict]:
         strong_match = 1 if title_match or tag_match else 0
 
         has_overview = is_overview_hit(title_casefold, tags_casefold)
-        has_many_studies = is_many_studies_hit(title_casefold)
+        has_many_studies = is_many_studies_hit(title_casefold, tags_casefold)
         has_category = is_category_hit(tags_casefold)
 
         if has_overview and strong_match:
@@ -249,7 +254,7 @@ def fetch_overview_hits(query: str, limit: int = 10) -> list[dict]:
 
 def format_page_for_search(page):
     """Convert Page object to search document format"""
-    tags = list(page.tags.all())
+    tags = list(page.derived_tags.all())
     tag_names = [tag.name for tag in tags]
     tag_slugs = [tag.slug for tag in tags]
     search_priority = compute_search_priority(tag_names, tag_slugs, page.title)
@@ -297,6 +302,7 @@ def bulk_index_pages(pages_queryset):
     batch = []
 
     for page in pages_queryset:
+        page.update_derived_tags()
         if page.status == 'published':
             batch.append(format_page_for_search(page))
 
@@ -343,6 +349,25 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
 
+    display_mode = settings.SEARCH_RESULTS_DISPLAY_MODE
+    include_content = display_mode == 'full'
+
+    attributes_to_retrieve = [
+        'id',
+        'title',
+        'slug',
+        'tags',
+        'modified_date',
+        'search_priority',
+    ]
+    attributes_to_highlight = ['title']
+    attributes_to_crop = []
+
+    if include_content:
+        attributes_to_retrieve.append('content')
+        attributes_to_highlight.append('content')
+        attributes_to_crop.append('content')
+
     max_hits = 1000
     fetch_limit = max_hits
     search_payload = {
@@ -353,20 +378,16 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
             'search_priority:desc',
             'modified_date:desc',
         ],
-        'attributesToRetrieve': [
-            'id',
-            'title',
-            'slug',
-            'content',
-            'content_html',
-            'tags',
-            'modified_date',
-            'search_priority',
-        ],
-        'attributesToHighlight': ['title', 'content'],
-        'cropLength': 150,
-        'attributesToCrop': ['content'],
+        'attributesToRetrieve': attributes_to_retrieve,
+        'attributesToHighlight': attributes_to_highlight,
     }
+    if include_content:
+        search_payload['cropLength'] = 150
+        search_payload['attributesToCrop'] = attributes_to_crop
+
+    query_terms = [term for term in query.split() if term]
+    if len(query_terms) >= 2:
+        search_payload['matchingStrategy'] = 'all'
 
     try:
         results = index.search(query, search_payload)
