@@ -36,6 +36,10 @@ AWS_DEFAULT_REGION=us-west-2
 AWS_STORAGE_BUCKET_NAME=your-bucket
 
 # Meilisearch Configuration
+
+## Local Development Reindexing
+- `manage.py runserver` now reindexes Meilisearch on startup (once per server start).
+- This rebuild can take a few seconds because it reinitializes settings and reindexes all published pages.
 MEILISEARCH_URL=http://localhost:7700
 MEILISEARCH_MASTER_KEY=your_master_key
 MEILISEARCH_INDEX_NAME=pages

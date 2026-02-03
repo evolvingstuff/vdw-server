@@ -1,6 +1,11 @@
+import logging
+
 import meilisearch
 from django.conf import settings
+from meilisearch.errors import MeilisearchApiError
 from pages.models import Page
+
+logger = logging.getLogger(__name__)
 
 
 def get_search_client():
@@ -17,7 +22,7 @@ def initialize_search_index():
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
 
     # Configure searchable attributes - positional ranking only
-    index.update_searchable_attributes(
+    searchable_task = index.update_searchable_attributes(
         [
             'title',
             'tags',
@@ -26,11 +31,19 @@ def initialize_search_index():
     )
 
     # Configure filterable attributes
-    index.update_filterable_attributes(
+    filterable_task = index.update_filterable_attributes(
         [
             'status',
             'created_date',
+            'modified_date',
             'tags',
+        ]
+    )
+
+    sortable_task = index.update_sortable_attributes(
+        [
+            'search_priority',
+            'modified_date',
         ]
     )
 
@@ -41,23 +54,26 @@ def initialize_search_index():
     #     'enabled': False
     # })
 
-    # Configure ranking rules - prioritize attribute over proximity/exactness
+    # Configure ranking rules - prioritize sort (importance + recency) first
     # Default Meilisearch order: words, typo, proximity, attribute, sort, exactness
-    # We move 'attribute' before 'proximity' and 'exactness' to ensure that WHERE
-    # matches occur (title > tags > content) takes priority over HOW close words
-    # are to each other or how exact the matches are. This fixes issues where
-    # pages with partial title matches ranked higher than pages with complete
-    # title matches due to proximity/exactness factors.
-    index.update_ranking_rules(
+    # We put 'sort' first so priority buckets and recency dominate ordering.
+    # Attribute still comes before proximity/exactness to keep title/tag matches
+    # above content-only matches when sort ties.
+    ranking_task = index.update_ranking_rules(
         [
+            'sort',  # Enforce priority + recency ordering
             'words',  # Most important: number of matched terms
             'typo',  # Fewer typos = better
             'attribute',  # Where matches occur (title > tags > content) - MOVED UP
             'proximity',  # How close terms are to each other
-            'sort',  # Custom sort criteria
             'exactness',  # Exact matches vs partial
         ]
     )
+
+    wait_for_task(index, searchable_task, 'searchable attributes')
+    wait_for_task(index, filterable_task, 'filterable attributes')
+    wait_for_task(index, sortable_task, 'sortable attributes')
+    wait_for_task(index, ranking_task, 'ranking rules')
 
     return index
 
@@ -69,17 +85,48 @@ def clear_search_index():
     index.delete_all_documents()
 
 
+def wait_for_task(index, task_info, task_name: str) -> None:
+    assert index is not None, "index is required"
+    assert task_info is not None, f"{task_name} task_info is required"
+    assert hasattr(task_info, 'task_uid'), f"{task_name} task_info missing task_uid"
+    index.wait_for_task(task_info.task_uid)
+
+
+def compute_search_priority(tag_names: list[str], title: str) -> int:
+    assert isinstance(tag_names, list), f"tag_names must be list, got {type(tag_names)}"
+    assert isinstance(title, str), f"title must be str, got {type(title)}"
+    assert all(isinstance(name, str) for name in tag_names), "tag_names must contain strings"
+
+    tag_names_lower = {name.casefold() for name in tag_names}
+    title_casefold = title.casefold()
+    many_studies_token = 'many studies'
+
+    if 'overviews' in tag_names_lower:
+        return 3
+    if 'category' in tag_names_lower:
+        return 2
+    if many_studies_token in title_casefold or many_studies_token in tag_names_lower:
+        return 1
+    return 0
+
+
 def format_page_for_search(page):
     """Convert Page object to search document format"""
+    tag_names = [tag.name for tag in page.tags.all()]
+    search_priority = compute_search_priority(tag_names, page.title)
+    modified_timestamp = int(page.modified_date.timestamp())
+
     return {
         'id': page.pk,
         'title': page.title,
         'slug': page.slug,
         'content': page.content_text,  # Plain text for searching
         'content_html': page.content_html,  # HTML for display in results
-        'tags': [tag.name for tag in page.tags.all()],
+        'tags': tag_names,
         'status': page.status,
         'created_date': page.created_date.isoformat(),
+        'modified_date': modified_timestamp,
+        'search_priority': search_priority,
     }
 
 
@@ -157,17 +204,30 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
 
-    results = index.search(
-        query,
-        {
-            'limit': limit,
-            'offset': offset,
-            'filter': 'status = published',
-            'attributesToHighlight': ['title', 'content'],
-            'cropLength': 150,
-            'attributesToCrop': ['content'],
-        },
-    )
+    search_payload = {
+        'limit': limit,
+        'offset': offset,
+        'filter': 'status = published',
+        'sort': [
+            'search_priority:desc',
+            'modified_date:desc',
+        ],
+        'attributesToHighlight': ['title', 'content'],
+        'cropLength': 150,
+        'attributesToCrop': ['content'],
+    }
+
+    try:
+        results = index.search(query, search_payload)
+    except MeilisearchApiError as exc:
+        if exc.code == 'invalid_search_sort':
+            logger.warning(
+                "Search index missing sortable attributes; reinitializing index settings."
+            )
+            initialize_search_index()
+            results = index.search(query, search_payload)
+        else:
+            raise
 
     total_hits = extract_total_hits(results)
     if total_hits is not None:

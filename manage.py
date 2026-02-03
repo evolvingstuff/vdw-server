@@ -1,7 +1,26 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os
-from helper_functions.meilisearch import *
+import sys
+from collections.abc import Mapping
+
+import django
+from django.core.management import call_command, execute_from_command_line
+
+from helper_functions.meilisearch import start_meilisearch
+
+
+def should_reindex_on_runserver(argv, environ) -> bool:
+    assert isinstance(argv, list), f"argv must be list, got {type(argv)}"
+    assert isinstance(environ, Mapping), f"environ must be Mapping, got {type(environ)}"
+
+    if 'runserver' not in argv:
+        return False
+    if '--noreload' in argv:
+        return True
+    if 'RUN_MAIN' in environ and environ['RUN_MAIN'] == 'true':
+        return True
+    return False
 
 
 def main():
@@ -18,8 +37,11 @@ def main():
         start_meilisearch()
 
         print("\nStart admin at: http://127.0.0.1:8000/admin/\n")
+    if should_reindex_on_runserver(sys.argv, os.environ):
+        print("Reindexing Meilisearch before runserver...")
+        django.setup()
+        call_command('reindex_search')
 
-    from django.core.management import execute_from_command_line
     execute_from_command_line(sys.argv)
 
 
