@@ -88,7 +88,7 @@ Example `config/provisioning.json` (placeholder values):
 Edit this file directly if you ever need to change defaults (AMI, sizes, domains, etc.).
 You never need to add a `Name=` tag here—the provisioner automatically tags each instance as `vdw<YYYYMMDDHHMMSS>` (UTC timestamp) so every server is clearly labeled.
 
-Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly. HTTPS commands (options 10/11) follow the same prompt.
+Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly. HTTPS commands (options 10/11/15/16) follow the same prompt.
 
 ### Step 4: Deploy to Server
 
@@ -99,7 +99,7 @@ python deployment-manager.py
 
 ## Deployment Options
 
-`deployment-manager.py` now offers nine options:
+`deployment-manager.py` offers the following options:
 
 ### 0. Capture Provisioning Config
 - Reads your current production instance (via Elastic IP) and writes `config/provisioning.json` so future provisioning runs know which subnet/VPC/AMI/security group/key pair/etc. to reuse.
@@ -151,8 +151,15 @@ python deployment-manager.py
 
 ### 14. Lock Security Group to SSH + HTTPS Only
 - Prompts you to pick the prod/test host, inspects that instance’s attached security group (letting you choose if multiple are present), removes all existing inbound rules, then recreates just two: port 22/tcp (respecting `ssh_ingress_cidr`) and port 443/tcp for everyone. Run this once nginx or your load balancer handles HTTPS so no other ports stay open publicly.
+- Note: If you use the HTTP-01 auto-renew flow (Option 15), port 80 must remain open or renewals will fail.
 
-### 15. Exit
+### 15. Issue HTTPS Certificate (HTTP-01, auto-renew)
+- Uses a webroot-based HTTP-01 challenge (no DNS edits), ensures port 80 is open on the security group, runs Certbot non-interactively (forces renewal to switch from DNS-01), updates nginx to serve `/.well-known/acme-challenge/`, enables `certbot.timer` for auto-renew, and then configures HTTPS on port 443. Requires port 80 to be reachable from the public internet.
+
+### 16. HTTPS Renew Dry-Run (certbot renew --dry-run)
+- Runs a simulated renewal against the active host to confirm HTTP-01 validation and renewal configuration work without actually replacing certificates. Ensures port 80 is open and requires port 80 to be reachable from the public internet.
+
+### 17. Exit
 - Leaves the tool
 
 ## Typical Workflows
@@ -202,6 +209,17 @@ python deployment-manager.py
 ```
 
 **Tip:** If you provision a brand-new server frequently, you can copy `/etc/letsencrypt/{live,archive,renewal}` from the previous server before cutting over. Once the files are in place, `certbot.timer` on the new server will continue renewing automatically without re-running the DNS-01 flow.
+
+### Phase 2 – HTTPS (HTTP-01, Auto-Renew) Workflow
+```
+1. Ensure port 80/tcp is reachable from the public internet (the script can open it for you)
+2. Run: python deployment-manager.py
+3. Select: Option 15 (Issue HTTPS Certificate - HTTP-01)
+4. When prompted, choose `[1] test` (or `[0] prod` if you're refreshing the live box)
+5. After nginx reloads, hit https://<primary-domain> to confirm HTTPS works
+6. `certbot.timer` is enabled automatically; renewals run unattended
+7. Optional: run Option 16 (HTTPS Renew Dry-Run) anytime to validate renewals
+```
 
 ## How It Works
 

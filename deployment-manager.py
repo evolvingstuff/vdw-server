@@ -14,7 +14,7 @@ import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 import io
 
 import boto3
@@ -27,6 +27,7 @@ from scp import SCPClient
 load_dotenv()
 
 MANUAL_BACKUP_PREFIX = "db_backups/manual_backups"
+ACME_WEBROOT = "/var/www/letsencrypt"
 
 class DockerDeployment:
     def __init__(self):
@@ -366,7 +367,15 @@ class DockerDeployment:
             self.ssh_client.close()
             print("🔌 Disconnected from server")
     
-    def execute_command(self, command, show_output=True):
+    def execute_command(
+        self,
+        command,
+        show_output=True,
+        stream_output=False,
+        heartbeat_seconds: Optional[int] = None,
+        watchdog_seconds: Optional[int] = None,
+        watchdog_callback: Optional[Callable[[], None]] = None,
+    ):
         """Execute command on remote server"""
         if not self.ssh_client:
             print("❌ Not connected to server")
@@ -374,17 +383,74 @@ class DockerDeployment:
         
         try:
             stdin, stdout, stderr = self.ssh_client.exec_command(command)
+
+            if stream_output:
+                output_chunks = []
+                error_chunks = []
+                channel = stdout.channel
+                start_time = time.monotonic()
+                next_heartbeat = (start_time + heartbeat_seconds) if heartbeat_seconds else None
+                watchdog_fired = False
+                heartbeat_printed = False
+                while not channel.exit_status_ready():
+                    if channel.recv_ready():
+                        data = channel.recv(4096).decode()
+                        if data:
+                            output_chunks.append(data)
+                            if show_output:
+                                print(data, end='')
+                    if channel.recv_stderr_ready():
+                        data = channel.recv_stderr(4096).decode()
+                        if data:
+                            error_chunks.append(data)
+                            if show_output:
+                                print(data, end='', file=sys.stderr)
+                    now = time.monotonic()
+                    if heartbeat_seconds and next_heartbeat and now >= next_heartbeat:
+                        if show_output:
+                            print(".", end="", flush=True)
+                        heartbeat_printed = True
+                        next_heartbeat = now + heartbeat_seconds
+                    if watchdog_seconds and not watchdog_fired and (now - start_time) >= watchdog_seconds:
+                        watchdog_fired = True
+                        if show_output:
+                            print("\n\n--- watchdog: command still running, showing diagnostics ---")
+                        if watchdog_callback:
+                            watchdog_callback()
+                        if show_output:
+                            print("--- watchdog: diagnostics complete ---\n")
+                    time.sleep(0.1)
+
+                while channel.recv_ready():
+                    data = channel.recv(4096).decode()
+                    if data:
+                        output_chunks.append(data)
+                        if show_output:
+                            print(data, end='')
+                while channel.recv_stderr_ready():
+                    data = channel.recv_stderr(4096).decode()
+                    if data:
+                        error_chunks.append(data)
+                        if show_output:
+                            print(data, end='', file=sys.stderr)
+
+                exit_status = channel.recv_exit_status()
+                if show_output and heartbeat_printed:
+                    print()
+                output = ''.join(output_chunks).strip()
+                error = ''.join(error_chunks).strip()
+                return exit_status == 0, output, error
+
             exit_status = stdout.channel.recv_exit_status()
-            
             output = stdout.read().decode().strip()
             error = stderr.read().decode().strip()
-            
+
             if show_output and output:
                 print(output)
             # Only print stderr when the command failed; avoid noisy benign warnings
             if error and exit_status != 0:
                 print(f"⚠️  {error}")
-            
+
             return exit_status == 0, output, error
             
         except Exception as e:
@@ -1509,6 +1575,143 @@ class DockerDeployment:
         print("❌ Certbot failed. Check output above for details.")
         return False
 
+    def _ensure_acme_webroot(self, webroot: str) -> bool:
+        challenge_path = f"{webroot}/.well-known/acme-challenge"
+        mkdir_cmd = f"sudo mkdir -p {shlex.quote(challenge_path)}"
+        success, _, error = self.execute_command(mkdir_cmd, show_output=False)
+        if not success:
+            print(f"❌ Failed to create ACME webroot at {webroot}: {error}")
+            return False
+
+        chmod_cmd = f"sudo chmod -R 755 {shlex.quote(webroot)}"
+        success, _, error = self.execute_command(chmod_cmd, show_output=False)
+        if not success:
+            print(f"❌ Failed to set permissions on {webroot}: {error}")
+            return False
+
+        return True
+
+    def _enable_certbot_timer(self) -> bool:
+        enable_cmd = "sudo systemctl enable --now certbot.timer"
+        success, _, error = self.execute_command(enable_cmd, show_output=False)
+        if not success:
+            print(f"❌ Failed to enable certbot.timer: {error}")
+            return False
+
+        active_cmd = "sudo systemctl is-active --quiet certbot.timer"
+        success, _, _ = self.execute_command(active_cmd, show_output=False)
+        if not success:
+            print("❌ certbot.timer is not active. Check systemctl status certbot.timer.")
+            return False
+
+        print("✅ certbot.timer is active (auto-renew enabled)")
+        return True
+
+    def _ensure_port_80_ingress(self, host: str, interactive: bool = True) -> bool:
+        sg_id = self._resolve_security_group_for_host(host)
+        if not sg_id:
+            print("⚠️  Could not determine security group for this host.")
+            if interactive:
+                response = input("Continue without opening port 80? (y/n): ").lower()
+                if response != 'y':
+                    return False
+                return True
+            print("❌ Port 80 is required for HTTP-01 validation.")
+            return False
+
+        if interactive:
+            response = input(f"Ensure port 80/tcp is open in {sg_id}? (y/n): ").lower()
+            if response != 'y':
+                print("❌ Port 80 is required for HTTP-01 validation.")
+                return False
+        else:
+            print(f"🛠️  Ensuring port 80/tcp is open in {sg_id}...")
+
+        ec2 = self._aws_client('ec2')
+        permission = {
+            'IpProtocol': 'tcp',
+            'FromPort': 80,
+            'ToPort': 80,
+            'IpRanges': [{'CidrIp': '0.0.0.0/0'}],
+        }
+        try:
+            ec2.authorize_security_group_ingress(
+                GroupId=sg_id,
+                IpPermissions=[permission],
+            )
+            print("✅ Port 80/tcp opened on the security group")
+            return True
+        except ClientError as exc:
+            code = exc.response['Error']['Code']
+            if code == 'InvalidPermission.Duplicate':
+                print("✅ Port 80/tcp already open on the security group")
+                return True
+            print(f"❌ Failed to update security group: {exc}")
+            return False
+
+    def _http_fetch_command(self, url: str) -> str:
+        curl_check, _, _ = self.execute_command("command -v curl", show_output=False)
+        if curl_check:
+            return f"curl -fsS --max-time 10 {shlex.quote(url)}"
+
+        wget_check, _, _ = self.execute_command("command -v wget", show_output=False)
+        if wget_check:
+            return f"wget -qO- {shlex.quote(url)}"
+
+        python_payload = (
+            "import sys, urllib.request\n"
+            f"url = {url!r}\n"
+            "with urllib.request.urlopen(url, timeout=10) as resp:\n"
+            "    sys.stdout.write(resp.read().decode())\n"
+        )
+        return f"python3 -c {shlex.quote(python_payload)}"
+
+    def _http01_preflight(self, primary_domain: str) -> bool:
+        token = f"vdw-acme-{int(time.time())}"
+        challenge_dir = f"{ACME_WEBROOT}/.well-known/acme-challenge"
+        challenge_file = f"{challenge_dir}/{token}"
+        create_cmd = (
+            f"sudo mkdir -p {shlex.quote(challenge_dir)} && "
+            f"echo {shlex.quote(token)} | sudo tee {shlex.quote(challenge_file)} >/dev/null"
+        )
+        success, _, error = self.execute_command(create_cmd, show_output=False)
+        if not success:
+            print(f"❌ Failed to create HTTP-01 challenge file: {error}")
+            return False
+
+        url = f"http://{primary_domain}/.well-known/acme-challenge/{token}"
+        fetch_cmd = self._http_fetch_command(url)
+        success, output, error = self.execute_command(fetch_cmd, show_output=False)
+        cleanup_cmd = f"sudo rm -f {shlex.quote(challenge_file)}"
+        self.execute_command(cleanup_cmd, show_output=False)
+
+        if not success or output.strip() != token:
+            print("❌ HTTP-01 preflight failed. The ACME challenge is not reachable over port 80.")
+            print(f"   Expected to fetch: {url}")
+            if error:
+                print(f"   Fetch error: {error}")
+            return False
+
+        print("✅ HTTP-01 preflight succeeded (challenge path reachable)")
+        return True
+
+    def _read_renewal_authenticator(self, primary_domain: str) -> str:
+        conf_path = f"/etc/letsencrypt/renewal/{primary_domain}.conf"
+        cmd = (
+            "sudo awk -F= '/^authenticator/ "
+            "{gsub(/ /, \"\", $2); print $2; exit}' "
+            f"{shlex.quote(conf_path)}"
+        )
+        success, output, _ = self.execute_command(cmd, show_output=False)
+        return output.strip() if success else ""
+
+    def _print_certbot_diagnostics(self):
+        print("🔎 Diagnostics: nginx config, nginx status, port 80 listener, certbot log tail")
+        self.execute_command("sudo nginx -t", show_output=True)
+        self.execute_command("sudo systemctl status nginx --no-pager", show_output=True)
+        self.execute_command("sudo ss -ltnp | grep ':80'", show_output=True)
+        self.execute_command("sudo tail -n 120 /var/log/letsencrypt/letsencrypt.log", show_output=True)
+
     def issue_https_certificate(self):
         host = self.prompt_host_for_operation('issue HTTPS certificate')
         cfg = self._domain_config()
@@ -1528,6 +1731,124 @@ class DockerDeployment:
             if not self.configure_nginx_proxy(content=content):
                 return False
             print("🎉 HTTPS configuration complete. Test https://{} before swapping DNS.".format(cfg['primary']))
+            return True
+        finally:
+            self.disconnect()
+
+    def issue_https_certificate_http01(self):
+        host = self.prompt_host_for_operation('issue HTTPS certificate (HTTP-01)')
+        cfg = self._domain_config()
+        if not cfg['primary'] or not cfg['email']:
+            print("❌ primary_domain and certbot_email must be set in config/provisioning.json")
+            return False
+
+        if not self.connect(host_override=host):
+            return False
+
+        try:
+            if not self.install_certbot():
+                return False
+            if not self._ensure_port_80_ingress(host, interactive=False):
+                return False
+            if not self._ensure_acme_webroot(ACME_WEBROOT):
+                return False
+
+            paths = self._ssl_paths()
+            cert_path = paths['cert']
+            cert_exists, _, _ = self.execute_command(f"sudo test -f {shlex.quote(cert_path)}", show_output=False)
+
+            if cert_exists:
+                if not self.configure_nginx_proxy(content=self._render_https_nginx()):
+                    return False
+            else:
+                if not self.configure_nginx_proxy():
+                    return False
+
+            domains = self._all_domains()
+            if not domains:
+                print("❌ No domains configured. Set primary_domain (and optional alt_domains).")
+                return False
+
+            if not self._http01_preflight(cfg['primary']):
+                print("❌ HTTP-01 preflight failed. Fix port 80 routing before issuing certificates.")
+                self._print_certbot_diagnostics()
+                return False
+
+            domain_args = ' '.join(f"-d {shlex.quote(domain)}" for domain in domains)
+            command = (
+                "sudo certbot certonly --webroot "
+                f"-w {shlex.quote(ACME_WEBROOT)} --agree-tos --no-eff-email "
+                "--non-interactive --force-renewal "
+                f"-m {shlex.quote(cfg['email'])} {domain_args}"
+            )
+            print("ℹ️  Cert issuance can take 1–5 minutes; it's normal for this step to be quiet.")
+            print("ℹ️  This run is non-interactive and forces renewal to switch to HTTP-01.")
+            print("\n🚧 Running Certbot (HTTP-01 webroot)...")
+            success, _, _ = self.execute_command(
+                command,
+                show_output=True,
+                stream_output=True,
+                heartbeat_seconds=120,
+                watchdog_seconds=300,
+                watchdog_callback=self._print_certbot_diagnostics,
+            )
+            if not success:
+                print("❌ Certbot failed. Review diagnostics below.")
+                self._print_certbot_diagnostics()
+                return False
+
+            if not self.configure_nginx_proxy(content=self._render_https_nginx()):
+                return False
+            if not self._enable_certbot_timer():
+                return False
+
+            print("🎉 HTTPS configuration complete (HTTP-01). Auto-renew is enabled via certbot.timer.")
+            return True
+        finally:
+            self.disconnect()
+
+    def renew_https_certificate_dry_run(self):
+        host = self.prompt_host_for_operation('dry-run HTTPS renewal (certbot renew)')
+        cfg = self._domain_config()
+        if not cfg['primary']:
+            print("❌ primary_domain must be set in config/provisioning.json")
+            return False
+
+        if not self.connect(host_override=host):
+            return False
+
+        try:
+            if not self.install_certbot():
+                return False
+            if not self._ensure_port_80_ingress(host, interactive=False):
+                return False
+
+            authenticator = self._read_renewal_authenticator(cfg['primary'])
+            if authenticator == 'manual':
+                print("❌ Renewal config is still using manual DNS-01.")
+                print("   Run Option 15 (HTTP-01, auto-renew) to switch the renewal method.")
+                return False
+
+            if not self._http01_preflight(cfg['primary']):
+                print("❌ HTTP-01 preflight failed. Fix port 80 routing before testing renewals.")
+                self._print_certbot_diagnostics()
+                return False
+
+            print("ℹ️  Dry-run can take 1–5 minutes; it's normal for this step to be quiet.")
+            print("\n🚧 Running certbot renew --dry-run...")
+            success, _, _ = self.execute_command(
+                "sudo certbot renew --dry-run --non-interactive",
+                show_output=True,
+                stream_output=True,
+                heartbeat_seconds=120,
+                watchdog_seconds=300,
+                watchdog_callback=self._print_certbot_diagnostics,
+            )
+            if not success:
+                print("❌ Dry-run renewal failed. Review diagnostics below.")
+                self._print_certbot_diagnostics()
+                return False
+            print("✅ Dry-run renewal succeeded")
             return True
         finally:
             self.disconnect()
@@ -1721,6 +2042,13 @@ class DockerDeployment:
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 """
+        acme_block = """
+    location ^~ /.well-known/acme-challenge/ {{
+        root {webroot};
+        default_type "text/plain";
+        try_files $uri =404;
+    }}
+""".format(webroot=ACME_WEBROOT)
         ssl_directives = """
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
@@ -1733,7 +2061,10 @@ class DockerDeployment:
         return f"""server {{
     listen 80;
     server_name {server_names};
-    return 301 https://$host$request_uri;
+{acme_block}
+    location / {{
+        return 301 https://$host$request_uri;
+    }}
 }}
 
 server {{
@@ -1978,7 +2309,9 @@ def print_menu(active_host: str, label: str):
     print("12. Update /etc/hosts for testing")
     print("13. Restore local database from S3 backup")
     print("14. Lock security group to SSH + HTTPS only")
-    print("15. Exit")
+    print("15. Issue HTTPS certificate (HTTP-01, auto-renew)")
+    print("16. HTTPS renew dry-run (certbot renew --dry-run)")
+    print("17. Exit")
     print()
 
 def main():
@@ -1988,7 +2321,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-15]: ").strip()
+        choice = input("Enter choice [0-17]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -2069,6 +2402,10 @@ def main():
             if input(prompt).lower() == 'y':
                 deployer.lock_security_group_https_only(host)
         elif choice == '15':
+            deployer.issue_https_certificate_http01()
+        elif choice == '16':
+            deployer.renew_https_certificate_dry_run()
+        elif choice == '17':
             print("\n👋 Goodbye!")
             break
         
