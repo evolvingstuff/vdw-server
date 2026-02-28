@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from .models import Page
+from .recent_cache import get_recent_pages
 
 from helper_functions.markdown import render_markdown
 
@@ -28,7 +29,7 @@ def page_list(request):
 
 
 def recent_page_list(request):
-    pages = Page.objects.filter(status='published').order_by('-modified_date', '-created_date')[:150]
+    pages = get_recent_pages()
     return render(request, 'pages/recent_page_list.html', {'pages': pages})
 
 

@@ -15,6 +15,7 @@ from _retired.conversion_md_to_db import get_created_and_modified_dates, process
 from pages.alias_cache import lookup_path, lookup_plain, reload_alias_redirects
 from pages.admin import PageAdmin
 from pages.models import Page
+from pages.recent_cache import clear_recent_pages_cache, get_recent_pages, reload_recent_pages
 from tags.models import Tag
 from vdw_server.middleware import LegacyAliasRedirectMiddleware
 
@@ -359,8 +360,11 @@ class MostRecentPageListTests(TestCase):
         self.remove_patch = patch('pages.signals.remove_page_from_search')
         self.index_patch.start()
         self.remove_patch.start()
+        clear_recent_pages_cache()
+        reload_recent_pages()
 
     def tearDown(self):
+        clear_recent_pages_cache()
         self.index_patch.stop()
         self.remove_patch.stop()
 
@@ -413,6 +417,7 @@ class MostRecentPageListTests(TestCase):
         Page.objects.filter(pk=page.pk).update(
             modified_date=timezone.make_aware(datetime(2025, 2, 3))
         )
+        reload_recent_pages()
 
         response = self.client.get(reverse('recent_page_list'))
 
@@ -424,3 +429,45 @@ class MostRecentPageListTests(TestCase):
 
         self.assertContains(response, "Most Recent")
         self.assertContains(response, 'href="/pages/recent/"')
+
+
+class RecentPageCacheTests(TestCase):
+    def setUp(self):
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+        clear_recent_pages_cache()
+        reload_recent_pages()
+
+    def tearDown(self):
+        clear_recent_pages_cache()
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_cache_serves_without_queries_after_reload(self):
+        Page.objects.create(title="Cached", content_md="Body", status="published")
+        reload_recent_pages()
+
+        with self.assertNumQueries(0):
+            entries = get_recent_pages()
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0].title, "Cached")
+
+    def test_cache_updates_on_save_and_delete(self):
+        page = Page.objects.create(title="Lifecycle", content_md="Body", status="published")
+
+        self.assertTrue(any(entry.pk == page.pk for entry in get_recent_pages()))
+
+        page.status = "draft"
+        page.save()
+        self.assertFalse(any(entry.pk == page.pk for entry in get_recent_pages()))
+
+        page.status = "published"
+        page.save()
+        self.assertTrue(any(entry.pk == page.pk for entry in get_recent_pages()))
+
+        page_id = page.pk
+        page.delete()
+        self.assertFalse(any(entry.pk == page_id for entry in get_recent_pages()))

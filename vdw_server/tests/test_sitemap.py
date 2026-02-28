@@ -94,6 +94,7 @@ class SitemapStartupTests(SimpleTestCase):
     def setUp(self):
         super().setUp()
         startup._sitemap_refresh_attempted = False
+        startup._recent_pages_cache_attempted = False
 
     @override_settings(SITE_BASE_URL='https://example.com')
     @patch('vdw_server.startup.refresh_sitemap')
@@ -106,3 +107,9 @@ class SitemapStartupTests(SimpleTestCase):
     def test_skip_when_base_url_missing(self, mock_refresh):
         startup._refresh_sitemap_if_configured()
         mock_refresh.assert_not_called()
+
+    @patch('vdw_server.startup.load_recent_pages')
+    def test_recent_cache_warmup_runs_once(self, mock_load_recent_pages):
+        startup._load_recent_pages_cache()
+        startup._load_recent_pages_cache()
+        mock_load_recent_pages.assert_called_once_with(force=True)

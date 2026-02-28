@@ -2,6 +2,7 @@ import logging
 from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 from .models import Page
+from .recent_cache import upsert_recent_page, remove_recent_page
 from search.search import index_page, remove_page_from_search
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ def sync_page_to_search_on_save(sender, instance, created, **kwargs):
         except Exception as e:
             logger.error("MeiliSearch removal failed on save for Page %s: %s", instance.pk, e)
 
+    upsert_recent_page(instance)
+
 
 @receiver(post_delete, sender=Page)
 def remove_page_from_search_on_delete(sender, instance, **kwargs):
@@ -32,6 +35,8 @@ def remove_page_from_search_on_delete(sender, instance, **kwargs):
         remove_page_from_search(instance.pk)
     except Exception as e:
         logger.error("MeiliSearch removal failed on delete for Page %s: %s", instance.pk, e)
+
+    remove_recent_page(instance.pk)
 
 
 @receiver(m2m_changed, sender=Page.tags.through)

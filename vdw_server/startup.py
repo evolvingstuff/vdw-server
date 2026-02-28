@@ -8,11 +8,13 @@ import os
 from django.conf import settings
 from django.db.utils import OperationalError, ProgrammingError
 
+from pages.recent_cache import load_recent_pages
 from vdw_server.sitemap_utils import refresh_sitemap
 
 logger = logging.getLogger(__name__)
 
 _sitemap_refresh_attempted = False
+_recent_pages_cache_attempted = False
 
 
 def run_startup_tasks() -> None:
@@ -21,6 +23,7 @@ def run_startup_tasks() -> None:
     if run_main not in (None, 'true'):
         return
     _refresh_sitemap_if_configured()
+    _load_recent_pages_cache()
 
 
 def _refresh_sitemap_if_configured() -> None:
@@ -42,3 +45,19 @@ def _refresh_sitemap_if_configured() -> None:
         logger.exception('Automatic sitemap refresh failed')
     else:
         logger.info('Sitemap refreshed automatically on startup')
+
+
+def _load_recent_pages_cache() -> None:
+    global _recent_pages_cache_attempted
+    if _recent_pages_cache_attempted:
+        return
+    _recent_pages_cache_attempted = True
+
+    try:
+        load_recent_pages(force=True)
+    except (OperationalError, ProgrammingError) as exc:
+        logger.warning('Skipping recent pages cache warmup because the database is unavailable: %s', exc)
+    except Exception:
+        logger.exception('Recent pages cache warmup failed')
+    else:
+        logger.info('Recent pages cache warmed successfully on startup')
