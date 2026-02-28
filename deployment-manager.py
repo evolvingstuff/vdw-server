@@ -28,6 +28,8 @@ load_dotenv()
 
 MANUAL_BACKUP_PREFIX = "db_backups/manual_backups"
 ACME_WEBROOT = "/var/www/letsencrypt"
+MAINTENANCE_PAGE_REMOTE_DIR = "/var/www/vdw"
+MAINTENANCE_PAGE_REMOTE_PATH = f"{MAINTENANCE_PAGE_REMOTE_DIR}/maintenance.html"
 
 class DockerDeployment:
     def __init__(self):
@@ -666,6 +668,10 @@ class DockerDeployment:
             if not self.setup_environment():
                 return False
 
+            print("🌐 Refreshing nginx proxy config...")
+            if not self._refresh_nginx_proxy_for_deploy():
+                return False
+
             if not self.rebuild_and_restart_stack():
                 return False
 
@@ -679,6 +685,22 @@ class DockerDeployment:
         
         finally:
             self.disconnect()
+
+    def _refresh_nginx_proxy_for_deploy(self) -> bool:
+        """Apply nginx config while preserving current HTTP/HTTPS mode."""
+        cfg = self._domain_config()
+        primary_domain = cfg['primary']
+        if not primary_domain:
+            return self.configure_nginx_proxy()
+
+        cert_path = self._ssl_paths()['cert']
+        cert_exists, _, _ = self.execute_command(
+            f"sudo test -f {shlex.quote(cert_path)}",
+            show_output=False,
+        )
+        if cert_exists:
+            return self.configure_nginx_proxy(content=self._render_https_nginx())
+        return self.configure_nginx_proxy()
     
     def deploy_database(self):
         target_host = self.prompt_host_for_operation('database deploy')
@@ -1991,6 +2013,7 @@ class DockerDeployment:
         """Upload nginx reverse proxy config and reload service."""
         print("📝 Configuring nginx reverse proxy...")
         remote_tmp = '/tmp/vdw_nginx.conf'
+        remote_maintenance_tmp = '/tmp/vdw_maintenance.html'
         try:
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 if content is None:
@@ -2001,11 +2024,18 @@ class DockerDeployment:
                     scp.put(str(local_conf), remote_tmp)
                 else:
                     scp.putfo(io.BytesIO(content.encode('utf-8')), remote_tmp)
+                scp.putfo(
+                    io.BytesIO(self._render_maintenance_page().encode('utf-8')),
+                    remote_maintenance_tmp,
+                )
         except Exception as exc:
             print(f"❌ Failed to upload nginx config: {exc}")
             return False
 
         commands = [
+            f"sudo mkdir -p {MAINTENANCE_PAGE_REMOTE_DIR}",
+            f"sudo mv {remote_maintenance_tmp} {MAINTENANCE_PAGE_REMOTE_PATH}",
+            f"sudo chmod 644 {MAINTENANCE_PAGE_REMOTE_PATH}",
             f"sudo mv {remote_tmp} /etc/nginx/sites-available/vdw",
             "sudo ln -sf /etc/nginx/sites-available/vdw /etc/nginx/sites-enabled/vdw",
             "sudo rm -f /etc/nginx/sites-enabled/default",
@@ -2034,7 +2064,15 @@ class DockerDeployment:
         alias /app/media/;
     }
 
+    location = /maintenance.html {
+        root /var/www/vdw;
+        internal;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+    }
+
     location / {
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -2075,6 +2113,69 @@ server {{
     ssl_certificate_key {paths['key']};
 {ssl_directives}
 {static_block}}}
+"""
+
+    def _render_maintenance_page(self) -> str:
+        return """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VitaminDWiki Update In Progress</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #223;
+      background: linear-gradient(135deg, #f4f7fb 0%, #eaf3ff 100%);
+    }
+    main {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: min(640px, 100%);
+      background: #fff;
+      border: 1px solid #d9e2ef;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(15, 35, 80, 0.12);
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.75rem;
+      line-height: 1.2;
+      color: #0f2a56;
+    }
+    p {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .hint {
+      color: #4d5d78;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card" role="status" aria-live="polite">
+      <h1>VitaminDWiki is updating</h1>
+      <p>The server is currently being updated and will be available again in a few minutes.</p>
+      <p class="hint">Please refresh this page shortly.</p>
+    </section>
+  </main>
+</body>
+</html>
 """
 
     def setup_environment(self):
