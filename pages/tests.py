@@ -6,6 +6,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from django.urls import reverse
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.utils import timezone
 from django.utils.text import slugify
@@ -350,3 +351,76 @@ class PageAdminBulkTagActionTests(TestCase):
             self.assertTrue(page.tags.filter(name="Existing").exists())
             self.assertTrue(page.tags.filter(name="Beta").exists())
             self.assertTrue(page.tags.filter(name="Gamma").exists())
+
+
+class MostRecentPageListTests(TestCase):
+    def setUp(self):
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_recent_page_list_limits_to_150_published_pages(self):
+        for index in range(170):
+            Page.objects.create(
+                title=f"Published {index}",
+                content_md="Body",
+                status="published",
+            )
+
+        Page.objects.create(title="Draft page", content_md="Body", status="draft")
+
+        response = self.client.get(reverse('recent_page_list'))
+
+        self.assertEqual(response.status_code, 200)
+        pages = response.context['pages']
+        self.assertEqual(len(pages), 150)
+        self.assertTrue(all(page.status == 'published' for page in pages))
+
+    def test_recent_page_list_orders_by_most_recent_update(self):
+        older_page = Page.objects.create(
+            title="Older update",
+            content_md="Body",
+            status="published",
+        )
+        newer_page = Page.objects.create(
+            title="Newer update",
+            content_md="Body",
+            status="published",
+        )
+
+        older_ts = timezone.make_aware(datetime(2024, 1, 1))
+        newer_ts = timezone.make_aware(datetime(2025, 1, 1))
+        Page.objects.filter(pk=older_page.pk).update(modified_date=older_ts)
+        Page.objects.filter(pk=newer_page.pk).update(modified_date=newer_ts)
+
+        response = self.client.get(reverse('recent_page_list'))
+
+        pages = list(response.context['pages'])
+        self.assertEqual(pages[0].pk, newer_page.pk)
+        self.assertEqual(pages[1].pk, older_page.pk)
+
+    def test_recent_page_list_renders_month_year_date_format(self):
+        page = Page.objects.create(
+            title="Date format page",
+            content_md="Body",
+            status="published",
+        )
+        Page.objects.filter(pk=page.pk).update(
+            modified_date=timezone.make_aware(datetime(2025, 2, 3))
+        )
+
+        response = self.client.get(reverse('recent_page_list'))
+
+        self.assertContains(response, "Date format page")
+        self.assertContains(response, "02/2025")
+
+    def test_recent_page_list_includes_most_recent_toolbar_link(self):
+        response = self.client.get(reverse('recent_page_list'))
+
+        self.assertContains(response, "Most Recent")
+        self.assertContains(response, 'href="/pages/recent/"')

@@ -1,0 +1,63 @@
+{% extends 'pages/base.html' %}
+
+{% block title %}Most Recent Pages - VitaminDWiki{% endblock %}
+
+{% block extra_css %}
+.recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.recent-item {
+    align-items: baseline;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin: 0;
+    padding: 4px 0;
+}
+
+.recent-item:last-child {
+    border-bottom: none;
+}
+
+.recent-link {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.recent-link:hover {
+    text-decoration: underline;
+}
+
+.recent-date {
+    color: #666;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .recent-item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<h1>Most Recent Pages</h1>
+
+<ul class="recent-list" data-display-mode="single_line">
+    {% for page in pages %}
+        <li class="recent-item">
+            <a class="recent-link" href="{% url 'page_detail' page.slug %}">{{ page.title }}</a>
+            <span class="recent-date">{{ page.modified_date|date:"m/Y" }}</span>
+        </li>
+    {% empty %}
+        <li>No published pages yet.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

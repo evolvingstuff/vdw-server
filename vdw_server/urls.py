@@ -19,7 +19,7 @@ from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from pages.views import preview_markdown, page_list, page_detail, page_preview, upload_media
+from pages.views import preview_markdown, page_list, recent_page_list, page_detail, page_preview, upload_media
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
@@ -36,6 +36,7 @@ urlpatterns = [
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     re_path(r'^google(?P<token>[A-Za-z0-9]+)\.html$', google_site_verification, name='google_site_verification'),
     path('pages/', page_list, name='page_list'),
+    path('pages/recent/', recent_page_list, name='recent_page_list'),
     path('pages/<slug:slug>/preview/', page_preview, name='page_preview'),
     path('pages/<slug:slug>/', page_detail, name='page_detail'),
     # Legacy URLs for backwards compatibility

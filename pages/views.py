@@ -27,6 +27,11 @@ def page_list(request):
     return render(request, 'pages/page_list.html', {'pages': pages})
 
 
+def recent_page_list(request):
+    pages = Page.objects.filter(status='published').order_by('-modified_date', '-created_date')[:150]
+    return render(request, 'pages/recent_page_list.html', {'pages': pages})
+
+
 def page_detail(request, slug):
     page = get_object_or_404(Page, slug=slug, status='published')
 
@@ -236,4 +241,3 @@ def upload_media(request):
         'filename': uploaded_file.name,
         'size': uploaded_file.size
     })
-
