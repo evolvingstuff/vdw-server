@@ -364,6 +364,61 @@
     </script>
     <script>
     (function() {
+        function toAbsoluteUrl(url) {
+            if (!url) return null;
+            const parser = document.createElement('a');
+            parser.href = url;
+            return parser.href;
+        }
+
+        function mergeRelValues(existingRel) {
+            const relValues = new Set((existingRel || '').split(/\s+/).filter(Boolean));
+            relValues.add('noopener');
+            relValues.add('noreferrer');
+            return Array.from(relValues).join(' ');
+        }
+
+        function makeImagesOpenInNewTab() {
+            const containers = document.querySelectorAll('.markdown-content');
+
+            containers.forEach((container) => {
+                const images = container.querySelectorAll('img');
+
+                images.forEach((image) => {
+                    const source = image.currentSrc || image.getAttribute('src');
+                    if (!source) return;
+
+                    const existingAnchor = image.closest('a');
+                    if (existingAnchor) {
+                        const imageUrl = toAbsoluteUrl(source);
+                        const linkUrl = toAbsoluteUrl(existingAnchor.getAttribute('href'));
+
+                        if (imageUrl && linkUrl && imageUrl === linkUrl) {
+                            existingAnchor.target = '_blank';
+                            existingAnchor.rel = mergeRelValues(existingAnchor.getAttribute('rel'));
+                        }
+                        return;
+                    }
+
+                    const wrapper = document.createElement('a');
+                    wrapper.href = source;
+                    wrapper.target = '_blank';
+                    wrapper.rel = 'noopener noreferrer';
+                    image.parentNode.insertBefore(wrapper, image);
+                    wrapper.appendChild(image);
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', makeImagesOpenInNewTab);
+        } else {
+            makeImagesOpenInNewTab();
+        }
+    })();
+    </script>
+    <script>
+    (function() {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const scrollToTopButton = document.getElementById('scroll-to-top');
         const scrollToBottomButton = document.getElementById('scroll-to-bottom');
