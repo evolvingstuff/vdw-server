@@ -236,6 +236,29 @@
             margin-bottom: 0.6em;
         }
 
+        .legacy-box-line {
+            margin: 0.5em 0;
+        }
+
+        .legacy-box-list {
+            margin: 0.6em 0 0.6em 1.3em;
+            padding-left: 0.6em;
+        }
+
+        .legacy-box-list li + li {
+            margin-top: 0.45em;
+        }
+
+        .legacy-box-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75em 0;
+        }
+
+        .legacy-box-table td {
+            vertical-align: top;
+        }
+
         @media (max-width: 768px) {
             .scroll-controls {
                 right: 10px;
@@ -454,6 +477,7 @@
         }
     })();
     </script>
+    <script src="{% static 'pages/js/legacy_box_rendering.js' %}"></script>
     <script>
     (function() {
         const colorMarkerPattern = /#\s*f00\b/i;
@@ -672,6 +696,9 @@
                 splitOverflowHeadingContent(container);
                 normalizeLegacyHorizontalRules(container);
                 normalizeLegacyBoxBlocks(container);
+                if (window.VDWLegacyBoxRendering) {
+                    window.VDWLegacyBoxRendering.normalizeLegacyBoxElements(container);
+                }
 
                 const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
                 const nodes = [];
