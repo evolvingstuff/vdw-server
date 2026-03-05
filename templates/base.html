@@ -364,6 +364,80 @@
     </script>
     <script>
     (function() {
+        const legacyTikiCheckPattern = /\[\s*tiki-index\s*\.\s*php\?\s*page\s*_?\s*id\s*=\s*\d+\s*\]/i;
+        const legacyTikiReplacePattern = /\[\s*tiki-index\s*\.\s*php\?\s*page\s*_?\s*id\s*=\s*(\d+)\s*\]/gi;
+
+        function shouldSkipNode(textNode) {
+            const parent = textNode.parentElement;
+            if (!parent) return true;
+            if (parent.closest('a, script, style, textarea, code, pre')) return true;
+            return !legacyTikiCheckPattern.test(textNode.nodeValue || '');
+        }
+
+        function linkifyLegacyTikiTextNode(textNode) {
+            const text = textNode.nodeValue;
+            if (!text) return;
+
+            legacyTikiReplacePattern.lastIndex = 0;
+
+            const fragment = document.createDocumentFragment();
+            let lastIndex = 0;
+            let match;
+
+            while ((match = legacyTikiReplacePattern.exec(text)) !== null) {
+                const fullMatch = match[0];
+                const pageId = match[1];
+                const index = match.index;
+
+                if (index > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+                }
+
+                const anchor = document.createElement('a');
+                anchor.href = '/' + pageId;
+                anchor.textContent = 'link';
+                fragment.appendChild(anchor);
+
+                lastIndex = index + fullMatch.length;
+            }
+
+            if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+
+            if (textNode.parentNode) {
+                textNode.parentNode.replaceChild(fragment, textNode);
+            }
+        }
+
+        function linkifyLegacyTikiReferences() {
+            const containers = document.querySelectorAll('.markdown-content');
+
+            containers.forEach((container) => {
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+                const nodes = [];
+
+                while (walker.nextNode()) {
+                    nodes.push(walker.currentNode);
+                }
+
+                nodes.forEach((node) => {
+                    if (!shouldSkipNode(node)) {
+                        linkifyLegacyTikiTextNode(node);
+                    }
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', linkifyLegacyTikiReferences);
+        } else {
+            linkifyLegacyTikiReferences();
+        }
+    })();
+    </script>
+    <script>
+    (function() {
         function toAbsoluteUrl(url) {
             if (!url) return null;
             const parser = document.createElement('a');
