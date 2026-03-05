@@ -218,6 +218,11 @@
             transform: translateY(1px);
         }
 
+        .legacy-rct-label {
+            color: #f00;
+            font-weight: 700;
+        }
+
         @media (max-width: 768px) {
             .scroll-controls {
                 right: 10px;
@@ -433,6 +438,122 @@
             document.addEventListener('DOMContentLoaded', linkifyLegacyTikiReferences);
         } else {
             linkifyLegacyTikiReferences();
+        }
+    })();
+    </script>
+    <script>
+    (function() {
+        const colorMarkerPattern = /#\s*f00\b/i;
+        const highlightMarkerPattern = /~\s*hs\s*~/i;
+        const strikeMarkerPattern = /~~/;
+        const decoratedRctPattern = /[_*]\s*\d*\s*rct\s*[_*]/i;
+
+        function normalizeSpaces(value) {
+            return value.replace(/\s+/g, ' ').trim();
+        }
+
+        function shouldProcessAnchorText(text) {
+            return (
+                colorMarkerPattern.test(text) ||
+                highlightMarkerPattern.test(text) ||
+                strikeMarkerPattern.test(text) ||
+                decoratedRctPattern.test(text)
+            );
+        }
+
+        function extractRctLabel(rawText) {
+            const normalized = normalizeSpaces(
+                rawText
+                    .replace(/[~_*]+/g, ' ')
+                    .replace(/#\s*f00\s*:/gi, ' ')
+            );
+
+            const explicitMatch = normalized.match(/\b([0-9]+\s+)?rct\b/i);
+            if (explicitMatch) {
+                const count = (explicitMatch[1] || '').trim();
+                return count ? count + ' RCT' : 'RCT';
+            }
+            return null;
+        }
+
+        function sanitizeLinkTitle(rawText) {
+            let cleaned = rawText;
+            cleaned = cleaned.replace(/#\s*f00\s*:/gi, ' ');
+            cleaned = cleaned.replace(/~\s*hs\s*~/gi, ' ');
+            cleaned = cleaned.replace(/[~_*]+/g, ' ');
+            cleaned = cleaned.replace(/\b\d+\s+rct\b/gi, ' ');
+            cleaned = cleaned.replace(/\brct\b/gi, ' ');
+            cleaned = cleaned.replace(/&nbsp;/gi, ' ');
+
+            cleaned = cleaned.replace(/^[\s,:;|./-]+/, ' ');
+            cleaned = cleaned.replace(/[\s,:;|./-]+$/, ' ');
+            return normalizeSpaces(cleaned);
+        }
+
+        function prependRctLabel(anchor, labelText) {
+            const previousSibling = anchor.previousSibling;
+            if (previousSibling && previousSibling.nodeType === Node.TEXT_NODE) {
+                const previousText = normalizeSpaces(previousSibling.nodeValue || '');
+                if (previousText.toUpperCase() === labelText.toUpperCase()) {
+                    return;
+                }
+            }
+
+            const previousElement = anchor.previousElementSibling;
+            if (previousElement) {
+                const previousElementText = normalizeSpaces(previousElement.textContent || '');
+                if (previousElement.classList.contains('legacy-rct-label')) {
+                    previousElement.textContent = labelText;
+                    return;
+                }
+                if (previousElementText.toUpperCase() === labelText.toUpperCase()) {
+                    return;
+                }
+            }
+
+            const label = document.createElement('span');
+            label.className = 'legacy-rct-label';
+            label.textContent = labelText;
+            anchor.parentNode.insertBefore(label, anchor);
+            anchor.parentNode.insertBefore(document.createTextNode(' '), anchor);
+        }
+
+        function removeAnchor(anchor) {
+            const parent = anchor.parentNode;
+            if (!parent) return;
+            parent.removeChild(anchor);
+        }
+
+        function fixMalformedLegacyRctLinks() {
+            const anchors = document.querySelectorAll('.markdown-content a');
+            anchors.forEach((anchor) => {
+                if (anchor.querySelector('img')) return;
+
+                const originalText = anchor.textContent || '';
+                if (!shouldProcessAnchorText(originalText)) {
+                    return;
+                }
+
+                const labelText = extractRctLabel(originalText);
+                const cleanTitle = sanitizeLinkTitle(originalText);
+
+                if (labelText) {
+                    prependRctLabel(anchor, labelText);
+                }
+
+                if (!cleanTitle) {
+                    removeAnchor(anchor);
+                    return;
+                }
+
+                anchor.textContent = cleanTitle;
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fixMalformedLegacyRctLinks);
+        } else {
+            fixMalformedLegacyRctLinks();
         }
     })();
     </script>
