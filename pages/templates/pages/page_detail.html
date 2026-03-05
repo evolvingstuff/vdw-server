@@ -43,6 +43,27 @@
         cleaned = cleaned.replace(/\{(?:FONT(?:\s*\([^}]*\))?|LIST\(\)|include|category|ANAME\(\)|ANAME)\}/gi, ' ');
         cleaned = cleaned.replace(/\*\*/g, '');
         cleaned = cleaned.replace(/__+/g, '');
+        cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+        const cutoffPatterns = [
+            /\shttps?:\/\//i,
+            /\sdoi:\s*/i,
+            /\s\[\s*doi:/i,
+            /\s\*+\s+/,
+            /\*(?=[A-Z])/,
+            /\s"(?:[^"]*)$/,
+        ];
+        for (const pattern of cutoffPatterns) {
+            const match = cleaned.match(pattern);
+            if (match && match.index !== undefined && match.index > 20) {
+                cleaned = cleaned.slice(0, match.index).trim();
+            }
+        }
+
+        const sourceTail = cleaned.match(/\s(?:PDF|Journal|Review|Systematic review|Perplexity AI|Nature Medicine)\b/i);
+        if (sourceTail && sourceTail.index !== undefined && sourceTail.index > 25) {
+            cleaned = cleaned.slice(0, sourceTail.index).trim();
+        }
         cleaned = cleaned.replace(/[ \t]{2,}/g, ' ').trim();
 
         const numberedListStart = cleaned.match(/\s(?:Highlights\s+)?1\.\s/i);
@@ -51,6 +72,9 @@
         }
 
         cleaned = cleaned.replace(/\s*[:\-|.,;]+$/g, '').trim();
+        if (cleaned.length > 140) {
+            cleaned = cleaned.slice(0, 137).trimEnd() + '...';
+        }
         return cleaned;
     }
 
@@ -129,10 +153,28 @@
         tocContainer.style.display = 'block';
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTOC);
-    } else {
+    let tocInitialized = false;
+
+    function initTOCOnce() {
+        if (tocInitialized) return;
+        tocInitialized = true;
         initTOC();
+    }
+
+    function initTOCAfterCleanup() {
+        if (document.documentElement.dataset.vdwLegacyCleanupDone === '1') {
+            initTOCOnce();
+            return;
+        }
+
+        document.addEventListener('vdw:legacy-cleanup-complete', initTOCOnce, { once: true });
+        window.addEventListener('load', initTOCOnce, { once: true });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTOCAfterCleanup, { once: true });
+    } else {
+        initTOCAfterCleanup();
     }
 })();
 </script>

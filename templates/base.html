@@ -223,6 +223,19 @@
             font-weight: 700;
         }
 
+        .legacy-box {
+            border: 1px solid #d8c98d;
+            border-radius: 8px;
+            padding: 0.85em 1em;
+            margin: 1em 0;
+            background: #fffae2;
+        }
+
+        .legacy-box-title {
+            font-weight: 700;
+            margin-bottom: 0.6em;
+        }
+
         @media (max-width: 768px) {
             .scroll-controls {
                 right: 10px;
@@ -658,6 +671,7 @@
             containers.forEach((container) => {
                 splitOverflowHeadingContent(container);
                 normalizeLegacyHorizontalRules(container);
+                normalizeLegacyBoxBlocks(container);
 
                 const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
                 const nodes = [];
@@ -677,6 +691,179 @@
                         node.nodeValue = cleaned;
                     }
                 });
+
+                normalizeInlineLinkSpacing(container);
+            });
+
+            document.documentElement.dataset.vdwLegacyCleanupDone = '1';
+            document.dispatchEvent(new CustomEvent('vdw:legacy-cleanup-complete'));
+        }
+
+        function shouldInsertSpaceBetween(leftText, rightText) {
+            const left = (leftText || '').trimEnd();
+            const right = (rightText || '').trimStart();
+            if (!left || !right) return false;
+
+            const leftChar = left.slice(-1);
+            const rightChar = right.charAt(0);
+            const leftWordLike = /[A-Za-z0-9)\]%"']/.test(leftChar);
+            const rightWordLike = /[A-Za-z0-9("'`]/.test(rightChar);
+            return leftWordLike && rightWordLike;
+        }
+
+        function startsWithTightPunctuation(text) {
+            return /^[\s]*[.,!?;:)\]]/.test(text || '');
+        }
+
+        function looksLikeCitationLink(anchorText) {
+            const text = normalizeSpaces(anchorText || '');
+            if (!text) return false;
+
+            const hasDateCue = /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b|\b(?:19|20)\d{2}\b/i.test(text);
+            const hasTitleShape = /^[A-Z"'(]/.test(text) && /\s/.test(text);
+            return hasDateCue || hasTitleShape || text.length >= 28;
+        }
+
+        function insertLineBreakBefore(node) {
+            if (!node || !node.parentNode) return;
+            const previous = node.previousSibling;
+            if (previous && previous.nodeType === Node.ELEMENT_NODE && previous.tagName === 'BR') return;
+            node.parentNode.insertBefore(document.createElement('br'), node);
+        }
+
+        function insertLineBreakAfter(node) {
+            if (!node || !node.parentNode) return;
+            const next = node.nextSibling;
+            if (next && next.nodeType === Node.ELEMENT_NODE && next.tagName === 'BR') return;
+            node.parentNode.insertBefore(document.createElement('br'), next);
+        }
+
+        function normalizeInlineLinkSpacing(container) {
+            const anchors = container.querySelectorAll('a');
+
+            anchors.forEach((anchor) => {
+                if (anchor.querySelector('img')) return;
+                if (anchor.closest('h1, h2, h3, h4, h5, h6')) return;
+
+                const anchorText = normalizeSpaces(anchor.textContent || '');
+                if (!anchorText) return;
+                const citationLike = looksLikeCitationLink(anchorText);
+
+                const previousSibling = anchor.previousSibling;
+                if (previousSibling && previousSibling.nodeType === Node.TEXT_NODE) {
+                    const previousText = previousSibling.nodeValue || '';
+                    if (!/\s$/.test(previousText) && shouldInsertSpaceBetween(previousText, anchorText)) {
+                        if (citationLike) {
+                            insertLineBreakBefore(anchor);
+                        } else {
+                            anchor.parentNode.insertBefore(document.createTextNode(' '), anchor);
+                        }
+                    }
+                }
+                if (anchor.previousSibling && anchor.previousSibling.nodeType === Node.ELEMENT_NODE) {
+                    const previousElementText = normalizeSpaces(anchor.previousSibling.textContent || '');
+                    if (shouldInsertSpaceBetween(previousElementText, anchorText)) {
+                        if (citationLike) {
+                            insertLineBreakBefore(anchor);
+                        } else {
+                            anchor.parentNode.insertBefore(document.createTextNode(' '), anchor);
+                        }
+                    }
+                }
+
+                const nextSibling = anchor.nextSibling;
+                if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
+                    const nextText = nextSibling.nodeValue || '';
+                    if (!/^\s/.test(nextText) && shouldInsertSpaceBetween(anchorText, nextText)) {
+                        if (!startsWithTightPunctuation(nextText)) {
+                            anchor.parentNode.insertBefore(document.createTextNode(' '), nextSibling);
+                        }
+                    }
+                }
+                if (anchor.nextSibling && anchor.nextSibling.nodeType === Node.ELEMENT_NODE) {
+                    const nextElementText = normalizeSpaces(anchor.nextSibling.textContent || '');
+                    if (
+                        nextElementText &&
+                        !startsWithTightPunctuation(nextElementText) &&
+                        shouldInsertSpaceBetween(anchorText, nextElementText)
+                    ) {
+                        anchor.parentNode.insertBefore(document.createTextNode(' '), anchor.nextSibling);
+                    }
+                }
+            });
+        }
+
+        function parseLegacyBoxConfig(rawMarkerText) {
+            const openMatch = (rawMarkerText || '').match(/^\{BOX\((.*)\)\}$/i);
+            if (!openMatch) return null;
+
+            const configText = openMatch[1] || '';
+            const titleMatch = configText.match(/title\s*=>\s*(.+?)(?=(?:\s+\w+\s*(?:=>|=)|,|$))/i);
+            const backgroundMatch = configText.match(/bg\s*=>\s*["']?([^"',)\s]+)["']?/i);
+            const widthMatch = configText.match(/width\s*=\s*["']?([^"')]+)["']?/i);
+
+            function cleanValue(value) {
+                return (value || '').trim().replace(/^["']|["']$/g, '');
+            }
+
+            return {
+                title: cleanValue(titleMatch ? titleMatch[1] : ''),
+                background: cleanValue(backgroundMatch ? backgroundMatch[1] : ''),
+                width: cleanValue(widthMatch ? widthMatch[1] : ''),
+            };
+        }
+
+        function isStandaloneTextMarker(element, pattern) {
+            if (!element || element.children.length > 0) return false;
+            return pattern.test(normalizeSpaces(element.textContent || ''));
+        }
+
+        function normalizeLegacyBoxBlocks(container) {
+            const blockParents = [container, ...Array.from(container.querySelectorAll('blockquote, li, td, th, div'))];
+
+            blockParents.forEach((parent) => {
+                const children = Array.from(parent.children);
+                for (let index = 0; index < children.length; index += 1) {
+                    const openMarker = children[index];
+                    const openText = normalizeSpaces(openMarker.textContent || '');
+                    const boxConfig = parseLegacyBoxConfig(openText);
+                    if (!boxConfig) continue;
+                    if (!isStandaloneTextMarker(openMarker, /^\{BOX\([^}]*\)\}$/i)) continue;
+
+                    let closeIndex = -1;
+                    for (let i = index + 1; i < children.length; i += 1) {
+                        if (isStandaloneTextMarker(children[i], /^\{BOX\}$/i)) {
+                            closeIndex = i;
+                            break;
+                        }
+                    }
+                    if (closeIndex === -1) continue;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'legacy-box';
+                    if (boxConfig.background) wrapper.style.background = boxConfig.background;
+                    if (boxConfig.width) {
+                        wrapper.style.width = boxConfig.width;
+                        wrapper.style.maxWidth = '100%';
+                    }
+
+                    if (boxConfig.title) {
+                        const title = document.createElement('div');
+                        title.className = 'legacy-box-title';
+                        title.textContent = boxConfig.title;
+                        wrapper.appendChild(title);
+                    }
+
+                    openMarker.parentNode.insertBefore(wrapper, openMarker);
+
+                    for (let i = index + 1; i < closeIndex; i += 1) {
+                        wrapper.appendChild(children[i]);
+                    }
+
+                    openMarker.remove();
+                    children[closeIndex].remove();
+                    break;
+                }
             });
         }
 
