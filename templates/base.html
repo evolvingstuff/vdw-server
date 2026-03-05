@@ -572,12 +572,15 @@
             cleaned = cleaned.replace(/\*\*/g, '');
             cleaned = cleaned.replace(/__+/g, '');
             cleaned = cleaned.replace(/\s\*:\s*/g, ': ');
+            cleaned = cleaned.replace(/(^|\n)(\s*)\*(?=[A-Za-z0-9\[])/g, '$1$2');
             cleaned = cleaned.replace(/^(\s*)\*\s+/g, '$1');
             cleaned = cleaned.replace(/\s+\*\s*$/g, '');
             cleaned = cleaned.replace(/\s+\*(?=\s*---)/g, '');
             cleaned = cleaned.replace(/\s\*\s*\*(?=\s*\d)/g, ' ');
             cleaned = cleaned.replace(/\s+\*(?=\s*\d+\.)/g, ' ');
+            cleaned = cleaned.replace(/\s\*(?=[A-Za-z0-9\[])/g, ' ');
             cleaned = cleaned.replace(/\s\*\s(?=[A-Za-z0-9\[])/g, ' ');
+            cleaned = cleaned.replace(/([A-Za-z0-9\]])\*(?=\s|$)/g, '$1');
             cleaned = cleaned.replace(/\s*---\s*$/g, '');
             cleaned = cleaned.replace(/_+\s*$/g, '');
             cleaned = cleaned.replace(/[ \t]{2,}/g, ' ');
@@ -654,6 +657,7 @@
 
             containers.forEach((container) => {
                 splitOverflowHeadingContent(container);
+                normalizeLegacyHorizontalRules(container);
 
                 const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
                 const nodes = [];
@@ -673,6 +677,21 @@
                         node.nodeValue = cleaned;
                     }
                 });
+            });
+        }
+
+        function normalizeLegacyHorizontalRules(container) {
+            const candidates = container.querySelectorAll('p, div, li, blockquote');
+
+            candidates.forEach((element) => {
+                if (!element.parentNode) return;
+                if (element.children.length > 0) return;
+
+                const text = normalizeSpaces(element.textContent || '');
+                if (text !== '--') return;
+
+                const hr = document.createElement('hr');
+                element.parentNode.replaceChild(hr, element);
             });
         }
 
