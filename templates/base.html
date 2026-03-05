@@ -743,30 +743,31 @@
 
             anchors.forEach((anchor) => {
                 if (anchor.querySelector('img')) return;
-                if (anchor.closest('h1, h2, h3, h4, h5, h6')) return;
 
                 const anchorText = normalizeSpaces(anchor.textContent || '');
                 if (!anchorText) return;
                 const citationLike = looksLikeCitationLink(anchorText);
+                const boundaryNode = anchor.closest('em, i, strong, b, span') || anchor;
+                const inHeading = Boolean(anchor.closest('h1, h2, h3, h4, h5, h6'));
 
-                const previousSibling = anchor.previousSibling;
+                const previousSibling = boundaryNode.previousSibling;
                 if (previousSibling && previousSibling.nodeType === Node.TEXT_NODE) {
                     const previousText = previousSibling.nodeValue || '';
                     if (!/\s$/.test(previousText) && shouldInsertSpaceBetween(previousText, anchorText)) {
-                        if (citationLike) {
-                            insertLineBreakBefore(anchor);
+                        if (citationLike && !inHeading) {
+                            insertLineBreakBefore(boundaryNode);
                         } else {
-                            anchor.parentNode.insertBefore(document.createTextNode(' '), anchor);
+                            boundaryNode.parentNode.insertBefore(document.createTextNode(' '), boundaryNode);
                         }
                     }
                 }
-                if (anchor.previousSibling && anchor.previousSibling.nodeType === Node.ELEMENT_NODE) {
-                    const previousElementText = normalizeSpaces(anchor.previousSibling.textContent || '');
+                if (boundaryNode.previousSibling && boundaryNode.previousSibling.nodeType === Node.ELEMENT_NODE) {
+                    const previousElementText = normalizeSpaces(boundaryNode.previousSibling.textContent || '');
                     if (shouldInsertSpaceBetween(previousElementText, anchorText)) {
-                        if (citationLike) {
-                            insertLineBreakBefore(anchor);
+                        if (citationLike && !inHeading) {
+                            insertLineBreakBefore(boundaryNode);
                         } else {
-                            anchor.parentNode.insertBefore(document.createTextNode(' '), anchor);
+                            boundaryNode.parentNode.insertBefore(document.createTextNode(' '), boundaryNode);
                         }
                     }
                 }
@@ -788,6 +789,31 @@
                         shouldInsertSpaceBetween(anchorText, nextElementText)
                     ) {
                         anchor.parentNode.insertBefore(document.createTextNode(' '), anchor.nextSibling);
+                    }
+                }
+
+                if (boundaryNode !== anchor) {
+                    const boundaryNextSibling = boundaryNode.nextSibling;
+                    if (boundaryNextSibling && boundaryNextSibling.nodeType === Node.TEXT_NODE) {
+                        const boundaryNextText = boundaryNextSibling.nodeValue || '';
+                        if (
+                            !/^\s/.test(boundaryNextText) &&
+                            !startsWithTightPunctuation(boundaryNextText) &&
+                            shouldInsertSpaceBetween(anchorText, boundaryNextText)
+                        ) {
+                            boundaryNode.parentNode.insertBefore(document.createTextNode(' '), boundaryNextSibling);
+                        }
+                    }
+
+                    if (boundaryNode.nextSibling && boundaryNode.nextSibling.nodeType === Node.ELEMENT_NODE) {
+                        const boundaryNextElementText = normalizeSpaces(boundaryNode.nextSibling.textContent || '');
+                        if (
+                            boundaryNextElementText &&
+                            !startsWithTightPunctuation(boundaryNextElementText) &&
+                            shouldInsertSpaceBetween(anchorText, boundaryNextElementText)
+                        ) {
+                            boundaryNode.parentNode.insertBefore(document.createTextNode(' '), boundaryNode.nextSibling);
+                        }
                     }
                 }
             });
