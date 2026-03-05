@@ -2,6 +2,7 @@ import json
 from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase
+from django.template.loader import render_to_string
 from meilisearch.errors import MeilisearchApiError
 from requests import Response
 
@@ -191,3 +192,17 @@ class SearchHitSortingTests(SimpleTestCase):
         }
 
         self.assertTrue(has_overview_query_match(hit, "alcohol"))
+
+
+class SearchPageTemplateTests(SimpleTestCase):
+    def test_search_help_link_is_present_in_global_header(self):
+        html = render_to_string("components/global_search_bar.html")
+
+        self.assertIn(
+            'href="/pages/search-vitamindwiki/"',
+            html,
+        )
+        self.assertIn(
+            'aria-label="How search works"',
+            html,
+        )
