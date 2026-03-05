@@ -38,6 +38,22 @@
 
 <script>
 (function() {
+    function normalizeTocHeadingText(value) {
+        let cleaned = (value || '').replace(/\s+/g, ' ').trim();
+        cleaned = cleaned.replace(/\{(?:FONT(?:\s*\([^}]*\))?|LIST\(\)|include|category|ANAME\(\)|ANAME)\}/gi, ' ');
+        cleaned = cleaned.replace(/\*\*/g, '');
+        cleaned = cleaned.replace(/__+/g, '');
+        cleaned = cleaned.replace(/[ \t]{2,}/g, ' ').trim();
+
+        const numberedListStart = cleaned.match(/\s(?:Highlights\s+)?1\.\s/i);
+        if (numberedListStart) {
+            cleaned = cleaned.slice(0, numberedListStart.index).trim();
+        }
+
+        cleaned = cleaned.replace(/\s*[:\-|.,;]+$/g, '').trim();
+        return cleaned;
+    }
+
     function initTOC() {
         const contentEl = document.querySelector('.markdown-content');
         const tocContainer = document.getElementById('post-toc');
@@ -63,9 +79,11 @@
         });
 
         headings.forEach((heading, index) => {
+            const rawHeadingText = heading.textContent || '';
+            const tocHeadingText = normalizeTocHeadingText(rawHeadingText) || rawHeadingText.trim();
+
             if (!heading.id) {
-                const text = heading.textContent || '';
-                const slug = text.toLowerCase().trim()
+                const slug = tocHeadingText.toLowerCase().trim()
                     .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
                     .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
                 heading.id = slug || 'heading-' + index;
@@ -85,7 +103,7 @@
 
             const link = document.createElement('a');
             link.href = '#' + heading.id;
-            link.textContent = heading.textContent;
+            link.textContent = tocHeadingText;
             link.style.cssText = 'color: #3498db; text-decoration: none; display: inline-block;';
             link.style.fontWeight = depth === 0 ? '600' : '400';
             link.style.fontStyle = depth >= 2 ? 'italic' : 'normal';

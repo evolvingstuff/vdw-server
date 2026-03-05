@@ -559,6 +559,132 @@
     </script>
     <script>
     (function() {
+        const legacyMacroPattern = /\{(?:FONT(?:\s*\([^}]*\))?|LIST\(\)|include|category|ANAME\(\)|ANAME)\}/gi;
+
+        function normalizeSpaces(value) {
+            return (value || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function cleanLegacyTextArtifacts(text) {
+            let cleaned = text;
+
+            cleaned = cleaned.replace(legacyMacroPattern, ' ');
+            cleaned = cleaned.replace(/\*\*/g, '');
+            cleaned = cleaned.replace(/__+/g, '');
+            cleaned = cleaned.replace(/\s\*:\s*/g, ': ');
+            cleaned = cleaned.replace(/^(\s*)\*\s+/g, '$1');
+            cleaned = cleaned.replace(/\s+\*\s*$/g, '');
+            cleaned = cleaned.replace(/\s+\*(?=\s*---)/g, '');
+            cleaned = cleaned.replace(/\s\*\s*\*(?=\s*\d)/g, ' ');
+            cleaned = cleaned.replace(/\s+\*(?=\s*\d+\.)/g, ' ');
+            cleaned = cleaned.replace(/\s\*\s(?=[A-Za-z0-9\[])/g, ' ');
+            cleaned = cleaned.replace(/\s*---\s*$/g, '');
+            cleaned = cleaned.replace(/_+\s*$/g, '');
+            cleaned = cleaned.replace(/[ \t]{2,}/g, ' ');
+
+            return cleaned;
+        }
+
+        function shouldSkipNode(textNode) {
+            const parent = textNode.parentElement;
+            if (!parent) return true;
+            if (parent.closest('script, style, textarea, code, pre')) return true;
+            return false;
+        }
+
+        function splitOverflowHeadingContent(container) {
+            const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+            headings.forEach((heading) => {
+                const rawText = normalizeSpaces(heading.textContent || '');
+                if (rawText.length < 120) return;
+
+                const splitMatch = rawText.match(/\s(?:\*\s*)?(?:Highlights\s+)?(?:\*\s*)?1\.\s/i);
+                if (!splitMatch) return;
+
+                const splitIndex = splitMatch.index;
+                if (splitIndex === undefined || splitIndex < 30) return;
+
+                const titleText = cleanLegacyTextArtifacts(rawText.slice(0, splitIndex))
+                    .replace(/\s*[:\-|.,;]+$/g, '')
+                    .trim();
+                if (!titleText) return;
+
+                const overflowRaw = rawText.slice(splitIndex).trim();
+                let overflowText = cleanLegacyTextArtifacts(overflowRaw)
+                    .replace(/^Highlights\s*/i, '')
+                    .trim();
+                if (!overflowText) return;
+
+                heading.textContent = titleText;
+
+                const existingOverflow = heading.nextElementSibling;
+                if (existingOverflow && existingOverflow.classList.contains('legacy-heading-overflow')) {
+                    existingOverflow.remove();
+                }
+
+                const listItemMatches = Array.from(
+                    overflowText.matchAll(/(?:^|\s)\d+\.\s+(.+?)(?=(?:\s\d+\.\s+)|$)/g)
+                ).map((match) => normalizeSpaces(match[1] || '')).filter(Boolean);
+
+                if (listItemMatches.length >= 2) {
+                    const list = document.createElement('ul');
+                    list.className = 'legacy-heading-overflow';
+                    listItemMatches.forEach((itemText) => {
+                        const li = document.createElement('li');
+                        li.textContent = itemText;
+                        list.appendChild(li);
+                    });
+                    heading.insertAdjacentElement('afterend', list);
+                    return;
+                }
+
+                overflowText = overflowText.replace(/^\d+\.\s*/, '').trim();
+                if (!overflowText) return;
+
+                const paragraph = document.createElement('p');
+                paragraph.className = 'legacy-heading-overflow';
+                paragraph.textContent = overflowText;
+                heading.insertAdjacentElement('afterend', paragraph);
+            });
+        }
+
+        function cleanupLegacyMarkupArtifacts() {
+            const containers = document.querySelectorAll('.markdown-content');
+
+            containers.forEach((container) => {
+                splitOverflowHeadingContent(container);
+
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+                const nodes = [];
+
+                while (walker.nextNode()) {
+                    nodes.push(walker.currentNode);
+                }
+
+                nodes.forEach((node) => {
+                    if (shouldSkipNode(node)) return;
+
+                    const original = node.nodeValue || '';
+                    if (!original) return;
+
+                    const cleaned = cleanLegacyTextArtifacts(original);
+                    if (cleaned !== original) {
+                        node.nodeValue = cleaned;
+                    }
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', cleanupLegacyMarkupArtifacts);
+        } else {
+            cleanupLegacyMarkupArtifacts();
+        }
+    })();
+    </script>
+    <script>
+    (function() {
         function toAbsoluteUrl(url) {
             if (!url) return null;
             const parser = document.createElement('a');
