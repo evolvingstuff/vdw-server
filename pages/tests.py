@@ -41,6 +41,26 @@ class PageAdminSearchTests(TestCase):
             content_md="Contains the needle keyword",
             status='published',
         )
+        self.prefix_hit = Page.objects.create(
+            title="Thyroid Support",
+            content_md="Body text",
+            status='published',
+        )
+        self.mid_word_hit = Page.objects.create(
+            title="Hypothyroidism Overview",
+            content_md="Body text",
+            status='published',
+        )
+        self.phrase_prefix_hit = Page.objects.create(
+            title="Vitamin D Basics",
+            content_md="Body text",
+            status='published',
+        )
+        self.phrase_mid_word_hit = Page.objects.create(
+            title="Hypovitamin D Basics",
+            content_md="Body text",
+            status='published',
+        )
 
     def tearDown(self):
         self.index_patch.stop()
@@ -61,6 +81,31 @@ class PageAdminSearchTests(TestCase):
         results, _ = self.admin.get_search_results(request, queryset, 'needle')
 
         self.assertNotIn(self.content_hit, results)
+
+    def test_search_matches_phrase_at_start_of_word(self):
+        request = self.factory.get('/admin/posts/page/', {'q': 'thyroid'})
+        queryset = Page.objects.all()
+
+        results, _ = self.admin.get_search_results(request, queryset, 'thyroid')
+
+        self.assertIn(self.prefix_hit, results)
+
+    def test_search_ignores_phrase_inside_word(self):
+        request = self.factory.get('/admin/posts/page/', {'q': 'thyroid'})
+        queryset = Page.objects.all()
+
+        results, _ = self.admin.get_search_results(request, queryset, 'thyroid')
+
+        self.assertNotIn(self.mid_word_hit, results)
+
+    def test_search_matches_multi_word_phrase_at_word_start(self):
+        request = self.factory.get('/admin/posts/page/', {'q': 'vitamin d'})
+        queryset = Page.objects.all()
+
+        results, _ = self.admin.get_search_results(request, queryset, 'vitamin d')
+
+        self.assertIn(self.phrase_prefix_hit, results)
+        self.assertNotIn(self.phrase_mid_word_hit, results)
 
 
 class DerivedTagsFromTitleTests(TestCase):

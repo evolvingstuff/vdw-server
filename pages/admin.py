@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
 from django.utils.html import format_html, escape
-from django.utils.text import slugify
+from django.utils.text import slugify, unescape_string_literal
 from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.utils import timezone
@@ -42,6 +42,36 @@ def _create_tag_with_unique_slug(*, name: str) -> Tag:
         counter += 1
 
     return Tag.objects.create(name=name, slug=slug)
+
+
+def _normalize_admin_search_phrase(raw_phrase: str) -> str:
+    assert isinstance(raw_phrase, str), f"raw_phrase must be str, got {type(raw_phrase)}"
+
+    phrase = raw_phrase.strip()
+    if not phrase:
+        return ''
+
+    is_quoted = len(phrase) >= 2 and phrase[0] == phrase[-1] and phrase[0] in {'"', "'"}
+    if is_quoted:
+        phrase = unescape_string_literal(phrase)
+
+    return slugify(phrase)
+
+
+def _title_matches_admin_search_phrase(title: str, raw_phrase: str) -> bool:
+    assert isinstance(title, str), f"title must be str, got {type(title)}"
+    assert isinstance(raw_phrase, str), f"raw_phrase must be str, got {type(raw_phrase)}"
+
+    title_slug = slugify(title)
+    if not title_slug:
+        return False
+
+    normalized_phrase = _normalize_admin_search_phrase(raw_phrase)
+    if not normalized_phrase:
+        return False
+
+    title_haystack = f"-{title_slug}-"
+    return f"-{normalized_phrase}" in title_haystack
 
 
 class BulkTagPagesActionForm(forms.Form):
@@ -111,6 +141,22 @@ class PageAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(tags_count_annotation=Count('tags'))
         return queryset.prefetch_related('tags')
+
+    def get_search_results(self, request, queryset, search_term):
+        trimmed_search_term = search_term.strip()
+        if not trimmed_search_term:
+            return queryset, False
+
+        matching_page_ids = [
+            page_id
+            for page_id, title in queryset.values_list('pk', 'title')
+            if _title_matches_admin_search_phrase(title, trimmed_search_term)
+        ]
+
+        if not matching_page_ids:
+            return queryset.none(), False
+
+        return queryset.filter(pk__in=matching_page_ids), False
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
