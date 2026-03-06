@@ -126,6 +126,7 @@ class PageAdminQueryOptimizationTests(TestCase):
         self.assertNotIn('"posts_post"."content_html"', sql)
         self.assertNotIn('"posts_post"."content_text"', sql)
         self.assertNotIn('"posts_post"."original_tiki"', sql)
+        self.assertNotIn('LEFT OUTER JOIN "posts_post_tags"', sql)
         self.assertEqual(queryset._prefetch_related_lookups, ())
 
     def test_change_queryset_keeps_large_text_fields_available(self):

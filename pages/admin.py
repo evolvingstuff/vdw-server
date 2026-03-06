@@ -10,7 +10,6 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils.html import format_html, escape
 from django.utils.text import slugify, unescape_string_literal
-from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
@@ -143,7 +142,7 @@ class PageAdminForm(forms.ModelForm):
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     form = PageAdminForm
-    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'tags_count', 'created_date_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
     list_filter = [
         'status',
@@ -161,7 +160,6 @@ class PageAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.annotate(tags_count_annotation=Count('tags'))
         if _is_changelist_request(request):
             return queryset.defer(*PAGE_CHANGELIST_DEFERRED_FIELDS)
         return queryset
@@ -353,15 +351,6 @@ class PageAdmin(admin.ModelAdmin):
         return timezone.localtime(obj.modified_date).strftime('%Y/%m/%d')
     modified_date_display.short_description = "Modified"
     modified_date_display.admin_order_field = 'modified_date'
-
-    def tags_count(self, obj):
-        # Use the annotated count if available, otherwise fall back to counting
-        count = getattr(obj, 'tags_count_annotation', None) or obj.tags.count()
-        if count > 0:
-            return format_html('<span style="font-weight: bold;">{}</span>', count)
-        return format_html('<span style="color: #ccc;">—</span>')
-    tags_count.short_description = "Tags"
-    tags_count.admin_order_field = 'tags_count_annotation'
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
