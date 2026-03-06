@@ -148,14 +148,13 @@ class PageAdmin(admin.ModelAdmin):
         'status',
         ('created_date', DateRangeFieldListFilter),
         ('modified_date', DateRangeFieldListFilter),
-        'tags',
     ]
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
-    date_hierarchy = 'created_date'
     readonly_fields = ['live_link', 'markdown_link_helper', 'html_link_helper', 'tiki_markdown_comparison']
     actions = ['add_tags_to_selected']
+    list_per_page = 25
     show_full_result_count = False
     
     def get_queryset(self, request):
