@@ -6,3 +6,6 @@ class SitePagesConfig(AppConfig):
     name = 'site_pages'
     label = 'pages'
     verbose_name = 'Site Pages'
+
+    def ready(self):
+        import site_pages.signals

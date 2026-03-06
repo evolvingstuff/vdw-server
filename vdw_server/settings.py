@@ -17,6 +17,13 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+
+def _parse_bool_env(raw_value: str | None) -> bool:
+    if raw_value is None:
+        return False
+    normalized = raw_value.strip().lower()
+    return normalized in {'1', 'true', 'yes', 'on'}
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,7 +35,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_0ql%xgcegzyq$ejyco-*3@5u0_c-fgx*-=)4!#5z1#79-e7ej'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # TODO: setting to False BREAKS server on AWS, not sure why
+_debug_value = os.getenv('DJANGO_DEBUG')
+if _debug_value is None:
+    _debug_value = os.getenv('DEBUG')
+DEBUG = _parse_bool_env(_debug_value)
+del _debug_value
 
 ALLOWED_HOSTS = ['*']  # Allow any host for now
 

@@ -90,6 +90,42 @@
         color: #708090;
     }
 
+    .not-found__suggestions-wrap {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.12);
+        text-align: left;
+    }
+
+    .not-found__suggestions-title {
+        margin: 0 0 0.85rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #29465f;
+    }
+
+    .not-found__suggestions {
+        margin: 0;
+        padding-left: 1.2rem;
+        color: #355068;
+    }
+
+    .not-found__suggestions li + li {
+        margin-top: 0.55rem;
+    }
+
+    .not-found__suggestions a {
+        color: #2167ad;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .not-found__suggestions a:hover {
+        text-decoration: underline;
+    }
+
     @media (max-width: 600px) {
         .not-found {
             padding: 2.25rem 1.75rem;
@@ -120,13 +156,27 @@
 {% block content %}
     <section class="not-found" aria-labelledby="not-found-heading">
         <div class="not-found__icon" aria-hidden="true">⌕</div>
-        <h1 id="not-found-heading" class="not-found__title">We couldn't find that page</h1>
+        {% if requested_phrase %}
+            <h1 id="not-found-heading" class="not-found__title">Cannot find "{{ requested_phrase }}"</h1>
+        {% else %}
+            <h1 id="not-found-heading" class="not-found__title">We couldn't find that page</h1>
+        {% endif %}
         <p class="not-found__lead">
-            Maybe the link is outdated or the page has moved. Try searching the site or head back to the homepage.
+            Maybe the link is outdated or the page has moved. Try one of these likely matches, search the site, or head back to the homepage.
         </p>
+        {% if suggestions %}
+            <div class="not-found__suggestions-wrap">
+                <h2 class="not-found__suggestions-title">Possible matches</h2>
+                <ol class="not-found__suggestions">
+                    {% for suggestion in suggestions %}
+                        <li><a href="{{ suggestion.url }}">{{ suggestion.title }}</a></li>
+                    {% endfor %}
+                </ol>
+            </div>
+        {% endif %}
         <div class="not-found__actions">
             <a href="/" class="primary">Go to homepage</a>
-            <a href="/pages/" class="secondary">Browse latest pages</a>
+            <a href="/pages/recent/" class="secondary">Browse latest pages</a>
         </div>
         <p class="not-found__search-hint">
             Tip: The search bar above looks across site pages and published content.
