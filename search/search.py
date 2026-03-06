@@ -1,13 +1,33 @@
 import logging
+import re
 
 import meilisearch
 from django.conf import settings
+from django.db.models import Q
 from django.utils.text import slugify
 from meilisearch.errors import MeilisearchApiError
-from django.db.models import Q
+
 from pages.models import Page
 
 logger = logging.getLogger(__name__)
+
+SEARCH_PRIORITY_CATEGORY = 1
+SEARCH_PRIORITY_RCT = 2
+SEARCH_PRIORITY_META_ANALYSIS = 3
+SEARCH_PRIORITY_SEVERAL_STUDIES = 4
+SEARCH_PRIORITY_MANY_STUDIES = 5
+SEARCH_PRIORITY_EXTENDED = 6
+SEARCH_PRIORITY_OVERVIEW = 7
+SEARCH_PRIORITY_SUMMARY = 8
+
+SUMMARY_PATTERN = re.compile(r'(?<![a-z0-9])summary(?![a-z0-9])')
+OVERVIEW_PATTERN = re.compile(r'(?<![a-z0-9])overview(?![a-z0-9])')
+EXTENDED_PATTERN = re.compile(r'(?<![a-z0-9])extended(?![a-z0-9])')
+MANY_STUDIES_PATTERN = re.compile(r'(?<![a-z0-9])many\s+studies(?![a-z0-9])')
+SEVERAL_STUDIES_PATTERN = re.compile(r'(?<![a-z0-9])several\s+studies(?![a-z0-9])')
+META_ANALYSIS_PATTERN = re.compile(r'(?<![a-z0-9])meta\s+analysis(?![a-z0-9])')
+RCT_PATTERN = re.compile(r'(?<![a-z0-9])(?:\d+\s+)?rct(?![a-z0-9])')
+QUERY_TOKEN_PATTERN = re.compile(r'[a-z0-9]+')
 
 
 def get_search_client():
@@ -93,6 +113,47 @@ def wait_for_task(index, task_info, task_name: str) -> None:
     index.wait_for_task(task_info.task_uid)
 
 
+def normalize_priority_text(value: str) -> str:
+    assert isinstance(value, str), f"value must be str, got {type(value)}"
+
+    normalized = value.casefold()
+    normalized = re.sub(r'[-_]+', ' ', normalized)
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    return normalized
+
+
+def normalize_query_match_text(value: str) -> str:
+    assert isinstance(value, str), f"value must be str, got {type(value)}"
+
+    return value.casefold()
+
+
+def extract_query_tokens(query: str) -> list[str]:
+    assert isinstance(query, str), f"query must be str, got {type(query)}"
+
+    return QUERY_TOKEN_PATTERN.findall(normalize_query_match_text(query))
+
+
+def build_query_match_pattern(query: str) -> re.Pattern[str] | None:
+    assert isinstance(query, str), f"query must be str, got {type(query)}"
+
+    query_tokens = extract_query_tokens(query)
+    if not query_tokens:
+        return None
+
+    pattern = r'(?<![a-z0-9])' + r'[\s_-]+'.join(re.escape(token) for token in query_tokens) + r'(?![a-z0-9])'
+    return re.compile(pattern)
+
+
+def has_clean_query_match(text: str, query_pattern: re.Pattern[str] | None) -> bool:
+    assert isinstance(text, str), f"text must be str, got {type(text)}"
+
+    if query_pattern is None:
+        return False
+
+    return bool(query_pattern.search(normalize_query_match_text(text)))
+
+
 def compute_search_priority(tag_names: list[str], tag_slugs: list[str], title: str) -> int:
     assert isinstance(tag_names, list), f"tag_names must be list, got {type(tag_names)}"
     assert isinstance(tag_slugs, list), f"tag_slugs must be list, got {type(tag_slugs)}"
@@ -100,23 +161,27 @@ def compute_search_priority(tag_names: list[str], tag_slugs: list[str], title: s
     assert all(isinstance(name, str) for name in tag_names), "tag_names must contain strings"
     assert all(isinstance(slug, str) for slug in tag_slugs), "tag_slugs must contain strings"
 
-    tag_names_lower = [name.casefold() for name in tag_names]
-    tag_slugs_lower = [slug.casefold() for slug in tag_slugs]
-    tag_keys = tag_names_lower + tag_slugs_lower
-    normalized_tag_keys = [key.replace('-', ' ') for key in tag_keys]
+    normalized_tag_keys = [
+        normalize_priority_text(key) for key in [*tag_names, *tag_slugs]
+    ]
+    normalized_title = normalize_priority_text(title)
 
-    title_casefold = title.casefold()
-    many_studies_token = 'many studies'
-
-    has_overview = any('overview' in key for key in normalized_tag_keys) or ('overview' in title_casefold)
-    has_category = any(key.startswith('category') for key in normalized_tag_keys)
-
-    if has_overview:
-        return 3
-    if many_studies_token in title_casefold or any(many_studies_token in key for key in normalized_tag_keys):
-        return 2
-    if has_category:
-        return 1
+    if is_summary_hit(normalized_tag_keys):
+        return SEARCH_PRIORITY_SUMMARY
+    if is_overview_hit(normalized_title, normalized_tag_keys):
+        return SEARCH_PRIORITY_OVERVIEW
+    if is_extended_hit(normalized_tag_keys):
+        return SEARCH_PRIORITY_EXTENDED
+    if is_many_studies_hit(normalized_title, normalized_tag_keys):
+        return SEARCH_PRIORITY_MANY_STUDIES
+    if is_several_studies_hit(normalized_title, normalized_tag_keys):
+        return SEARCH_PRIORITY_SEVERAL_STUDIES
+    if is_meta_analysis_hit(normalized_tag_keys):
+        return SEARCH_PRIORITY_META_ANALYSIS
+    if is_rct_hit(normalized_title, normalized_tag_keys):
+        return SEARCH_PRIORITY_RCT
+    if is_category_hit(normalized_tag_keys):
+        return SEARCH_PRIORITY_CATEGORY
     return 0
 
 
@@ -127,12 +192,28 @@ def derive_tag_slugs(tag_names: list[str]) -> list[str]:
     return [slugify(name) for name in tag_names]
 
 
+def is_summary_hit(tags_casefold: list[str]) -> bool:
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    return any(SUMMARY_PATTERN.search(tag) for tag in tags_casefold)
+
+
 def is_overview_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
     assert isinstance(title_casefold, str), f"title_casefold must be str, got {type(title_casefold)}"
     assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
     assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
 
-    return 'overview' in title_casefold or any('overview' in tag for tag in tags_casefold)
+    return bool(OVERVIEW_PATTERN.search(title_casefold)) or any(
+        OVERVIEW_PATTERN.search(tag) for tag in tags_casefold
+    )
+
+
+def is_extended_hit(tags_casefold: list[str]) -> bool:
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    return any(EXTENDED_PATTERN.search(tag) for tag in tags_casefold)
 
 
 def is_many_studies_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
@@ -140,10 +221,36 @@ def is_many_studies_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
     assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
     assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
 
-    many_studies_token = 'many studies'
-    if many_studies_token in title_casefold:
+    if MANY_STUDIES_PATTERN.search(title_casefold):
         return True
-    return any(many_studies_token in tag for tag in tags_casefold)
+    return any(MANY_STUDIES_PATTERN.search(tag) for tag in tags_casefold)
+
+
+def is_several_studies_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
+    assert isinstance(title_casefold, str), f"title_casefold must be str, got {type(title_casefold)}"
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    if SEVERAL_STUDIES_PATTERN.search(title_casefold):
+        return True
+    return any(SEVERAL_STUDIES_PATTERN.search(tag) for tag in tags_casefold)
+
+
+def is_meta_analysis_hit(tags_casefold: list[str]) -> bool:
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    return any(META_ANALYSIS_PATTERN.search(tag) for tag in tags_casefold)
+
+
+def is_rct_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
+    assert isinstance(title_casefold, str), f"title_casefold must be str, got {type(title_casefold)}"
+    assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
+    assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
+
+    if RCT_PATTERN.search(title_casefold):
+        return True
+    return any(RCT_PATTERN.search(tag) for tag in tags_casefold)
 
 
 def is_category_hit(tags_casefold: list[str]) -> bool:
@@ -159,7 +266,7 @@ def sort_hits_by_priority(hits: list[dict], query: str) -> list[dict]:
     assert isinstance(query, str), f"query must be str, got {type(query)}"
 
     sortable_hits = []
-    query_casefold = query.casefold()
+    query_pattern = build_query_match_pattern(query)
     for hit in hits:
         title = hit['title']
         tags = hit['tags']
@@ -168,22 +275,37 @@ def sort_hits_by_priority(hits: list[dict], query: str) -> list[dict]:
         assert isinstance(tags, list), f"tags must be list, got {type(tags)}"
         assert isinstance(modified_date, int), f"modified_date must be int, got {type(modified_date)}"
 
-        title_casefold = title.casefold()
-        tags_casefold = [tag.casefold() for tag in tags]
-        title_match = 1 if query_casefold and query_casefold in title_casefold else 0
-        tag_match = 1 if query_casefold and any(query_casefold == tag for tag in tags_casefold) else 0
+        title_casefold = normalize_priority_text(title)
+        tags_casefold = [normalize_priority_text(tag) for tag in tags]
+        title_match = 1 if has_clean_query_match(title, query_pattern) else 0
+        tag_match = 1 if any(has_clean_query_match(tag, query_pattern) for tag in tags) else 0
         strong_match = 1 if title_match or tag_match else 0
 
+        has_summary = is_summary_hit(tags_casefold)
         has_overview = is_overview_hit(title_casefold, tags_casefold)
+        has_extended = is_extended_hit(tags_casefold)
         has_many_studies = is_many_studies_hit(title_casefold, tags_casefold)
+        has_several_studies = is_several_studies_hit(title_casefold, tags_casefold)
+        has_meta_analysis = is_meta_analysis_hit(tags_casefold)
+        has_rct = is_rct_hit(title_casefold, tags_casefold)
         has_category = is_category_hit(tags_casefold)
 
-        if has_overview and strong_match:
-            effective_priority = 3
-        elif has_many_studies:
-            effective_priority = 2
+        if has_summary and strong_match:
+            effective_priority = SEARCH_PRIORITY_SUMMARY
+        elif has_overview and strong_match:
+            effective_priority = SEARCH_PRIORITY_OVERVIEW
+        elif has_extended and strong_match:
+            effective_priority = SEARCH_PRIORITY_EXTENDED
+        elif has_many_studies and strong_match:
+            effective_priority = SEARCH_PRIORITY_MANY_STUDIES
+        elif has_several_studies and strong_match:
+            effective_priority = SEARCH_PRIORITY_SEVERAL_STUDIES
+        elif has_meta_analysis and strong_match:
+            effective_priority = SEARCH_PRIORITY_META_ANALYSIS
+        elif has_rct and strong_match:
+            effective_priority = SEARCH_PRIORITY_RCT
         elif has_category and strong_match:
-            effective_priority = 1
+            effective_priority = SEARCH_PRIORITY_CATEGORY
         else:
             effective_priority = 0
 
@@ -218,18 +340,19 @@ def has_overview_query_match(hit: dict, query_casefold: str) -> bool:
     if not isinstance(title, str) or not isinstance(tags, list):
         return False
 
-    title_casefold = title.casefold()
-    tags_casefold = [tag.casefold() for tag in tags if isinstance(tag, str)]
+    title_casefold = normalize_priority_text(title)
+    tags_casefold = [normalize_priority_text(tag) for tag in tags if isinstance(tag, str)]
     if not is_overview_hit(title_casefold, tags_casefold):
         return False
 
-    if not query_casefold:
+    query_pattern = build_query_match_pattern(query_casefold)
+    if query_pattern is None:
         return False
 
-    if query_casefold in title_casefold:
+    if has_clean_query_match(title, query_pattern):
         return True
 
-    return any(query_casefold == tag for tag in tags_casefold)
+    return any(has_clean_query_match(tag, query_pattern) for tag in tags if isinstance(tag, str))
 
 
 def fetch_overview_hits(query: str, limit: int = 10) -> list[dict]:
@@ -385,7 +508,7 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
         search_payload['cropLength'] = 150
         search_payload['attributesToCrop'] = attributes_to_crop
 
-    query_terms = [term for term in query.split() if term]
+    query_terms = extract_query_tokens(query)
     if len(query_terms) >= 2:
         search_payload['matchingStrategy'] = 'all'
 
