@@ -7,6 +7,23 @@ from core.admin_filters import DateRangeFieldListFilter
 from .models import SitePage
 
 
+def _is_changelist_request(request) -> bool:
+    resolver_match = getattr(request, 'resolver_match', None)
+    if resolver_match is None:
+        return False
+
+    url_name = getattr(resolver_match, 'url_name', '') or ''
+    return url_name.endswith('_changelist')
+
+
+SITE_PAGE_CHANGELIST_DEFERRED_FIELDS = (
+    'content_md',
+    'content_html',
+    'content_text',
+    'meta_description',
+)
+
+
 class SitePageAdminForm(forms.ModelForm):
     class Meta:
         model = SitePage
@@ -32,6 +49,13 @@ class SitePageAdmin(admin.ModelAdmin):
         ('modified_date', DateRangeFieldListFilter),
     ]
     search_fields = ['title', 'content_md', 'meta_description']
+    show_full_result_count = False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if _is_changelist_request(request):
+            return queryset.defer(*SITE_PAGE_CHANGELIST_DEFERRED_FIELDS)
+        return queryset
 
     def get_prepopulated_fields(self, request, obj=None):
         # Don't prepopulate slug for homepage (it's readonly)

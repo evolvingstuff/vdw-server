@@ -74,6 +74,27 @@ def _title_matches_admin_search_phrase(title: str, raw_phrase: str) -> bool:
     return f"-{normalized_phrase}" in title_haystack
 
 
+def _is_changelist_request(request) -> bool:
+    resolver_match = getattr(request, 'resolver_match', None)
+    if resolver_match is None:
+        return False
+
+    url_name = getattr(resolver_match, 'url_name', '') or ''
+    return url_name.endswith('_changelist')
+
+
+PAGE_CHANGELIST_DEFERRED_FIELDS = (
+    'content_md',
+    'content_html',
+    'content_text',
+    'meta_description',
+    'notes',
+    'aliases',
+    'front_matter',
+    'original_tiki',
+)
+
+
 class BulkTagPagesActionForm(forms.Form):
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
@@ -136,11 +157,14 @@ class PageAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_date'
     readonly_fields = ['live_link', 'markdown_link_helper', 'html_link_helper', 'tiki_markdown_comparison']
     actions = ['add_tags_to_selected']
+    show_full_result_count = False
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(tags_count_annotation=Count('tags'))
-        return queryset.prefetch_related('tags')
+        if _is_changelist_request(request):
+            return queryset.defer(*PAGE_CHANGELIST_DEFERRED_FIELDS)
+        return queryset
 
     def get_search_results(self, request, queryset, search_term):
         trimmed_search_term = search_term.strip()

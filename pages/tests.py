@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.admin import helpers
@@ -106,6 +107,38 @@ class PageAdminSearchTests(TestCase):
 
         self.assertIn(self.phrase_prefix_hit, results)
         self.assertNotIn(self.phrase_mid_word_hit, results)
+
+
+class PageAdminQueryOptimizationTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.site = AdminSite()
+        self.admin = PageAdmin(Page, self.site)
+
+    def test_changelist_queryset_defers_large_text_fields(self):
+        request = self.factory.get('/admin/posts/page/')
+        request.resolver_match = SimpleNamespace(url_name='pages_page_changelist')
+
+        queryset = self.admin.get_queryset(request)
+        sql = str(queryset.query)
+
+        self.assertNotIn('"posts_post"."content_md"', sql)
+        self.assertNotIn('"posts_post"."content_html"', sql)
+        self.assertNotIn('"posts_post"."content_text"', sql)
+        self.assertNotIn('"posts_post"."original_tiki"', sql)
+        self.assertEqual(queryset._prefetch_related_lookups, ())
+
+    def test_change_queryset_keeps_large_text_fields_available(self):
+        request = self.factory.get('/admin/posts/page/1/change/')
+        request.resolver_match = SimpleNamespace(url_name='pages_page_change')
+
+        queryset = self.admin.get_queryset(request)
+        sql = str(queryset.query)
+
+        self.assertIn('"posts_post"."content_md"', sql)
+        self.assertIn('"posts_post"."content_html"', sql)
+        self.assertIn('"posts_post"."content_text"', sql)
+        self.assertIn('"posts_post"."original_tiki"', sql)
 
 
 class DerivedTagsFromTitleTests(TestCase):
