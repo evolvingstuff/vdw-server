@@ -3,11 +3,21 @@ from pathlib import Path
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import render
+from vdw_server.not_found_suggestions import get_not_found_suggestions
 
 
 def custom_page_not_found(request, exception, template_name="404.html"):
     """Render a friendly 404 page with the correct status code."""
-    return render(request, template_name, status=404)
+    requested_phrase, suggestions = get_not_found_suggestions(request)
+    return render(
+        request,
+        template_name,
+        {
+            'requested_phrase': requested_phrase,
+            'suggestions': suggestions,
+        },
+        status=404,
+    )
 
 
 def sitemap_xml(request):

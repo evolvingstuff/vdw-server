@@ -10,6 +10,7 @@ from django.urls import reverse
 from pages.alias_cache import load_alias_redirects, lookup_path, lookup_plain
 from pages.models import Page
 from site_pages.models import SitePage
+from vdw_server.not_found_suggestions import load_not_found_suggestions
 
 
 class LegacyAliasRedirectMiddleware:
@@ -18,6 +19,7 @@ class LegacyAliasRedirectMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         load_alias_redirects()
+        load_not_found_suggestions()
 
     def __call__(self, request):
         if self._should_skip(request):
