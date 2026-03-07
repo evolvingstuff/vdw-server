@@ -545,6 +545,33 @@ class MostRecentPageListTests(TestCase):
         self.assertContains(response, 'href="/pages/recent/"')
 
 
+class PageDetailPrintTemplateTests(TestCase):
+    def setUp(self):
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_page_detail_renders_print_metadata_and_css(self):
+        page = Page.objects.create(
+            title="Print Friendly Page",
+            content_md="Body copy for printing",
+            status="published",
+        )
+
+        response = self.client.get(reverse('page_detail', args=[page.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="print-page-metadata"')
+        self.assertContains(response, f'URL: http://testserver/pages/{page.slug}/')
+        self.assertContains(response, 'data-print-generated-at')
+        self.assertContains(response, '@page')
+
+
 class RecentPageCacheTests(TestCase):
     def setUp(self):
         self.index_patch = patch('pages.signals.index_page')

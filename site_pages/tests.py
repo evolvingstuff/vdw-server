@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from django.contrib.admin.sites import AdminSite
+from django.urls import reverse
 from django.test import RequestFactory, TestCase
 
 from site_pages.admin import SitePageAdmin
@@ -35,3 +36,21 @@ class SitePageAdminQueryOptimizationTests(TestCase):
         self.assertIn('"pages_page"."content_md"', sql)
         self.assertIn('"pages_page"."content_html"', sql)
         self.assertIn('"pages_page"."content_text"', sql)
+
+
+class SitePageDetailPrintTemplateTests(TestCase):
+    def test_site_page_detail_renders_print_metadata(self):
+        page = SitePage.objects.create(
+            title="About Print Layouts",
+            slug="about-print-layouts",
+            page_type="custom",
+            content_md="Body copy for a site page",
+            is_published=True,
+        )
+
+        response = self.client.get(reverse('site_page_detail', args=[page.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="print-page-metadata"')
+        self.assertContains(response, 'class="post-footer print-only-footer"')
+        self.assertContains(response, f'URL: http://testserver/{page.slug}/')

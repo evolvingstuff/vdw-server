@@ -259,6 +259,15 @@
             vertical-align: top;
         }
 
+        .print-page-metadata,
+        .print-only-footer {
+            display: none;
+        }
+
+        @page {
+            margin: 0.85in 0.7in 0.9in;
+        }
+
         @media (max-width: 768px) {
             .scroll-controls {
                 right: 10px;
@@ -270,6 +279,93 @@
             .scroll-button {
                 width: 44px;
                 height: 44px;
+            }
+        }
+
+        @media print {
+            html,
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                height: auto !important;
+                margin: 0 !important;
+                max-width: none !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            body {
+                font-size: 11pt;
+                line-height: 1.45;
+            }
+
+            main,
+            article,
+            .page-content,
+            .markdown-content {
+                margin: 0 !important;
+                max-width: none !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            .global-search-bar,
+            .scroll-controls,
+            .post-toc,
+            .page-return-nav {
+                display: none !important;
+            }
+
+            .print-only-footer,
+            .print-page-metadata {
+                display: block !important;
+            }
+
+            .print-page-metadata {
+                border-top: 1px solid #bbb;
+                break-inside: avoid-page;
+                color: #444;
+                font-size: 10pt;
+                margin-top: 2rem;
+                padding-top: 0.75rem;
+                page-break-inside: avoid;
+            }
+
+            .print-page-url,
+            .print-page-generated-at {
+                display: block;
+            }
+
+            .print-page-url {
+                word-break: break-word;
+            }
+
+            .print-page-generated-at {
+                margin-top: 0.2rem;
+            }
+
+            .post-footer {
+                break-inside: avoid-page;
+                page-break-inside: avoid;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                break-after: avoid-page;
+                page-break-after: avoid;
+            }
+
+            img,
+            table,
+            pre,
+            blockquote,
+            tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
 
@@ -995,6 +1091,35 @@
         } else {
             makeImagesOpenInNewTab();
         }
+    })();
+    </script>
+    <script>
+    (function() {
+        const printDateFormatter = new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+
+        function updatePrintGeneratedAt() {
+            const targets = document.querySelectorAll('[data-print-generated-at]');
+            if (!targets.length) {
+                return;
+            }
+
+            const printDate = printDateFormatter.format(new Date());
+            targets.forEach((target) => {
+                target.textContent = `Printed ${printDate}`;
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updatePrintGeneratedAt, { once: true });
+        } else {
+            updatePrintGeneratedAt();
+        }
+
+        window.addEventListener('beforeprint', updatePrintGeneratedAt);
     })();
     </script>
     <script>

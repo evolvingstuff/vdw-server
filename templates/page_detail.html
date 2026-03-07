@@ -21,8 +21,12 @@
     </div>
 </article>
 
+<footer class="post-footer print-only-footer">
+    {% include 'components/print_page_metadata.html' %}
+</footer>
+
 {% if not is_homepage %}
-<nav style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
+<nav class="page-return-nav" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
     <a href="{% url 'homepage' %}">← Back to Home</a>
 </nav>
 {% endif %}

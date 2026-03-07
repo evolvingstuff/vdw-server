@@ -35,6 +35,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - Admin page search: `pages.admin.PageAdmin.get_search_results` → slugified title-only phrase match at the start of a word (`thyroid` matches `Thyroid Support`, not `Hypothyroidism`); keeps Django admin date/tag filters separate from visitor search ranking
 - Search: frontend query → `search.views.search_api` (`limit`+`offset`, capped at 1000) → MeiliSearch (`search/search.py`) → hits + `totalHits` (shown as `1000+` when ≥1000)
 - Most-recent index: `GET /pages/recent/` → `pages.views.recent_page_list` → latest 150 published pages by `modified_date` (display date `MM/YYYY`)
+- Print output: shared `templates/base.html` print CSS removes fixed UI (header, TOC, scroll controls), sets page margins, and appends print metadata (URL/date) through `templates/components/print_page_metadata.html`
 - Smart 404 flow: unmatched request → `vdw_server.views.custom_page_not_found` → `vdw_server.not_found_suggestions.get_not_found_suggestions()` → styled `templates/404.html` with likely matches and CTA to `/pages/recent/`
 - Render-time legacy cleanup: `templates/base.html` JS rewrites bracketed legacy Tiki page-id text to clickable aliases, strips malformed `#F00 ... RCT` markup artifacts into a red `RCT` label + clean title links, normalizes stray `*`/macro artifacts, restores missing spacing around legacy inline citation links, converts `{BOX(...)} ... {BOX}` blocks into bordered containers, and calls `pages/static/pages/js/legacy_box_rendering.js` to reconstruct broken markdown-like tables/lists/hr content inside legacy HTML boxes before making markdown images open in a new tab.
 - Data import: `conversion_md_to_db.py` wipes DB, runs migrations, seeds pages/site pages/tags from Markdown dumps, rebuilds search index
@@ -61,4 +62,5 @@ python manage.py runserver  # auto-starts MeiliSearch locally if available
 - Admin redirect middleware: `vdw_server/middleware.py#L1`
 - Legacy alias redirect flow: `pages/alias_cache.py`, `vdw_server/middleware.py#L1`
 - Frontend post-processing fixes: `templates/base.html` + `pages/static/pages/js/legacy_box_rendering.js` (URL linkify, legacy Tiki bracket linkify, RCT cleanup, legacy box/hr conversion, box markdown reconstruction, inline-link spacing repair, clickable images)
+- Print metadata partial: `templates/components/print_page_metadata.html`
 - Bulk import script: `conversion_md_to_db.py#L1`
