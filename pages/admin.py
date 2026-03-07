@@ -148,6 +148,7 @@ class PageAdmin(admin.ModelAdmin):
         'status',
         ('created_date', DateRangeFieldListFilter),
         ('modified_date', DateRangeFieldListFilter),
+        'tags',
     ]
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}

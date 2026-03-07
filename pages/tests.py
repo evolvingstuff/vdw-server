@@ -142,6 +142,41 @@ class PageAdminQueryOptimizationTests(TestCase):
         self.assertIn('"posts_post"."original_tiki"', sql)
 
 
+class PageAdminListFilterTests(TestCase):
+    def setUp(self):
+        self.site = AdminSite()
+        self.admin = PageAdmin(Page, self.site)
+
+        user_model = get_user_model()
+        self.user = user_model.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password",
+        )
+
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_changelist_exposes_tag_filter(self):
+        tag = Tag.objects.create(name="Vitamin D", slug="vitamin-d")
+        page = Page.objects.create(title="Tagged page", content_md="Body", status="draft")
+        page.tags.add(tag)
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("admin:posts_page_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        filter_titles = [filter_spec.title for filter_spec in response.context["cl"].filter_specs]
+        self.assertIn("tags", filter_titles)
+
+
 class DerivedTagsFromTitleTests(TestCase):
     def test_title_implies_existing_tags(self):
         Tag.objects.create(name="Alcohol", slug="alcohol")
