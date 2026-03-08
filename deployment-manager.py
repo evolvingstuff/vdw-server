@@ -2449,7 +2449,7 @@ def main():
             print("CODE DEPLOYMENT")
             print("=" * 50)
             print("This will:")
-            print("  • Pull latest code from GitHub")
+            print("  • Upload your current local code to the selected server")
             print("  • Rebuild Docker containers")
             print("  • Restart services")
             
@@ -2465,7 +2465,7 @@ def main():
             print("FULL DEPLOYMENT")
             print("=" * 50)
             print("This will:")
-            print("  • Deploy code (git pull + rebuild)")
+            print("  • Deploy code (upload local code + rebuild)")
             print("  • Deploy database (upload + reindex)")
             
             if input("\nProceed? (y/n): ").lower() == 'y':

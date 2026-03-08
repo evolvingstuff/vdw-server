@@ -75,6 +75,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'vdw_server.middleware.RequestLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -199,3 +200,35 @@ if SEARCH_RESULTS_DISPLAY_MODE not in _valid_display_modes:
         % (sorted(_valid_display_modes), SEARCH_RESULTS_DISPLAY_MODE)
     )
 del _valid_display_modes
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'vdw_server.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

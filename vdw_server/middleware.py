@@ -1,16 +1,49 @@
+import logging
 import re
-from pathlib import Path
+import uuid
 from typing import Iterable, Optional
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponsePermanentRedirect
+from django.http import Http404, HttpResponse, HttpResponsePermanentRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.deprecation import MiddlewareMixin
 
 from pages.alias_cache import load_alias_redirects, lookup_path, lookup_plain
 from pages.models import Page
 from site_pages.models import SitePage
 from vdw_server.not_found_suggestions import load_not_found_suggestions
+from vdw_server.restore_state import maintenance_lock_path
+
+request_logger = logging.getLogger("vdw_server.request")
+
+
+class RequestLoggingMiddleware(MiddlewareMixin):
+    """Attach a request ID and log unhandled exceptions with request context."""
+
+    def process_request(self, request):
+        request.request_id = uuid.uuid4().hex[:12]
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, Http404):
+            return None
+        request_logger.exception(
+            "Unhandled exception request_id=%s method=%s path=%s host=%s remote=%s user_id=%s exception=%s",
+            getattr(request, "request_id", "-"),
+            request.method,
+            request.get_full_path(),
+            _safe_request_host(request),
+            request.META.get("REMOTE_ADDR", "-"),
+            _request_user_id(request),
+            exception.__class__.__name__,
+        )
+        return None
+
+    def process_response(self, request, response):
+        request_id = getattr(request, "request_id", None)
+        if request_id:
+            response["X-Request-ID"] = request_id
+        return response
 
 
 class LegacyAliasRedirectMiddleware:
@@ -236,7 +269,7 @@ class MaintenanceModeMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.sentinel_path = Path(settings.BASE_DIR) / "tmp" / "maintenance.lock"
+        self.sentinel_path = maintenance_lock_path()
 
     def __call__(self, request):
         if self.sentinel_path.exists() and not self._should_allow(request):
@@ -258,3 +291,24 @@ class MaintenanceModeMiddleware:
         if user and user.is_authenticated and user.is_staff and path.startswith("/admin/"):
             return True
         return False
+
+
+def _safe_request_host(request) -> str:
+    forwarded_host = request.META.get("HTTP_X_FORWARDED_HOST")
+    if forwarded_host:
+        return forwarded_host
+    host = request.META.get("HTTP_HOST")
+    if host:
+        return host
+    server_name = request.META.get("SERVER_NAME")
+    server_port = request.META.get("SERVER_PORT")
+    if server_name and server_port:
+        return f"{server_name}:{server_port}"
+    return "-"
+
+
+def _request_user_id(request):
+    user = getattr(request, "user", None)
+    if not user or not getattr(user, "is_authenticated", False):
+        return "-"
+    return getattr(user, "pk", "-")
