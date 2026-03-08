@@ -116,7 +116,7 @@ python deployment-manager.py
 
 ### 3. Deploy Code
 - Uploads fresh code from your local working copy
-- Rebuilds Docker images, restarts containers, and runs Django migrations
+- Rebuilds Docker images, restarts containers under Gunicorn, and runs Django migrations
 
 ### 4. Deploy Database
 - Uploads the local SQLite database to `/app/data/db.sqlite3`
@@ -148,6 +148,11 @@ python deployment-manager.py
 
 ### 13. Restore Local Database from S3 Backup
 - Lists manual backups stored under `s3://<bucket>/db_backups/manual_backups/`, downloads the selected file, and swaps it into `DEPLOY_LOCAL_DB` so you can inspect production data locally.
+
+### Admin Restore Safety
+- Admin-triggered production restores now leave the public site in maintenance mode until the Django/Gunicorn process is restarted cleanly.
+- The restore flow validates SQLite integrity and homepage invariants before and after the DB swap.
+- If validation fails, the original DB is restored and maintenance mode is lifted automatically.
 
 ### 14. Lock Security Group to SSH + HTTPS Only
 - Prompts you to pick the prod/test host, inspects that instance’s attached security group (letting you choose if multiple are present), removes all existing inbound rules, then recreates just two: port 22/tcp (respecting `ssh_ingress_cidr`) and port 443/tcp for everyone. Run this once nginx or your load balancer handles HTTPS so no other ports stay open publicly.
@@ -248,7 +253,7 @@ python deployment-manager.py
 2. Uploads all Python files, requirements, Docker configs
 3. Uploads application directories (pages, templates, static, etc.)
 4. Excludes: .git, __pycache__, .env, db.sqlite3, venv
-5. Rebuilds and restarts Docker containers, runs database migrations, and executes `collectstatic` so images/CSS land in `/app/static`
+5. Rebuilds and restarts Docker containers, serves Django through Gunicorn, runs database migrations, and executes `collectstatic` so images/CSS land in `/app/static`
 6. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`
 
 ### Database Deployment Process
@@ -257,6 +262,14 @@ python deployment-manager.py
 3. Sets root:root ownership and 644 permissions (required for Docker)
 4. Restarts Django container
 5. Rebuilds search index automatically
+
+### In-App Admin Restore Process
+1. Download the selected S3 backup to a temporary SQLite file on disk
+2. Validate SQLite integrity plus required app invariants before touching the live DB
+3. Turn on maintenance mode and swap the validated DB into place
+4. Validate the installed DB again
+5. Keep public traffic in maintenance mode until Django/Gunicorn restarts and startup validation clears the maintenance lock
+6. Roll back to the pre-restore DB automatically if install-time validation fails
 
 ### Security Features
 - Uses SSH key authentication

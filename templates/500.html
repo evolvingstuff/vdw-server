@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error - VitaminDWiki</title>
+    <style>
+        body {
+            background: #f7f5ef;
+            color: #222;
+            font-family: Georgia, "Times New Roman", serif;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        main {
+            background: #fff;
+            border: 1px solid #ddd4bf;
+            border-radius: 12px;
+            margin: 4rem auto;
+            max-width: 42rem;
+            padding: 2rem;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        a {
+            color: #0b5cad;
+        }
+
+        .request-id {
+            color: #6b675e;
+            font-family: monospace;
+            font-size: 0.95rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>VitaminDWiki hit a server error</h1>
+        <p>The request failed on the server. Please try again after a restart or a short wait.</p>
+        <p><a href="/">Return to the homepage</a></p>
+        {% if request_id %}
+        <p class="request-id">Request ID: {{ request_id }}</p>
+        {% endif %}
+    </main>
+</body>
+</html>

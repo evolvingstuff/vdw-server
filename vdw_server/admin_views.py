@@ -7,7 +7,6 @@ import shutil
 import os
 import sqlite3
 import tempfile
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, List
 
@@ -23,6 +22,12 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
+from vdw_server.restore_state import (
+    clear_pending_restore_restart,
+    maintenance_lock,
+    mark_pending_restore_restart,
+    validate_sqlite_database,
+)
 from vdw_server.sitemap_utils import refresh_sitemap as regenerate_sitemap
 
 logger = logging.getLogger(__name__)
@@ -130,7 +135,13 @@ def manual_restore(request: HttpRequest) -> HttpResponse:
                 logger.exception("Manual restore failed for %s", chosen_backup)
                 messages.error(request, f"Restore failed: {exc}")
             else:
-                messages.success(request, f"Restored backup: {chosen_backup}")
+                messages.success(
+                    request,
+                    (
+                        f"Restored backup: {chosen_backup}. "
+                        "Public traffic stays in maintenance mode until Django is restarted cleanly."
+                    ),
+                )
                 return redirect(reverse("admin:index"))
 
     context = admin.site.each_context(request)
@@ -223,6 +234,7 @@ def _restore_backup(s3_path: str) -> None:
 
     temp_path = _download_backup_to_tempfile(s3_path)
     try:
+        validate_sqlite_database(temp_path)
         _swap_in_backup(temp_path, s3_path)
     finally:
         temp_path.unlink(missing_ok=True)
@@ -266,33 +278,25 @@ def _swap_in_backup(temp_path: Path, s3_path: str) -> None:
     timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
     pre_restore_path = db_path.with_suffix(f".pre_restore_{timestamp}.sqlite3")
 
-    with _maintenance_lock("manual restore in progress"):
+    with maintenance_lock("manual restore in progress") as maintenance_state:
         connections.close_all()
         logger.info("Renaming active DB %s to %s", db_path, pre_restore_path)
         db_path.replace(pre_restore_path)
         try:
             logger.info("Installing backup from %s", s3_path)
             temp_path.replace(db_path)
+            summary = validate_sqlite_database(db_path)
+            mark_pending_restore_restart(s3_path)
+            maintenance_state["clear_on_exit"] = False
+            logger.warning(
+                "Manual restore installed %s and kept maintenance mode active until restart; homepage=%s (%s)",
+                s3_path,
+                summary.homepage_id,
+                summary.homepage_title,
+            )
         except Exception:
             logger.exception("Failed to install backup, restoring original DB")
+            clear_pending_restore_restart()
             if pre_restore_path.exists():
                 pre_restore_path.replace(db_path)
             raise
-
-
-@contextmanager
-def _maintenance_lock(reason: str):
-    tmp_dir = Path(settings.BASE_DIR) / "tmp"
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    sentinel = tmp_dir / "maintenance.lock"
-    if sentinel.exists():
-        raise RuntimeError("Maintenance already in progress")
-
-    sentinel.write_text(
-        f"{timezone.now().isoformat()}\n{reason}\n",
-        encoding="utf-8",
-    )
-    try:
-        yield
-    finally:
-        sentinel.unlink(missing_ok=True)

@@ -26,6 +26,7 @@ from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitema
 from vdw_server.views import google_site_verification, sitemap_xml
 
 handler404 = 'vdw_server.views.custom_page_not_found'
+handler500 = 'vdw_server.views.custom_server_error'
 
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),

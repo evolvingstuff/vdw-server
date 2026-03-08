@@ -20,6 +20,22 @@ def custom_page_not_found(request, exception, template_name="404.html"):
     )
 
 
+def custom_server_error(request, template_name="500.html"):
+    """Render a stable 500 page with a request ID for log correlation."""
+    request_id = getattr(request, 'request_id', None)
+    response = render(
+        request,
+        template_name,
+        {
+            'request_id': request_id,
+        },
+        status=500,
+    )
+    if request_id:
+        response['X-Request-ID'] = request_id
+    return response
+
+
 def sitemap_xml(request):
     """Serve the most recently generated sitemap file."""
     sitemap_path = Path(getattr(settings, 'SITEMAP_FILE_PATH', settings.BASE_DIR / 'sitemap.xml'))

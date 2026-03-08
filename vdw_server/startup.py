@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db.utils import OperationalError, ProgrammingError
 
 from pages.recent_cache import load_recent_pages
+from vdw_server.restore_state import finalize_pending_restore
 from vdw_server.sitemap_utils import refresh_sitemap
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,25 @@ def run_startup_tasks() -> None:
     run_main = os.environ.get('RUN_MAIN')
     if run_main not in (None, 'true'):
         return
+    _finalize_pending_restore_if_present()
     _refresh_sitemap_if_configured()
     _load_recent_pages_cache()
+
+
+def _finalize_pending_restore_if_present() -> None:
+    try:
+        summary = finalize_pending_restore()
+    except (OperationalError, ProgrammingError) as exc:
+        logger.warning('Pending restore validation deferred because the database is unavailable: %s', exc)
+    except Exception:
+        logger.exception('Pending restore validation failed; maintenance mode remains enabled')
+    else:
+        if summary is not None:
+            logger.info(
+                'Pending restore validated successfully on startup; homepage=%s (%s); maintenance cleared',
+                summary.homepage_id,
+                summary.homepage_title,
+            )
 
 
 def _refresh_sitemap_if_configured() -> None:
