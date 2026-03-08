@@ -3,12 +3,19 @@ from pathlib import Path
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import render
-from vdw_server.not_found_suggestions import get_not_found_suggestions
+from vdw_server.not_found_suggestions import (
+    get_not_found_requested_phrase,
+    get_not_found_suggestions,
+)
 
 
 def custom_page_not_found(request, exception, template_name="404.html"):
     """Render a friendly 404 page with the correct status code."""
-    requested_phrase, suggestions = get_not_found_suggestions(request)
+    if settings.ENABLE_404_SUGGESTIONS:
+        requested_phrase, suggestions = get_not_found_suggestions(request)
+    else:
+        requested_phrase = get_not_found_requested_phrase(request)
+        suggestions = tuple()
     return render(
         request,
         template_name,

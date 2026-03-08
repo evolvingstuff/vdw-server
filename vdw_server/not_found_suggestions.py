@@ -162,6 +162,15 @@ def get_not_found_suggestions(request: HttpRequest) -> tuple[str, tuple[NotFound
     return query_texts[0], suggestions
 
 
+def get_not_found_requested_phrase(request: HttpRequest) -> str:
+    """Return the best human-readable phrase for a missing request path."""
+
+    query_texts = _extract_request_queries(request)
+    if not query_texts:
+        return ''
+    return query_texts[0]
+
+
 def upsert_page_not_found_suggestion(page: Page) -> None:
     """Update the cached entry for a content page if the index is loaded."""
 

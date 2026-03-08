@@ -1,14 +1,17 @@
 from unittest.mock import patch
 
+from django.http import Http404
 from django.test import RequestFactory, TestCase, override_settings
 
 from pages.models import Page
 from site_pages.models import SitePage
 from vdw_server.not_found_suggestions import (
     clear_not_found_suggestions_cache,
+    get_not_found_requested_phrase,
     get_not_found_suggestions,
     reload_not_found_suggestions,
 )
+from vdw_server.views import custom_page_not_found
 
 
 class NotFoundSuggestionTests(TestCase):
@@ -77,7 +80,19 @@ class NotFoundSuggestionTests(TestCase):
         self.assertEqual(suggestions[0].title, site_page.title)
         self.assertEqual(suggestions[0].url, '/about-vitamin-d-research/')
 
-    @override_settings(DEBUG=False)
+    def test_get_not_found_requested_phrase_skips_scoring_work(self):
+        request = self.factory.get(
+            '/tiki-index.php/styles/vitamindwiki/magiczoom-trial/magiczoom/Stronger+rowers+have+higher+levels+of+Vitamin+D+-+Jan+2024'
+        )
+
+        requested_phrase = get_not_found_requested_phrase(request)
+
+        self.assertEqual(
+            requested_phrase,
+            'tiki index.php styles vitamindwiki magiczoom trial magiczoom Stronger rowers have higher levels of Vitamin D Jan 2024',
+        )
+
+    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=True)
     def test_custom_404_renders_requested_phrase_and_matches(self):
         page = Page.objects.create(
             title='Vitamin D for Asthma Support',
@@ -93,3 +108,16 @@ class NotFoundSuggestionTests(TestCase):
         self.assertContains(response, 'Vitamin D for Asthma Supports', status_code=404)
         self.assertContains(response, page.title, status_code=404)
         self.assertContains(response, f'/pages/{page.slug}/', status_code=404)
+
+    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=False)
+    def test_custom_404_cheap_mode_skips_suggestion_scoring(self):
+        request = self.factory.get('/pages/Vitamin+D+for+Asthma+Supports/')
+
+        with patch('vdw_server.views.get_not_found_suggestions') as suggestions_mock:
+            response = custom_page_not_found(request, Http404('missing'))
+
+        suggestions_mock.assert_not_called()
+        self.assertEqual(response.status_code, 404)
+        response_html = response.content.decode()
+        self.assertIn('Cannot find "Vitamin D for Asthma Supports"', response_html)
+        self.assertNotIn('Possible matches', response_html)

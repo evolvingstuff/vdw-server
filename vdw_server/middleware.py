@@ -52,7 +52,8 @@ class LegacyAliasRedirectMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         load_alias_redirects()
-        load_not_found_suggestions()
+        if settings.ENABLE_404_SUGGESTIONS:
+            load_not_found_suggestions()
 
     def __call__(self, request):
         if self._should_skip(request):

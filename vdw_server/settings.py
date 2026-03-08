@@ -201,6 +201,13 @@ if SEARCH_RESULTS_DISPLAY_MODE not in _valid_display_modes:
     )
 del _valid_display_modes
 
+_enable_404_suggestions_value = os.getenv('ENABLE_404_SUGGESTIONS')
+if _enable_404_suggestions_value is None:
+    ENABLE_404_SUGGESTIONS = False
+else:
+    ENABLE_404_SUGGESTIONS = _parse_bool_env(_enable_404_suggestions_value)
+del _enable_404_suggestions_value
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
