@@ -154,7 +154,7 @@ class DockerDeployment:
             print(f"🎯 Active target set to {host} ({label})")
 
     def check_git_branch(self):
-        """Check current git branch and warn if not on main"""
+        """Check current git branch and warn about risky local deploy state."""
         try:
             result = subprocess.run(['git', 'branch', '--show-current'],
                                   capture_output=True, text=True, cwd='.')
@@ -174,6 +174,37 @@ class DockerDeployment:
                     return False
 
                 print(f"   Proceeding with deployment from '{current_branch}'...")
+
+            status_result = subprocess.run(
+                ['git', 'status', '--short'],
+                capture_output=True,
+                text=True,
+                cwd='.',
+            )
+            if status_result.returncode != 0:
+                print("⚠️  Could not determine whether the working tree has uncommitted changes")
+                return True
+
+            changed_entries = [
+                line for line in status_result.stdout.splitlines()
+                if line.strip()
+            ]
+            if changed_entries:
+                print("\n⚠️  WARNING: You have uncommitted local changes on this machine.")
+                print("   Deployment will upload these uncommitted changes to the server.")
+                preview_limit = 10
+                for entry in changed_entries[:preview_limit]:
+                    print(f"   {entry}")
+                remaining_count = len(changed_entries) - preview_limit
+                if remaining_count > 0:
+                    print(f"   ... plus {remaining_count} more changed files")
+
+                response = input("\n   Continue deploying with uncommitted changes? (y/n): ").lower()
+                if response != 'y':
+                    print("❌ Deployment cancelled")
+                    return False
+
+                print("   Proceeding with uncommitted changes...")
 
             return True
 
@@ -1127,7 +1158,7 @@ class DockerDeployment:
             self.disconnect()
     
     def show_status(self):
-        """Show server status and logs"""
+        """Show server status, Django logs, and restore/maintenance state."""
         target_host = self.prompt_host_for_operation('server status')
         print(f"\n📊 Checking server status on {target_host}...")
         
@@ -1140,8 +1171,21 @@ class DockerDeployment:
             print("🐳 Container status:")
             self.execute_command(f"cd {app_path} && sudo docker compose ps")
             
-            print("\n📋 Recent logs (last 20 lines):")
-            self.execute_command(f"cd {app_path} && sudo docker compose logs --tail=20")
+            print("\n📋 Django logs (last 200 lines):")
+            self.execute_command(f"cd {app_path} && sudo docker compose logs django --tail=200")
+
+            print("\n🔒 Maintenance / restore lock state:")
+            lock_state_command = (
+                f"cd {app_path} && "
+                "if sudo docker compose ps --status running -q django | grep -q .; then "
+                "sudo docker compose exec -T django sh -lc "
+                "'for f in /app/tmp/maintenance.lock /app/tmp/pending_restore_restart.lock; do "
+                "if [ -f \"$f\" ]; then echo FILE:$f; cat \"$f\"; "
+                "else echo MISSING:$f; fi; "
+                "done'; "
+                "else echo 'django container is not running; lock files unavailable'; fi"
+            )
+            self.execute_command(lock_state_command)
             
             return True
             
@@ -2403,7 +2447,7 @@ def print_menu(active_host: str, label: str):
     print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
     print("6. Reindex Search")
     print("7. Free Disk (stop containers, delete DB, remove Meili volume, prune caches)")
-    print("8. Troubleshoot (docker ps + logs)")
+    print("8. Troubleshoot (docker ps + django logs + lock state)")
     print("9. Switch active host (production vs latest)")
     print("10. Issue HTTPS certificate (manual DNS-01)")
     print("11. Reset HTTPS configuration")
