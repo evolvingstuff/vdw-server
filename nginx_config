@@ -1,3 +1,5 @@
+limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
+
 server {
     listen 80;
     server_name _;
@@ -22,6 +24,27 @@ server {
         root /var/www/vdw;
         internal;
         add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+    }
+
+    # Unsupported legacy Tiki endpoints should fail in nginx instead of waking Django.
+    location = /tiki-comment-list { return 410; }
+    location = /tiki-comment-list/ { return 410; }
+    location = /tiki-list_file_gallery.php { return 410; }
+    location = /tiki-download_wiki_attachment.php { return 410; }
+    location = /tiki-share.php { return 410; }
+    location = /tiki-print.php { return 410; }
+    location = /tiki-editpage.php { return 410; }
+
+    # Keep valid legacy redirects working, but slow crawler floods on /tiki-* paths.
+    location ~ ^/tiki- {
+        limit_req zone=tiki_legacy burst=15 nodelay;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
     
     location / {

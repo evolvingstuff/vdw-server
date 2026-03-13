@@ -108,6 +108,7 @@ python deployment-manager.py
 - Creates a fresh EC2 instance (values driven by `config/provisioning.json`)
 - Ensures security group rules for SSH/HTTP/HTTPS/Django/Meilisearch
 - Installs Docker, docker compose, nginx, and (optionally) mounts a dedicated `/app/data` volume
+- Auto-creates / reuses the EC2 management profile, then bootstraps `amazon-ssm-agent` and the CloudWatch agent so the new box publishes disk/memory metrics from the start
 - Uploads the current codebase + `.env`, builds containers, and leaves the app running on the instance’s temporary public IP (Elastic IP not yet reassigned)
 
 ### 2. Associate Elastic IP
@@ -132,7 +133,11 @@ python deployment-manager.py
 - Stops all containers on the chosen host, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and frees disk space so you can upload a clean database.
 
 ### 8. Troubleshoot / Show Status
-- Shows `docker compose ps` plus the last 20 log lines from every container on the chosen host
+- Shows AWS host diagnostics for the chosen target (Elastic IP attachment, EC2 state, status checks, security-group exposure for `22/80/443`)
+- Shows the latest CloudWatch agent metrics if the instance is publishing them (`disk_used_percent`, memory, swap)
+- If the instance is managed by AWS Systems Manager, also runs remote diagnostics (`df -h`, inode usage, memory, Docker disk usage, service state) even when SSH is broken
+- Probes public reachability from your machine (`22` with SSH-banner detection, plus HTTP/HTTPS checks on `80/443`)
+- If SSH works, also shows `docker compose ps`, recent Django logs, and maintenance / restore lock state
 
 ### 9. Switch Active Host
 - Toggle between the production Elastic-IP host and the latest provisioned (temporary) host for subsequent commands.
@@ -164,7 +169,20 @@ python deployment-manager.py
 ### 16. HTTPS Renew Dry-Run (certbot renew --dry-run)
 - Runs a simulated renewal against the active host to confirm HTTP-01 validation and renewal configuration work without actually replacing certificates. Ensures port 80 is open and requires port 80 to be reachable from the public internet.
 
-### 17. Exit
+### 17. Run SSM Diagnostics
+- Prompts for prod/test and, if the instance is registered and online in AWS Systems Manager, runs remote diagnostics including `df -h`, inode usage, memory, Docker disk usage, and `ssh/nginx` service state.
+- Use this when SSH is dead but the instance still appears healthy in EC2.
+
+### 18. Enable AWS Management
+- Prompts for prod/test, auto-creates an EC2 instance profile if needed, attaches the AWS-managed policies for SSM + CloudWatch (`AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`), and associates the profile to the instance.
+- If SSM is already online, the tool installs/configures the CloudWatch agent through SSM. Otherwise it falls back to SSH to install/configure both `amazon-ssm-agent` and the CloudWatch agent, then starts publishing disk/memory metrics automatically.
+- The chosen profile name is saved to `config/provisioning.json` so future provisioned instances inherit the same management profile and bootstrap path.
+
+### 19. Reboot EC2 Instance
+- Prompts for prod/test, resolves the backing EC2 instance for that host, calls AWS `reboot_instances`, and waits for both AWS reachability checks to return to `ok`.
+- Use this when the box is still “running” in EC2 but `22/80/443` are hung.
+
+### 20. Exit
 - Leaves the tool
 
 ## Typical Workflows

@@ -12,7 +12,7 @@
   "data_volume_gb": 16,
   "root_device_name": "/dev/sda1",
   "data_device_name": "/dev/sdf",
-  "iam_instance_profile": null,
+  "iam_instance_profile": "vdw-ec2-management",
   "tag_specification": "",
   "associate_public_ip": true,
   "ssh_ingress_cidr": "0.0.0.0/0",
@@ -21,7 +21,9 @@
   "elastic_hostname": "44.228.184.247",
   "elastic_ip_address": "44.228.184.247",
   "primary_domain": "vitamindwiki.com",
-  "alt_domains": ["www.vitamindwiki.com"],
+  "alt_domains": [
+    "www.vitamindwiki.com"
+  ],
   "certbot_email": "hlahore@gmail.com",
   "ssl_certificate_path": "",
   "ssl_certificate_key_path": "",

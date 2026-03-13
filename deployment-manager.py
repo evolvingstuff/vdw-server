@@ -8,11 +8,13 @@ import json
 import os
 import shlex
 import socket
+import ssl
 import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import http.client
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 import io
@@ -30,6 +32,8 @@ MANUAL_BACKUP_PREFIX = "db_backups/manual_backups"
 ACME_WEBROOT = "/var/www/letsencrypt"
 MAINTENANCE_PAGE_REMOTE_DIR = "/var/www/vdw"
 MAINTENANCE_PAGE_REMOTE_PATH = f"{MAINTENANCE_PAGE_REMOTE_DIR}/maintenance.html"
+CLOUDWATCH_AGENT_CONFIG_REMOTE_PATH = "/opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-agent.json"
+DEFAULT_MANAGEMENT_INSTANCE_PROFILE = "vdw-ec2-management"
 
 class DockerDeployment:
     def __init__(self):
@@ -399,6 +403,826 @@ class DockerDeployment:
         if self.ssh_client:
             self.ssh_client.close()
             print("🔌 Disconnected from server")
+
+    def _find_instance_by_public_ip(self, host: str) -> Optional[Dict]:
+        ec2 = self._aws_client('ec2')
+        response = ec2.describe_instances(Filters=[{'Name': 'ip-address', 'Values': [host]}])
+        for reservation in response.get('Reservations', []):
+            for instance in reservation.get('Instances', []):
+                if instance.get('PublicIpAddress') == host:
+                    return instance
+        return None
+
+    @staticmethod
+    def _permission_sources(permission: Dict) -> List[str]:
+        sources = [item['CidrIp'] for item in permission.get('IpRanges', []) if item.get('CidrIp')]
+        sources.extend(item['CidrIpv6'] for item in permission.get('Ipv6Ranges', []) if item.get('CidrIpv6'))
+        sources.extend(
+            pair['GroupId']
+            for pair in permission.get('UserIdGroupPairs', [])
+            if pair.get('GroupId')
+        )
+        sources.extend(
+            prefix['PrefixListId']
+            for prefix in permission.get('PrefixListIds', [])
+            if prefix.get('PrefixListId')
+        )
+        return sources
+
+    def _summarize_port_exposure(self, security_group: Dict, port: int) -> str:
+        exposures: List[str] = []
+        for permission in security_group.get('IpPermissions', []):
+            protocol = permission.get('IpProtocol')
+            from_port = permission.get('FromPort')
+            to_port = permission.get('ToPort')
+            if protocol not in ('tcp', '-1'):
+                continue
+            if protocol != '-1':
+                if from_port is None or to_port is None:
+                    continue
+                if not (from_port <= port <= to_port):
+                    continue
+            sources = self._permission_sources(permission)
+            assert sources, f"Security group rule for port {port} had no sources"
+            exposures.extend(sources)
+        if not exposures:
+            return 'closed'
+        return ', '.join(sorted(set(exposures)))
+
+    def _ssh_banner_diagnostic(self, host: str, timeout: int = 5) -> str:
+        port = self.config['port']
+        try:
+            with socket.create_connection((host, port), timeout=timeout) as sock:
+                sock.settimeout(timeout)
+                try:
+                    banner = sock.recv(255)
+                except socket.timeout:
+                    return f"TCP connect ok, but no SSH banner within {timeout}s"
+        except socket.timeout:
+            return f"TCP connect timed out after {timeout}s"
+        except OSError as exc:
+            return f"TCP connect failed: {exc}"
+
+        if not banner:
+            return 'TCP connect ok, but the server closed the socket before sending a banner'
+
+        banner_text = banner.decode('utf-8', errors='replace').strip()
+        if banner_text.startswith('SSH-'):
+            return f"banner ok: {banner_text}"
+        return f"connected, but received non-SSH data: {banner_text}"
+
+    @staticmethod
+    def _http_probe(host: str, port: int, use_tls: bool, timeout: int = 5) -> str:
+        connection = None
+        try:
+            if use_tls:
+                connection = http.client.HTTPSConnection(
+                    host,
+                    port=port,
+                    timeout=timeout,
+                    context=ssl._create_unverified_context(),
+                )
+            else:
+                connection = http.client.HTTPConnection(host, port=port, timeout=timeout)
+            connection.request('HEAD', '/', headers={'Host': host})
+            response = connection.getresponse()
+            server_header = response.getheader('Server') or 'unknown server'
+            return f"HTTP {response.status} {response.reason} ({server_header})"
+        except Exception as exc:
+            return f"request failed: {exc.__class__.__name__}: {exc}"
+        finally:
+            if connection is not None:
+                connection.close()
+
+    def _print_public_network_diagnostics(self, host: str) -> None:
+        print("\n🌐 Public network diagnostics:")
+        print(f"   SSH {self.config['port']}/tcp: {self._ssh_banner_diagnostic(host)}")
+        print(f"   HTTP 80/tcp: {self._http_probe(host, 80, use_tls=False)}")
+        print(f"   HTTPS 443/tcp: {self._http_probe(host, 443, use_tls=True)}")
+
+    def _print_aws_host_diagnostics(self, host: str) -> None:
+        print("\n☁️  AWS host diagnostics:")
+        ec2 = self._aws_client('ec2')
+
+        address = None
+        try:
+            if host == self.production_host:
+                allocation_id = self._get_provisioning().get('elastic_ip_allocation_id')
+                if allocation_id:
+                    addresses = ec2.describe_addresses(AllocationIds=[allocation_id]).get('Addresses', [])
+                    if addresses:
+                        address = addresses[0]
+            if address is None:
+                addresses = ec2.describe_addresses(PublicIps=[host]).get('Addresses', [])
+                if addresses:
+                    address = addresses[0]
+        except ClientError as exc:
+            print(f"   ⚠️  Failed to inspect Elastic IP metadata: {exc}")
+
+        if address:
+            print(f"   Elastic IP allocation: {address.get('AllocationId') or 'unknown'}")
+            print(f"   Elastic IP association: {address.get('AssociationId') or 'none'}")
+            print(f"   Elastic IP instance: {address.get('InstanceId') or 'none'}")
+            print(f"   Elastic IP ENI: {address.get('NetworkInterfaceId') or 'none'}")
+        else:
+            print(f"   No Elastic IP metadata found for {host}")
+
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print(f"   No EC2 instance found with public IP {host}")
+            return
+
+        instance_id = instance['InstanceId']
+        print(f"   Instance ID: {instance_id}")
+        print(f"   Instance state: {instance.get('State', {}).get('Name', 'unknown')}")
+        print(f"   Instance type: {instance.get('InstanceType') or 'unknown'}")
+        print(f"   Availability zone: {instance.get('Placement', {}).get('AvailabilityZone') or 'unknown'}")
+        print(
+            "   Public/private IP: "
+            f"{instance.get('PublicIpAddress') or 'unknown'} / "
+            f"{instance.get('PrivateIpAddress') or 'unknown'}"
+        )
+        launch_time = instance.get('LaunchTime')
+        if launch_time:
+            print(f"   Launch time: {launch_time.isoformat()}")
+        profile_arn = instance.get('IamInstanceProfile', {}).get('Arn')
+        print(f"   IAM instance profile: {profile_arn or 'none'}")
+
+        status_response = ec2.describe_instance_status(
+            InstanceIds=[instance_id],
+            IncludeAllInstances=True,
+        )
+        statuses = status_response.get('InstanceStatuses', [])
+        if statuses:
+            status = statuses[0]
+            instance_check = status.get('InstanceStatus', {})
+            system_check = status.get('SystemStatus', {})
+            print(f"   Instance reachability check: {instance_check.get('Status') or 'unknown'}")
+            print(f"   System reachability check: {system_check.get('Status') or 'unknown'}")
+            for label, payload in (
+                ('instance', instance_check),
+                ('system', system_check),
+            ):
+                for detail in payload.get('Details', []):
+                    detail_name = detail.get('Name') or 'unknown'
+                    detail_status = detail.get('Status') or 'unknown'
+                    print(f"   {label} detail {detail_name}: {detail_status}")
+        else:
+            print("   Instance status checks: unavailable")
+
+        security_groups = instance.get('SecurityGroups', [])
+        if not security_groups:
+            print("   Security groups: none")
+            return
+
+        group_ids = [group['GroupId'] for group in security_groups if group.get('GroupId')]
+        security_group_response = ec2.describe_security_groups(GroupIds=group_ids)
+        print("   Security group ingress summary:")
+        for security_group in security_group_response.get('SecurityGroups', []):
+            group_id = security_group.get('GroupId') or 'unknown'
+            group_name = security_group.get('GroupName') or 'unnamed'
+            print(f"     {group_id} ({group_name})")
+            for port in (22, 80, 443):
+                exposure = self._summarize_port_exposure(security_group, port)
+                print(f"       {port}/tcp: {exposure}")
+
+    def _ssm_instance_information(self, instance_id: str) -> Optional[Dict]:
+        ssm = self._aws_client('ssm')
+        response = ssm.describe_instance_information(
+            Filters=[{'Key': 'InstanceIds', 'Values': [instance_id]}]
+        )
+        info_list = response.get('InstanceInformationList', [])
+        if not info_list:
+            return None
+        assert len(info_list) == 1, f"Expected one SSM record for {instance_id}, got {len(info_list)}"
+        return info_list[0]
+
+    def _run_ssm_shell_command(
+        self,
+        instance_id: str,
+        commands: List[str],
+        comment: str,
+        timeout_seconds: int,
+    ) -> bool:
+        ssm = self._aws_client('ssm')
+        response = ssm.send_command(
+            InstanceIds=[instance_id],
+            DocumentName='AWS-RunShellScript',
+            Comment=comment,
+            Parameters={'commands': commands},
+        )
+        command_id = response['Command']['CommandId']
+        print(f"   SSM command ID: {command_id}")
+
+        deadline = time.time() + timeout_seconds
+        invocation = None
+        while time.time() < deadline:
+            try:
+                invocation = ssm.get_command_invocation(
+                    CommandId=command_id,
+                    InstanceId=instance_id,
+                )
+            except ClientError as exc:
+                error_code = exc.response.get('Error', {}).get('Code')
+                if error_code == 'InvocationDoesNotExist':
+                    time.sleep(2)
+                    continue
+                raise
+
+            status = invocation['Status']
+            if status in ('Pending', 'InProgress', 'Delayed'):
+                time.sleep(2)
+                continue
+            break
+
+        if invocation is None:
+            print(f"❌ Timed out waiting for SSM command {command_id}")
+            return False
+
+        stdout = invocation.get('StandardOutputContent') or ''
+        stderr = invocation.get('StandardErrorContent') or ''
+        if stdout.strip():
+            print(stdout.rstrip())
+        if stderr.strip():
+            print(stderr.rstrip(), file=sys.stderr)
+
+        status = invocation['Status']
+        if status != 'Success':
+            print(f"❌ SSM command failed with status {status}")
+            return False
+        return True
+
+    def run_ssm_diagnostics(self, host: str) -> bool:
+        print("\n📡 AWS Systems Manager diagnostics:")
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print(f"   No EC2 instance found with public IP {host}")
+            return False
+
+        instance_id = instance['InstanceId']
+        try:
+            info = self._ssm_instance_information(instance_id)
+        except ClientError as exc:
+            print(f"   ⚠️  Failed to inspect SSM state: {exc}")
+            return False
+
+        if not info:
+            print("   SSM: instance is not registered as a managed node")
+            profile_arn = instance.get('IamInstanceProfile', {}).get('Arn')
+            if not profile_arn:
+                print("   Instance profile: none attached")
+            return False
+
+        ping_status = info.get('PingStatus') or 'unknown'
+        platform = info.get('PlatformName') or 'unknown'
+        agent_version = info.get('AgentVersion') or 'unknown'
+        print(f"   Managed node: {instance_id}")
+        print(f"   Ping status: {ping_status}")
+        print(f"   Platform: {platform}")
+        print(f"   Agent version: {agent_version}")
+        last_ping = info.get('LastPingDateTime')
+        if last_ping:
+            print(f"   Last ping: {last_ping.isoformat()}")
+
+        if ping_status != 'Online':
+            print("   SSM is not online; cannot run remote disk diagnostics")
+            return False
+
+        app_path = shlex.quote(self.config['app_path'])
+        commands = [
+            'set -u',
+            'echo "== date =="',
+            'date -Is',
+            'echo',
+            'echo "== uptime =="',
+            'uptime',
+            'echo',
+            'echo "== filesystem usage =="',
+            'df -h',
+            'echo',
+            'echo "== inode usage =="',
+            'df -ih',
+            'echo',
+            'echo "== memory (MB) =="',
+            'free -m',
+            'echo',
+            f'echo "== {app_path} usage =="',
+            f'if [ -d {app_path} ]; then du -sh {app_path}; else echo "{self.config["app_path"]} not found"; fi',
+            f'if [ -d {app_path}/data ]; then du -sh {app_path}/data; else echo "{self.config["app_path"]}/data not found"; fi',
+            'echo',
+            'echo "== journal disk usage =="',
+            'if command -v journalctl >/dev/null 2>&1; then journalctl --disk-usage; else echo "journalctl not available"; fi',
+            'echo',
+            'echo "== docker disk usage =="',
+            'if command -v docker >/dev/null 2>&1; then docker system df; else echo "docker not installed"; fi',
+            'echo',
+            'echo "== service state =="',
+            'if command -v systemctl >/dev/null 2>&1; then '
+            'if systemctl list-unit-files ssh.service >/dev/null 2>&1; then echo "ssh: $(systemctl is-active ssh)"; '
+            'elif systemctl list-unit-files sshd.service >/dev/null 2>&1; then echo "sshd: $(systemctl is-active sshd)"; '
+            'else echo "ssh service unit not found"; fi; '
+            'if systemctl list-unit-files nginx.service >/dev/null 2>&1; then echo "nginx: $(systemctl is-active nginx)"; '
+            'else echo "nginx service unit not found"; fi; '
+            'else echo "systemctl not available"; fi',
+        ]
+        return self._run_ssm_shell_command(
+            instance_id=instance_id,
+            commands=commands,
+            comment='VDW SSM diagnostics',
+            timeout_seconds=120,
+        )
+
+    @staticmethod
+    def _management_policy_arns() -> List[str]:
+        return [
+            'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore',
+            'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy',
+        ]
+
+    def _management_profile_name(self) -> str:
+        configured = self._get_provisioning().get('iam_instance_profile')
+        if configured:
+            return configured
+        return DEFAULT_MANAGEMENT_INSTANCE_PROFILE
+
+    def _persist_management_profile_name(self, profile_name: str) -> None:
+        config = self._get_provisioning()
+        if config.get('iam_instance_profile') == profile_name:
+            return
+        updated_config = dict(config)
+        updated_config['iam_instance_profile'] = profile_name
+        self._write_provisioning_config(updated_config)
+        self.provisioning = updated_config
+
+    def ensure_management_instance_profile(self) -> str:
+        profile_name = self._management_profile_name()
+        iam = self._aws_client('iam')
+        role_name = profile_name
+        profile = None
+
+        try:
+            profile = iam.get_instance_profile(InstanceProfileName=profile_name)['InstanceProfile']
+            print(f"🔐 Using existing IAM instance profile {profile_name}")
+            roles = profile.get('Roles', [])
+            if roles:
+                role_name = roles[0]['RoleName']
+        except ClientError as exc:
+            error_code = exc.response.get('Error', {}).get('Code')
+            if error_code != 'NoSuchEntity':
+                raise
+            print(f"🔐 Creating IAM instance profile {profile_name}")
+
+        assume_role_policy = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Principal': {'Service': 'ec2.amazonaws.com'},
+                    'Action': 'sts:AssumeRole',
+                }
+            ],
+        }
+
+        try:
+            iam.get_role(RoleName=role_name)
+        except ClientError as exc:
+            error_code = exc.response.get('Error', {}).get('Code')
+            if error_code != 'NoSuchEntity':
+                raise
+            print(f"   Creating IAM role {role_name}")
+            iam.create_role(
+                RoleName=role_name,
+                AssumeRolePolicyDocument=json.dumps(assume_role_policy),
+                Description='VDW EC2 management role for SSM and CloudWatch',
+            )
+
+        attached_policy_arns = {
+            policy['PolicyArn']
+            for policy in iam.list_attached_role_policies(RoleName=role_name).get('AttachedPolicies', [])
+        }
+        for policy_arn in self._management_policy_arns():
+            if policy_arn in attached_policy_arns:
+                continue
+            print(f"   Attaching policy {policy_arn}")
+            iam.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+
+        if profile is None:
+            iam.create_instance_profile(InstanceProfileName=profile_name)
+            time.sleep(5)
+            profile = iam.get_instance_profile(InstanceProfileName=profile_name)['InstanceProfile']
+
+        profile_roles = profile.get('Roles', [])
+        if not profile_roles:
+            print(f"   Adding role {role_name} to instance profile {profile_name}")
+            iam.add_role_to_instance_profile(
+                InstanceProfileName=profile_name,
+                RoleName=role_name,
+            )
+            time.sleep(5)
+        else:
+            assert len(profile_roles) == 1, f"Expected one role in instance profile {profile_name}"
+            current_role_name = profile_roles[0]['RoleName']
+            if current_role_name != role_name:
+                raise RuntimeError(
+                    f"Instance profile {profile_name} already uses role {current_role_name}; update it manually."
+                )
+
+        self._persist_management_profile_name(profile_name)
+        return profile_name
+
+    @staticmethod
+    def _cloudwatch_agent_download_url(architecture: str) -> str:
+        if architecture == 'arm64':
+            return 'https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb'
+        return 'https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb'
+
+    def _cloudwatch_agent_config(self) -> str:
+        config = {
+            'agent': {
+                'metrics_collection_interval': 60,
+                'run_as_user': 'root',
+            },
+            'metrics': {
+                'append_dimensions': {
+                    'InstanceId': '${aws:InstanceId}',
+                    'ImageId': '${aws:ImageId}',
+                    'InstanceType': '${aws:InstanceType}',
+                },
+                'metrics_collected': {
+                    'disk': {
+                        'measurement': ['used_percent', 'inodes_free'],
+                        'resources': ['*'],
+                        'drop_device': True,
+                        'ignore_file_system_types': [
+                            'sysfs',
+                            'devtmpfs',
+                            'tmpfs',
+                            'overlay',
+                            'squashfs',
+                            'nsfs',
+                            'proc',
+                            'devpts',
+                            'aufs',
+                        ],
+                    },
+                    'mem': {
+                        'measurement': ['used_percent'],
+                    },
+                    'swap': {
+                        'measurement': ['used_percent'],
+                    },
+                },
+            },
+        }
+        return json.dumps(config, indent=2)
+
+    def _management_bootstrap_commands(self, architecture: str) -> List[str]:
+        cloudwatch_url = self._cloudwatch_agent_download_url(architecture)
+        config_json = shlex.quote(self._cloudwatch_agent_config())
+        raw_config_dir = str(Path(CLOUDWATCH_AGENT_CONFIG_REMOTE_PATH).parent)
+        raw_config_path = CLOUDWATCH_AGENT_CONFIG_REMOTE_PATH
+        config_dir = shlex.quote(raw_config_dir)
+        config_path = shlex.quote(raw_config_path)
+        return [
+            'set -euxo pipefail',
+            'sudo apt-get update',
+            'sudo apt-get install -y curl snapd',
+            'sudo systemctl enable --now snapd.service snapd.socket',
+            'if ! snap list amazon-ssm-agent >/dev/null 2>&1; then sudo snap install amazon-ssm-agent --classic; fi',
+            'sudo snap start amazon-ssm-agent || sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service',
+            f'curl -fsSL -o /tmp/amazon-cloudwatch-agent.deb {shlex.quote(cloudwatch_url)}',
+            'sudo dpkg -i -E /tmp/amazon-cloudwatch-agent.deb',
+            f'sudo install -d -m 0755 {config_dir}',
+            f'printf %s {config_json} | sudo tee {config_path} >/dev/null',
+            (
+                'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl '
+                f'-a fetch-config -m ec2 -s -c file:{raw_config_path}'
+            ),
+            'sudo systemctl enable amazon-cloudwatch-agent',
+            'sudo systemctl is-active --quiet amazon-cloudwatch-agent',
+        ]
+
+    def _wait_for_ssm_online(self, instance_id: str, timeout_seconds: int) -> bool:
+        print(f"⏳ Waiting for SSM on {instance_id}...")
+        deadline = time.time() + timeout_seconds
+        while time.time() < deadline:
+            try:
+                info = self._ssm_instance_information(instance_id)
+            except ClientError as exc:
+                print(f"⚠️  Failed to inspect SSM state: {exc}")
+                return False
+            if info and info.get('PingStatus') == 'Online':
+                print("   SSM is online")
+                return True
+            time.sleep(5)
+        print("   SSM did not come online in time")
+        return False
+
+    def _bootstrap_management_via_ssm(self, instance_id: str, architecture: str) -> bool:
+        print("🛠️  Installing/configuring CloudWatch agent via SSM...")
+        return self._run_ssm_shell_command(
+            instance_id=instance_id,
+            commands=self._management_bootstrap_commands(architecture),
+            comment='VDW management bootstrap',
+            timeout_seconds=300,
+        )
+
+    def _bootstrap_management_on_connected_host(self, architecture: str) -> bool:
+        print("🛠️  Installing/configuring SSM + CloudWatch agents over SSH...")
+        script = '\n'.join(self._management_bootstrap_commands(architecture))
+        success, _, error = self.execute_command(
+            f"bash -lc {shlex.quote(script)}",
+            show_output=True,
+            stream_output=True,
+        )
+        if not success:
+            print(f"❌ Management bootstrap failed: {error}")
+            return False
+        return True
+
+    def _bootstrap_management_via_ssh(self, host: str, architecture: str) -> bool:
+        if not self.connect(host_override=host):
+            return False
+        try:
+            return self._bootstrap_management_on_connected_host(architecture)
+        finally:
+            self.disconnect()
+
+    def _attach_instance_profile(self, instance_id: str, profile_name: str) -> bool:
+        ec2 = self._aws_client('ec2')
+        association_response = ec2.describe_iam_instance_profile_associations(
+            Filters=[{'Name': 'instance-id', 'Values': [instance_id]}]
+        )
+        associations = association_response.get('IamInstanceProfileAssociations', [])
+        assert len(associations) <= 1, f"Expected at most one profile association for {instance_id}"
+
+        try:
+            if associations:
+                association = associations[0]
+                current_arn = association.get('IamInstanceProfile', {}).get('Arn') or 'unknown'
+                if current_arn.endswith(f'instance-profile/{profile_name}'):
+                    print(f"🔗 IAM instance profile {profile_name} already attached")
+                    return True
+                print(f"🔁 Replacing current instance profile {current_arn}")
+                ec2.replace_iam_instance_profile_association(
+                    AssociationId=association['AssociationId'],
+                    IamInstanceProfile={'Name': profile_name},
+                )
+            else:
+                print(f"🔗 Attaching instance profile {profile_name} to {instance_id}")
+                ec2.associate_iam_instance_profile(
+                    IamInstanceProfile={'Name': profile_name},
+                    InstanceId=instance_id,
+                )
+        except ClientError as exc:
+            print(f"❌ Failed to attach instance profile: {exc}")
+            return False
+        return True
+
+    def _latest_metric_statistic(
+        self,
+        namespace: str,
+        metric_name: str,
+        dimensions: List[Dict[str, str]],
+        statistic: str,
+    ) -> Optional[Dict]:
+        cloudwatch = self._aws_client('cloudwatch')
+        end_time = datetime.now(timezone.utc)
+        response = cloudwatch.get_metric_statistics(
+            Namespace=namespace,
+            MetricName=metric_name,
+            Dimensions=dimensions,
+            StartTime=end_time - timedelta(minutes=30),
+            EndTime=end_time,
+            Period=300,
+            Statistics=[statistic],
+        )
+        datapoints = response.get('Datapoints', [])
+        if not datapoints:
+            return None
+        datapoints.sort(key=lambda item: item['Timestamp'])
+        return datapoints[-1]
+
+    def _print_ec2_cloudwatch_metrics(self, instance_id: str) -> None:
+        print("\n📊 EC2 CloudWatch metrics:")
+        dimensions = [{'Name': 'InstanceId', 'Value': instance_id}]
+
+        metric_specs = [
+            ('CPUUtilization', 'Average', '%'),
+            ('CPUCreditBalance', 'Average', ''),
+            ('CPUCreditUsage', 'Sum', ''),
+            ('NetworkIn', 'Sum', 'bytes'),
+            ('NetworkOut', 'Sum', 'bytes'),
+        ]
+
+        for metric_name, statistic, unit_suffix in metric_specs:
+            datapoint = self._latest_metric_statistic(
+                namespace='AWS/EC2',
+                metric_name=metric_name,
+                dimensions=dimensions,
+                statistic=statistic,
+            )
+            if not datapoint:
+                print(f"   {metric_name}: unavailable")
+                continue
+
+            value = datapoint[statistic]
+            rendered_value = f"{value:.1f}"
+            if unit_suffix:
+                rendered_value = f"{rendered_value} {unit_suffix}"
+            print(
+                f"   {metric_name} ({statistic.lower()}): {rendered_value} "
+                f"at {datapoint['Timestamp'].isoformat()}"
+            )
+
+    def _print_cloudwatch_metrics(self, host: str) -> None:
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print("\n📈 CloudWatch metrics:")
+            print(f"   No EC2 instance found with public IP {host}")
+            return
+
+        instance_id = instance['InstanceId']
+        self._print_ec2_cloudwatch_metrics(instance_id)
+
+        print("\n📈 CloudWatch agent metrics:")
+        cloudwatch = self._aws_client('cloudwatch')
+
+        def list_metrics(metric_name: str) -> List[Dict]:
+            paginator = cloudwatch.get_paginator('list_metrics')
+            metrics: List[Dict] = []
+            for page in paginator.paginate(
+                Namespace='CWAgent',
+                MetricName=metric_name,
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
+            ):
+                metrics.extend(page.get('Metrics', []))
+            return metrics
+
+        mem_metrics = list_metrics('mem_used_percent')
+        if mem_metrics:
+            datapoint = self._latest_metric_statistic(
+                namespace='CWAgent',
+                metric_name='mem_used_percent',
+                dimensions=mem_metrics[0]['Dimensions'],
+                statistic='Average',
+            )
+            if datapoint:
+                print(
+                    f"   mem_used_percent: {datapoint['Average']:.1f}% "
+                    f"at {datapoint['Timestamp'].isoformat()}"
+                )
+        else:
+            print("   mem_used_percent: unavailable")
+
+        swap_metrics = list_metrics('swap_used_percent')
+        if swap_metrics:
+            datapoint = self._latest_metric_statistic(
+                namespace='CWAgent',
+                metric_name='swap_used_percent',
+                dimensions=swap_metrics[0]['Dimensions'],
+                statistic='Average',
+            )
+            if datapoint:
+                print(
+                    f"   swap_used_percent: {datapoint['Average']:.1f}% "
+                    f"at {datapoint['Timestamp'].isoformat()}"
+                )
+        else:
+            print("   swap_used_percent: unavailable")
+
+        disk_metrics = list_metrics('disk_used_percent')
+        if not disk_metrics:
+            print("   disk_used_percent: unavailable")
+            return
+
+        entries = []
+        for metric in disk_metrics:
+            dimensions = {dimension['Name']: dimension['Value'] for dimension in metric['Dimensions']}
+            path = dimensions.get('path') or dimensions.get('Path') or 'unknown'
+            datapoint = self._latest_metric_statistic(
+                namespace='CWAgent',
+                metric_name='disk_used_percent',
+                dimensions=metric['Dimensions'],
+                statistic='Maximum',
+            )
+            if not datapoint:
+                continue
+            entries.append((path, datapoint))
+
+        if not entries:
+            print("   disk_used_percent: no recent datapoints")
+            return
+
+        for path, datapoint in sorted(entries, key=lambda item: item[0]):
+            print(
+                f"   disk_used_percent[{path}]: {datapoint['Maximum']:.1f}% "
+                f"at {datapoint['Timestamp'].isoformat()}"
+            )
+
+    def attach_instance_profile(self, host: str) -> bool:
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print(f"❌ No EC2 instance found with public IP {host}")
+            return False
+
+        instance_id = instance['InstanceId']
+        profile_name = self.ensure_management_instance_profile()
+        attached = self._attach_instance_profile(instance_id, profile_name)
+        if not attached:
+            return False
+
+        print("✅ Instance profile attachment requested.")
+        print(f"   Profile: {profile_name}")
+        return True
+
+    def enable_aws_management(self, host: str) -> bool:
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print(f"❌ No EC2 instance found with public IP {host}")
+            return False
+
+        instance_id = instance['InstanceId']
+        architecture = instance.get('Architecture') or 'x86_64'
+
+        print("\n☁️  Enabling AWS management (IAM + SSM + CloudWatch)...")
+        if not self.attach_instance_profile(host):
+            return False
+
+        if self._wait_for_ssm_online(instance_id, timeout_seconds=90):
+            if not self._bootstrap_management_via_ssm(instance_id, architecture):
+                return False
+            self._print_cloudwatch_metrics(host)
+            return True
+
+        print("⚠️  SSM is not online yet. Trying SSH bootstrap.")
+        if not self._bootstrap_management_via_ssh(host, architecture):
+            print("❌ Could not bootstrap management agents over SSH.")
+            print("   Reboot the instance, then rerun this option once SSH or SSM is reachable.")
+            return False
+
+        self._wait_for_ssm_online(instance_id, timeout_seconds=180)
+        self._print_cloudwatch_metrics(host)
+        return True
+
+    def reboot_instance(self, host: str) -> bool:
+        instance = self._find_instance_by_public_ip(host)
+        if not instance:
+            print(f"❌ No EC2 instance found with public IP {host}")
+            return False
+
+        instance_id = instance['InstanceId']
+        ec2 = self._aws_client('ec2')
+        min_wait_seconds = 90
+
+        print(f"\n🔄 Rebooting EC2 instance {instance_id} for host {host}...")
+        try:
+            ec2.reboot_instances(InstanceIds=[instance_id])
+        except ClientError as exc:
+            print(f"❌ Failed to request reboot: {exc}")
+            return False
+
+        print(
+            "⏳ Waiting for AWS instance and system checks to pass again "
+            f"(minimum {min_wait_seconds}s)..."
+        )
+        deadline = time.time() + 600
+        earliest_success = time.time() + min_wait_seconds
+        while time.time() < deadline:
+            try:
+                response = ec2.describe_instance_status(
+                    InstanceIds=[instance_id],
+                    IncludeAllInstances=True,
+                )
+            except ClientError as exc:
+                print(f"⚠️  Failed to poll instance status: {exc}")
+                time.sleep(10)
+                continue
+
+            statuses = response.get('InstanceStatuses', [])
+            if not statuses:
+                time.sleep(10)
+                continue
+
+            status = statuses[0]
+            state = status.get('InstanceState', {}).get('Name') or 'unknown'
+            instance_check = status.get('InstanceStatus', {}).get('Status') or 'unknown'
+            system_check = status.get('SystemStatus', {}).get('Status') or 'unknown'
+            print(
+                f"   state={state} instance_check={instance_check} system_check={system_check}"
+            )
+            if (
+                time.time() >= earliest_success
+                and state == 'running'
+                and instance_check == 'ok'
+                and system_check == 'ok'
+            ):
+                print("✅ Reboot complete. AWS status checks are back to ok.")
+                return True
+            time.sleep(10)
+
+        print("⚠️  Timed out waiting for AWS status checks after reboot request.")
+        return False
     
     def execute_command(
         self,
@@ -1161,10 +1985,28 @@ class DockerDeployment:
         """Show server status, Django logs, and restore/maintenance state."""
         target_host = self.prompt_host_for_operation('server status')
         print(f"\n📊 Checking server status on {target_host}...")
-        
+
+        try:
+            self._print_aws_host_diagnostics(target_host)
+        except Exception as exc:
+            print(f"\n⚠️  AWS diagnostics failed: {exc}")
+
+        try:
+            self._print_cloudwatch_metrics(target_host)
+        except Exception as exc:
+            print(f"\n⚠️  CloudWatch metric lookup failed: {exc}")
+
+        try:
+            self.run_ssm_diagnostics(target_host)
+        except Exception as exc:
+            print(f"\n⚠️  SSM diagnostics failed: {exc}")
+
+        self._print_public_network_diagnostics(target_host)
+
         if not self.connect(host_override=target_host):
+            print("\n⚠️  SSH is unavailable; skipping Docker/log inspection.")
             return False
-        
+
         try:
             app_path = self.config['app_path']
             
@@ -2114,6 +2956,25 @@ class DockerDeployment:
         add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
     }
 
+    location = /tiki-comment-list { return 410; }
+    location = /tiki-comment-list/ { return 410; }
+    location = /tiki-list_file_gallery.php { return 410; }
+    location = /tiki-download_wiki_attachment.php { return 410; }
+    location = /tiki-share.php { return 410; }
+    location = /tiki-print.php { return 410; }
+    location = /tiki-editpage.php { return 410; }
+
+    location ~ ^/tiki- {
+        limit_req zone=tiki_legacy burst=15 nodelay;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location / {
         proxy_intercept_errors on;
         error_page 502 503 504 /maintenance.html;
@@ -2140,7 +3001,9 @@ class DockerDeployment:
     add_header Strict-Transport-Security "max-age=31536000" always;
 """
 
-        return f"""server {{
+        return f"""limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
+
+server {{
     listen 80;
     server_name {server_names};
 {acme_block}
@@ -2303,6 +3166,8 @@ sudo chown %s:%s "$TARGET"
         """Provision a brand-new EC2 instance and bootstrap Docker/nginx."""
         print("\n🚀 Starting new server provisioning...\n")
         try:
+            profile_name = self.ensure_management_instance_profile()
+            print(f"🔐 Management profile ready: {profile_name}")
             sg_id = self.ensure_security_group()
             instance_id = self.launch_instance(sg_id)
             self.config['instance_id'] = instance_id
@@ -2329,6 +3194,8 @@ sudo chown %s:%s "$TARGET"
                 if not self.prepare_data_volume():
                     return False
                 if not self.configure_nginx_proxy():
+                    return False
+                if not self._bootstrap_management_on_connected_host(instance.get('Architecture') or 'x86_64'):
                     return False
             finally:
                 self.disconnect()
@@ -2447,7 +3314,7 @@ def print_menu(active_host: str, label: str):
     print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
     print("6. Reindex Search")
     print("7. Free Disk (stop containers, delete DB, remove Meili volume, prune caches)")
-    print("8. Troubleshoot (docker ps + django logs + lock state)")
+    print("8. Troubleshoot (AWS/EIP/CloudWatch/SSM + docker ps + django logs + lock state)")
     print("9. Switch active host (production vs latest)")
     print("10. Issue HTTPS certificate (manual DNS-01)")
     print("11. Reset HTTPS configuration")
@@ -2456,7 +3323,10 @@ def print_menu(active_host: str, label: str):
     print("14. Lock security group to SSH + HTTPS only")
     print("15. Issue HTTPS certificate (HTTP-01, auto-renew)")
     print("16. HTTPS renew dry-run (certbot renew --dry-run)")
-    print("17. Exit")
+    print("17. Run SSM diagnostics (disk/memory/services)")
+    print("18. Enable AWS management (auto-create profile + install SSM/CloudWatch)")
+    print("19. Reboot EC2 instance")
+    print("20. Exit")
     print()
 
 def main():
@@ -2466,7 +3336,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-17]: ").strip()
+        choice = input("Enter choice [0-20]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -2551,6 +3421,25 @@ def main():
         elif choice == '16':
             deployer.renew_https_certificate_dry_run()
         elif choice == '17':
+            try:
+                host = deployer.prompt_host_for_operation('SSM diagnostics')
+            except RuntimeError:
+                continue
+            deployer.run_ssm_diagnostics(host)
+        elif choice == '18':
+            try:
+                host = deployer.prompt_host_for_operation('enable AWS management')
+            except RuntimeError:
+                continue
+            deployer.enable_aws_management(host)
+        elif choice == '19':
+            try:
+                host = deployer.prompt_host_for_operation('reboot EC2 instance')
+            except RuntimeError:
+                continue
+            if input(f"\nRequest AWS reboot for the instance behind {host}? (y/n): ").lower() == 'y':
+                deployer.reboot_instance(host)
+        elif choice == '20':
             print("\n👋 Goodbye!")
             break
         
