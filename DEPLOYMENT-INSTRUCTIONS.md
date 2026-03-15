@@ -135,9 +135,9 @@ python deployment-manager.py
 ### 8. Troubleshoot / Show Status
 - Shows AWS host diagnostics for the chosen target (Elastic IP attachment, EC2 state, status checks, security-group exposure for `22/80/443`)
 - Shows the latest CloudWatch agent metrics if the instance is publishing them (`disk_used_percent`, memory, swap)
-- If the instance is managed by AWS Systems Manager, also runs remote diagnostics (`df -h`, inode usage, memory, Docker disk usage, service state) even when SSH is broken
+- If the instance is managed by AWS Systems Manager, also runs remote diagnostics (`date`, `uptime`, `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, service state) even when SSH is broken
 - Probes public reachability from your machine (`22` with SSH-banner detection, plus HTTP/HTTPS checks on `80/443`)
-- If SSH works, also shows `docker compose ps`, recent Django logs, and maintenance / restore lock state
+- If SSH works, also shows `docker compose ps -a`, container restart/lifecycle details, `docker stats --no-stream`, Meilisearch health/version probes, recent Django logs, recent Meilisearch logs, and maintenance / restore lock state
 
 ### 9. Switch Active Host
 - Toggle between the production Elastic-IP host and the latest provisioned (temporary) host for subsequent commands.
@@ -170,7 +170,7 @@ python deployment-manager.py
 - Runs a simulated renewal against the active host to confirm HTTP-01 validation and renewal configuration work without actually replacing certificates. Ensures port 80 is open and requires port 80 to be reachable from the public internet.
 
 ### 17. Run SSM Diagnostics
-- Prompts for prod/test and, if the instance is registered and online in AWS Systems Manager, runs remote diagnostics including `df -h`, inode usage, memory, Docker disk usage, and `ssh/nginx` service state.
+- Prompts for prod/test and, if the instance is registered and online in AWS Systems Manager, runs remote diagnostics including `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, and `ssh/nginx` service state.
 - Use this when SSH is dead but the instance still appears healthy in EC2.
 
 ### 18. Enable AWS Management

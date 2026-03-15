@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 
 import meilisearch
 from django.conf import settings
@@ -28,6 +29,10 @@ SEVERAL_STUDIES_PATTERN = re.compile(r'(?<![a-z0-9])several\s+studies(?![a-z0-9]
 META_ANALYSIS_PATTERN = re.compile(r'(?<![a-z0-9])meta\s+analysis(?![a-z0-9])')
 RCT_PATTERN = re.compile(r'(?<![a-z0-9])(?:\d+\s+)?rct(?![a-z0-9])')
 QUERY_TOKEN_PATTERN = re.compile(r'[a-z0-9]+')
+MAX_SEARCH_HITS = 1000
+MIN_RERANK_CANDIDATES = 100
+RERANK_CANDIDATE_BUFFER = 40
+SLOW_SEARCH_THRESHOLD_MS = 250.0
 
 
 def get_search_client():
@@ -335,6 +340,13 @@ def has_overview_query_match(hit: dict, query_casefold: str) -> bool:
     assert isinstance(hit, dict), f"hit must be dict, got {type(hit)}"
     assert isinstance(query_casefold, str), f"query_casefold must be str, got {type(query_casefold)}"
 
+    query_pattern = build_query_match_pattern(query_casefold)
+    return _has_overview_query_match_pattern(hit, query_pattern)
+
+
+def _has_overview_query_match_pattern(hit: dict, query_pattern: re.Pattern[str] | None) -> bool:
+    assert isinstance(hit, dict), f"hit must be dict, got {type(hit)}"
+
     title = hit.get('title')
     tags = hit.get('tags')
     if not isinstance(title, str) or not isinstance(tags, list):
@@ -345,7 +357,6 @@ def has_overview_query_match(hit: dict, query_casefold: str) -> bool:
     if not is_overview_hit(title_casefold, tags_casefold):
         return False
 
-    query_pattern = build_query_match_pattern(query_casefold)
     if query_pattern is None:
         return False
 
@@ -353,6 +364,55 @@ def has_overview_query_match(hit: dict, query_casefold: str) -> bool:
         return True
 
     return any(has_clean_query_match(tag, query_pattern) for tag in tags if isinstance(tag, str))
+
+
+def compute_fetch_limit(limit: int, offset: int) -> int:
+    assert isinstance(limit, int), f"limit must be int, got {type(limit)}"
+    assert isinstance(offset, int), f"offset must be int, got {type(offset)}"
+    assert limit >= 0, 'limit must be non-negative'
+    assert offset >= 0, 'offset must be non-negative'
+
+    candidate_window = offset + limit + RERANK_CANDIDATE_BUFFER
+    return min(
+        MAX_SEARCH_HITS,
+        max(candidate_window, MIN_RERANK_CANDIDATES),
+    )
+
+
+def log_slow_search_timing(
+    query: str,
+    limit: int,
+    offset: int,
+    fetch_limit: int,
+    raw_hits_count: int,
+    total_hits: int | None,
+    meili_ms: float,
+    rerank_ms: float,
+    overview_ms: float,
+    total_ms: float,
+) -> None:
+    assert isinstance(query, str), f"query must be str, got {type(query)}"
+
+    if total_ms < SLOW_SEARCH_THRESHOLD_MS:
+        return
+
+    query_preview = query if len(query) <= 80 else f"{query[:77]}..."
+    logger.warning(
+        (
+            "Slow search query=%r limit=%s offset=%s fetch_limit=%s raw_hits=%s total_hits=%s "
+            "meili_ms=%.1f rerank_ms=%.1f overview_ms=%.1f total_ms=%.1f"
+        ),
+        query_preview,
+        limit,
+        offset,
+        fetch_limit,
+        raw_hits_count,
+        total_hits,
+        meili_ms,
+        rerank_ms,
+        overview_ms,
+        total_ms,
+    )
 
 
 def fetch_overview_hits(query: str, limit: int = 10) -> list[dict]:
@@ -471,6 +531,7 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
 
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
+    search_started_at = time.perf_counter()
 
     display_mode = settings.SEARCH_RESULTS_DISPLAY_MODE
     include_content = display_mode == 'full'
@@ -491,8 +552,7 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
         attributes_to_highlight.append('content')
         attributes_to_crop.append('content')
 
-    max_hits = 1000
-    fetch_limit = max_hits
+    fetch_limit = compute_fetch_limit(limit, offset)
     search_payload = {
         'limit': fetch_limit,
         'offset': 0,
@@ -512,6 +572,7 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
     if len(query_terms) >= 2:
         search_payload['matchingStrategy'] = 'all'
 
+    meili_started_at = time.perf_counter()
     try:
         results = index.search(query, search_payload)
     except MeilisearchApiError as exc:
@@ -523,17 +584,23 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
             results = index.search(query, search_payload)
         else:
             raise
+    meili_ms = (time.perf_counter() - meili_started_at) * 1000
 
     hits = results.get('hits')
     assert isinstance(hits, list), f"hits must be list, got {type(hits)}"
+    rerank_started_at = time.perf_counter()
     sorted_hits = sort_hits_by_priority(hits, query)
-    query_casefold = query.casefold()
+    overview_query_pattern = build_query_match_pattern(query)
     has_overview_match = any(
-        has_overview_query_match(hit, query_casefold) for hit in sorted_hits
+        _has_overview_query_match_pattern(hit, overview_query_pattern) for hit in sorted_hits
     )
+    rerank_ms = (time.perf_counter() - rerank_started_at) * 1000
 
+    overview_ms = 0.0
     if not has_overview_match:
+        overview_started_at = time.perf_counter()
         overview_hits = fetch_overview_hits(query)
+        overview_ms = (time.perf_counter() - overview_started_at) * 1000
         if overview_hits:
             overview_ids = {hit['id'] for hit in overview_hits}
             sorted_hits = overview_hits + [
@@ -545,5 +612,19 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
     total_hits = extract_total_hits(results)
     if total_hits is not None:
         results['totalHits'] = total_hits
+
+    total_ms = (time.perf_counter() - search_started_at) * 1000
+    log_slow_search_timing(
+        query=query,
+        limit=limit,
+        offset=offset,
+        fetch_limit=fetch_limit,
+        raw_hits_count=len(hits),
+        total_hits=total_hits,
+        meili_ms=meili_ms,
+        rerank_ms=rerank_ms,
+        overview_ms=overview_ms,
+        total_ms=total_ms,
+    )
 
     return results

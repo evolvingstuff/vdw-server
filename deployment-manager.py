@@ -706,12 +706,21 @@ class DockerDeployment:
             'echo "== memory (MB) =="',
             'free -m',
             'echo',
+            'echo "== top processes by memory =="',
+            'ps -eo pid,ppid,%mem,%cpu,etime,cmd --sort=-%mem | head -n 15',
+            'echo',
             f'echo "== {app_path} usage =="',
             f'if [ -d {app_path} ]; then du -sh {app_path}; else echo "{self.config["app_path"]} not found"; fi',
             f'if [ -d {app_path}/data ]; then du -sh {app_path}/data; else echo "{self.config["app_path"]}/data not found"; fi',
             'echo',
             'echo "== journal disk usage =="',
             'if command -v journalctl >/dev/null 2>&1; then journalctl --disk-usage; else echo "journalctl not available"; fi',
+            'echo',
+            'echo "== docker containers =="',
+            'if command -v docker >/dev/null 2>&1; then docker ps -a --format "table {{.Names}}\\t{{.Status}}\\t{{.RunningFor}}"; else echo "docker not installed"; fi',
+            'echo',
+            'echo "== docker live stats =="',
+            'if command -v docker >/dev/null 2>&1; then docker stats --no-stream --format "table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}"; else echo "docker not installed"; fi',
             'echo',
             'echo "== docker disk usage =="',
             'if command -v docker >/dev/null 2>&1; then docker system df; else echo "docker not installed"; fi',
@@ -1313,6 +1322,73 @@ class DockerDeployment:
         except Exception as e:
             print(f"❌ Command execution failed: {e}")
             return False, "", str(e)
+
+    def _run_remote_diagnostic_command(
+        self,
+        title: str,
+        command: str,
+        *,
+        show_output: bool = True,
+    ) -> bool:
+        print(f"\n{title}:")
+        success, output, error = self.execute_command(command, show_output=show_output)
+        if not success:
+            detail = error or output or 'command failed'
+            print(f"⚠️  {title} failed: {detail}")
+        elif show_output and not output:
+            print("(no output)")
+        return success
+
+    def _compose_container_state_command(self, app_path: str) -> str:
+        app_path_q = shlex.quote(app_path)
+        return (
+            f"cd {app_path_q} && "
+            "ids=$(sudo docker compose ps -aq 2>/dev/null); "
+            "if [ -z \"$ids\" ]; then echo 'No compose containers found'; "
+            "else sudo docker inspect --format "
+            "'{{.Name}} status={{.State.Status}} started={{.State.StartedAt}} "
+            "finished={{.State.FinishedAt}} restarts={{.RestartCount}} "
+            "health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "
+            "$ids; fi"
+        )
+
+    def _docker_stats_command(self) -> str:
+        return (
+            "if ! command -v docker >/dev/null 2>&1; then "
+            "echo 'docker not installed'; "
+            "elif ! sudo docker ps -q | grep -q .; then "
+            "echo 'No running containers'; "
+            "else sudo docker stats --no-stream "
+            "--format 'table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}\\t{{.NetIO}}\\t{{.BlockIO}}'; fi"
+        )
+
+    def _meilisearch_probe_command(self, app_path: str) -> str:
+        app_path_q = shlex.quote(app_path)
+        fetch_health = (
+            "if command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:7700/health; "
+            "elif command -v wget >/dev/null 2>&1; then wget -qO- http://127.0.0.1:7700/health; "
+            "else echo 'curl/wget unavailable'; fi"
+        )
+        fetch_version = (
+            "if command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:7700/version; "
+            "elif command -v wget >/dev/null 2>&1; then wget -qO- http://127.0.0.1:7700/version; "
+            "else echo 'curl/wget unavailable'; fi"
+        )
+        return (
+            "cd {app_path} && "
+            "if sudo docker compose ps --status running -q meilisearch | grep -q .; then "
+            "echo 'health:'; "
+            "{fetch_health} || echo 'health probe failed'; "
+            "echo; "
+            "echo 'version:'; "
+            "{fetch_version} || "
+            "sudo docker compose exec -T meilisearch sh -lc 'meilisearch --version 2>/dev/null || echo version probe failed'; "
+            "else echo 'meilisearch container is not running'; fi"
+        ).format(
+            app_path=app_path_q,
+            fetch_health=fetch_health,
+            fetch_version=fetch_version,
+        )
 
     @staticmethod
     def _format_bytes(num_bytes):
@@ -1982,7 +2058,7 @@ class DockerDeployment:
             self.disconnect()
     
     def show_status(self):
-        """Show server status, Django logs, and restore/maintenance state."""
+        """Show server status, logs, container health, and restore/maintenance state."""
         target_host = self.prompt_host_for_operation('server status')
         print(f"\n📊 Checking server status on {target_host}...")
 
@@ -2009,16 +2085,34 @@ class DockerDeployment:
 
         try:
             app_path = self.config['app_path']
-            
-            print("🐳 Container status:")
-            self.execute_command(f"cd {app_path} && sudo docker compose ps")
-            
-            print("\n📋 Django logs (last 200 lines):")
-            self.execute_command(f"cd {app_path} && sudo docker compose logs django --tail=200")
 
-            print("\n🔒 Maintenance / restore lock state:")
+            self._run_remote_diagnostic_command(
+                "🐳 Container status",
+                f"cd {shlex.quote(app_path)} && sudo docker compose ps -a",
+            )
+            self._run_remote_diagnostic_command(
+                "🧭 Container lifecycle / restart state",
+                self._compose_container_state_command(app_path),
+            )
+            self._run_remote_diagnostic_command(
+                "📈 Live container resource snapshot",
+                self._docker_stats_command(),
+            )
+            self._run_remote_diagnostic_command(
+                "🔎 Meilisearch health / version",
+                self._meilisearch_probe_command(app_path),
+            )
+            self._run_remote_diagnostic_command(
+                "📋 Django logs (last 2h, tail 200)",
+                f"cd {shlex.quote(app_path)} && sudo docker compose logs django --since=2h --tail=200",
+            )
+            self._run_remote_diagnostic_command(
+                "📋 Meilisearch logs (last 2h, tail 200)",
+                f"cd {shlex.quote(app_path)} && sudo docker compose logs meilisearch --since=2h --tail=200",
+            )
+
             lock_state_command = (
-                f"cd {app_path} && "
+                f"cd {shlex.quote(app_path)} && "
                 "if sudo docker compose ps --status running -q django | grep -q .; then "
                 "sudo docker compose exec -T django sh -lc "
                 "'for f in /app/tmp/maintenance.lock /app/tmp/pending_restore_restart.lock; do "
@@ -2027,7 +2121,10 @@ class DockerDeployment:
                 "done'; "
                 "else echo 'django container is not running; lock files unavailable'; fi"
             )
-            self.execute_command(lock_state_command)
+            self._run_remote_diagnostic_command(
+                "🔒 Maintenance / restore lock state",
+                lock_state_command,
+            )
             
             return True
             

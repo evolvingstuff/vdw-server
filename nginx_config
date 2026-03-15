@@ -1,4 +1,5 @@
 limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
+limit_req_zone $binary_remote_addr zone=search_api:10m rate=5r/s;
 
 server {
     listen 80;
@@ -38,6 +39,18 @@ server {
     # Keep valid legacy redirects working, but slow crawler floods on /tiki-* paths.
     location ~ ^/tiki- {
         limit_req zone=tiki_legacy burst=15 nodelay;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /search/api/ {
+        limit_req zone=search_api burst=10 nodelay;
+        limit_req_status 429;
         proxy_intercept_errors on;
         error_page 502 503 504 /maintenance.html;
         proxy_pass http://127.0.0.1:8000;

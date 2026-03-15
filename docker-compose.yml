@@ -3,6 +3,7 @@ services:
     build: .
     ports:
       - "8000:8000"
+    shm_size: "256m"
     volumes:
       - ./data:/app/data
       - ./static:/app/static
@@ -17,6 +18,18 @@ services:
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
     depends_on:
       - meilisearch
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=5)"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
   meilisearch:

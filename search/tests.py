@@ -72,6 +72,21 @@ class SearchSortRecoveryTests(SimpleTestCase):
         _, search_payload = mock_index.search.call_args.args
         self.assertEqual(search_payload.get("matchingStrategy"), "all")
 
+    def test_first_page_does_not_fetch_full_1000_hit_window(self):
+        mock_client = Mock()
+        mock_index = Mock()
+        mock_client.index.return_value = mock_index
+        mock_index.search.return_value = {"hits": [], "totalHits": 0}
+
+        with patch("search.search.get_search_client", return_value=mock_client), patch(
+            "search.search.fetch_overview_hits",
+            return_value=[],
+        ):
+            search_pages("cancer", limit=20, offset=0)
+
+        _, search_payload = mock_index.search.call_args.args
+        self.assertEqual(search_payload.get("limit"), 100)
+
 
 class SearchPriorityTests(SimpleTestCase):
     def test_summary_tag_ranks_highest(self):
