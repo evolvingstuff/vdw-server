@@ -1449,7 +1449,12 @@ class DockerDeployment:
         commands = [
             ("Pruning unused Docker artifacts", "sudo docker system prune -f"),
             ("Pruning Docker builder cache", "sudo docker builder prune -af"),
+            ("Pruning unused Docker images", "sudo docker image prune -af"),
             ("Pruning unused Docker volumes", "sudo docker volume prune -f"),
+            (
+                "Truncating Docker container JSON logs",
+                "sudo find /var/lib/docker/containers -type f -name '*-json.log' -exec truncate -s 0 {} + 2>/dev/null || true"
+            ),
             (
                 "Removing stray SQLite temp files (app root)",
                 f"sudo find {app_q} -maxdepth 1 -name 'db.sqlite3*' -type f ! -name 'db.sqlite3' -delete"
@@ -1465,6 +1470,14 @@ class DockerDeployment:
             (
                 "Cleaning apt caches",
                 "sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* || true"
+            ),
+            (
+                "Deleting large temp files (/tmp >10M, older than 1d)",
+                "sudo find /tmp -type f -mtime +1 -size +10M -delete 2>/dev/null || true"
+            ),
+            (
+                "Removing pip caches",
+                "sudo rm -rf /root/.cache/pip /home/*/.cache/pip 2>/dev/null || true"
             ),
         ]
 
@@ -1495,6 +1508,47 @@ class DockerDeployment:
             print(f"⚠️  Failed to read space summary (after): {exc}")
 
         print("✅ Remote cleanup completed")
+
+    def safe_free_disk_on_server(self):
+        """Free disk on the remote host without deleting DB or Meili data."""
+        target_host = self.prompt_host_for_operation('safe disk cleanup')
+        print(f"\n🧹 Starting safe disk cleanup on {target_host}...")
+
+        if not self.connect(host_override=target_host):
+            return False
+
+        try:
+            app_path = self.config['app_path']
+            app_path_q = shlex.quote(app_path)
+
+            self.perform_remote_cleanup(app_path)
+
+            print("🚀 Attempting to bring Django back up...")
+            success, _, error = self.execute_command(
+                f"cd {app_path_q} && sudo docker compose up -d django",
+                show_output=False,
+            )
+            if not success:
+                print(f"❌ Failed to start Django container after cleanup: {error}")
+                return False
+
+            self._run_remote_diagnostic_command(
+                "🐳 Container status",
+                f"cd {app_path_q} && sudo docker compose ps -a",
+            )
+            self._run_remote_diagnostic_command(
+                "📋 Django logs (last 15m, tail 120)",
+                f"cd {app_path_q} && sudo docker compose logs django --since=15m --tail=120",
+            )
+            print("\n✅ Safe disk cleanup completed.")
+            return True
+
+        except Exception as e:
+            print(f"❌ Safe disk cleanup failed: {e}")
+            return False
+
+        finally:
+            self.disconnect()
 
     def _print_remote_space_summary(self, remote_app_path: str, label_prefix: str ="") -> None:
         """Print a brief free-space summary for key mount points on the host.
@@ -3410,7 +3464,7 @@ def print_menu(active_host: str, label: str):
     print("4. Deploy Database from Local (retain code + upload db + reindex search)")
     print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
     print("6. Reindex Search")
-    print("7. Free Disk (stop containers, delete DB, remove Meili volume, prune caches)")
+    print("7. Free Disk (safe cleanup by default; preserve DB + Meili)")
     print("8. Troubleshoot (AWS/EIP/CloudWatch/SSM + docker ps + django logs + lock state)")
     print("9. Switch active host (production vs latest)")
     print("10. Issue HTTPS certificate (manual DNS-01)")
@@ -3485,11 +3539,20 @@ def main():
             deployer.reindex_search()
         elif choice == '7':
             print("\n" + "=" * 50)
-            print("FREE DISK CLEANUP (DANGEROUS)")
+            print("FREE DISK CLEANUP")
             print("=" * 50)
-            print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data volume\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
-            if input("\nProceed? (y/n): ").lower() == 'y':
-                deployer.free_disk_on_server()
+            print("Choose cleanup mode:")
+            print("  1. Safe cleanup (preserve DB + Meili, prune logs/caches, restart Django)")
+            print("  2. Aggressive cleanup (stop containers, delete DB, remove Meili volume)")
+            cleanup_choice = input("\nEnter choice [1-2, Enter to cancel]: ").strip()
+            if cleanup_choice == '1':
+                deployer.safe_free_disk_on_server()
+            elif cleanup_choice == '2':
+                print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data volume\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
+                if input("\nProceed? (y/n): ").lower() == 'y':
+                    deployer.free_disk_on_server()
+            elif cleanup_choice:
+                print("❌ Invalid cleanup choice")
         elif choice == '8':
             deployer.show_status()
         elif choice == '9':

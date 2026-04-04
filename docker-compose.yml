@@ -30,6 +30,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: unless-stopped
 
   meilisearch:
@@ -41,6 +46,11 @@ services:
       - MEILI_ENV=production
     volumes:
       - meilisearch_data:/meili_data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     restart: unless-stopped
 
 volumes:

@@ -129,8 +129,10 @@ python deployment-manager.py
 ### 6. Reindex Search
 - Rebuilds the Meilisearch index on the chosen host without touching code or the DB
 
-### 7. Free Disk (Dangerous)
-- Stops all containers on the chosen host, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and frees disk space so you can upload a clean database.
+### 7. Free Disk
+- Prompts for cleanup mode:
+- Safe cleanup preserves the remote SQLite DB + Meilisearch data, prunes Docker caches, truncates Docker JSON logs, clears temp files, and then attempts to bring Django back up.
+- Aggressive cleanup stops all containers, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and leaves the host ready for a fresh DB upload.
 
 ### 8. Troubleshoot / Show Status
 - Shows AWS host diagnostics for the chosen target (Elastic IP attachment, EC2 state, status checks, security-group exposure for `22/80/443`)
@@ -347,6 +349,10 @@ docker compose logs --tail=50 meilisearch
 - Ensure you're uploading from correct local directory
 - Check Docker rebuild completed successfully
 - Clear browser cache
+
+**502 Bad Gateway With Healthy EC2 Checks**
+- Run Option 8 first and look at `disk_used_percent[/]`. If root is at or near `100%`, run Option 7 in safe mode before using the aggressive cleanup path.
+- If Django comes back after cleanup, deploy updated `docker-compose.yml` so container logs are rotated and root-disk pressure is less likely to recur.
 
 ## Development Workflows
 
