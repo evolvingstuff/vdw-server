@@ -19,7 +19,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 ## Design
 - Pattern: abstract `ContentBase` model centralizes Markdown (`markdown2` extras: footnotes, fenced code) → HTML/text caching
 - Storage: Django-Storages S3 backend enforced; media uploads crash if backend mismatch
-- Search: MeiliSearch client wrappers encapsulate index config, ranking, and CRUD
+- Search: MeiliSearch client wrappers encapsulate index config, ranking, and CRUD; production deploys persist Meili data under `/app/data/meilisearch` instead of Docker root storage
 - Middleware: `AdminPageRedirectMiddleware` rewrites admin redirects to edit concrete models; `LegacyAliasRedirectMiddleware` also warms alias + 404 caches on startup
 - 404 handling: custom handler ranks cached title/slug matches with token+trigram scoring; no DB scan on steady-state misses
 - Error handling philosophy: internal bugs crash immediately; only external I/O gets validation

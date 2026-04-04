@@ -45,13 +45,10 @@ services:
       - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
       - MEILI_ENV=production
     volumes:
-      - meilisearch_data:/meili_data
+      - ./data/meilisearch:/meili_data
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "5"
     restart: unless-stopped
-
-volumes:
-  meilisearch_data:

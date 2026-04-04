@@ -8,7 +8,7 @@
   "security_group_id": "sg-0d8006896cbc20eee",
   "security_group_name": "launch-wizard-5",
   "key_name": "vdw2",
-  "root_volume_gb": 16,
+  "root_volume_gb": 40,
   "data_volume_gb": 16,
   "root_device_name": "/dev/sda1",
   "data_device_name": "/dev/sdf",

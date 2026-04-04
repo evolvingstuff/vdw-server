@@ -64,10 +64,10 @@ class DockerDeployment:
         self.active_host = None
         self.active_host_label = ''
         latest_ip = (self.latest_state or {}).get('public_ip')
-        if latest_ip:
-            self.set_active_host(latest_ip, 'test', announce=False)
-        elif self.production_host:
+        if self.production_host:
             self.set_active_host(self.production_host, 'prod', announce=False)
+        elif latest_ip:
+            self.set_active_host(latest_ip, 'host', announce=False)
 
         # Validate required config for general deploy actions
         required_fields = ['user', 'port', 'key_file', 'app_path', 'local_db', 'django_port']
@@ -652,8 +652,11 @@ class DockerDeployment:
             return False
         return True
 
-    def run_ssm_diagnostics(self, host: str) -> bool:
-        print("\n📡 AWS Systems Manager diagnostics:")
+    def run_ssm_diagnostics(self, host: str, detailed: bool = True) -> bool:
+        if detailed:
+            print("\n📡 AWS Systems Manager diagnostics:")
+        else:
+            print("\n📡 AWS Systems Manager summary:")
         instance = self._find_instance_by_public_ip(host)
         if not instance:
             print(f"   No EC2 instance found with public IP {host}")
@@ -689,55 +692,85 @@ class DockerDeployment:
             return False
 
         app_path = shlex.quote(self.config['app_path'])
-        commands = [
-            'set -u',
-            'echo "== date =="',
-            'date -Is',
-            'echo',
-            'echo "== uptime =="',
-            'uptime',
-            'echo',
-            'echo "== filesystem usage =="',
-            'df -h',
-            'echo',
-            'echo "== inode usage =="',
-            'df -ih',
-            'echo',
-            'echo "== memory (MB) =="',
-            'free -m',
-            'echo',
-            'echo "== top processes by memory =="',
-            'ps -eo pid,ppid,%mem,%cpu,etime,cmd --sort=-%mem | head -n 15',
-            'echo',
-            f'echo "== {app_path} usage =="',
-            f'if [ -d {app_path} ]; then du -sh {app_path}; else echo "{self.config["app_path"]} not found"; fi',
-            f'if [ -d {app_path}/data ]; then du -sh {app_path}/data; else echo "{self.config["app_path"]}/data not found"; fi',
-            'echo',
-            'echo "== journal disk usage =="',
-            'if command -v journalctl >/dev/null 2>&1; then journalctl --disk-usage; else echo "journalctl not available"; fi',
-            'echo',
-            'echo "== docker containers =="',
-            'if command -v docker >/dev/null 2>&1; then docker ps -a --format "table {{.Names}}\\t{{.Status}}\\t{{.RunningFor}}"; else echo "docker not installed"; fi',
-            'echo',
-            'echo "== docker live stats =="',
-            'if command -v docker >/dev/null 2>&1; then docker stats --no-stream --format "table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}"; else echo "docker not installed"; fi',
-            'echo',
-            'echo "== docker disk usage =="',
-            'if command -v docker >/dev/null 2>&1; then docker system df; else echo "docker not installed"; fi',
-            'echo',
-            'echo "== service state =="',
-            'if command -v systemctl >/dev/null 2>&1; then '
-            'if systemctl list-unit-files ssh.service >/dev/null 2>&1; then echo "ssh: $(systemctl is-active ssh)"; '
-            'elif systemctl list-unit-files sshd.service >/dev/null 2>&1; then echo "sshd: $(systemctl is-active sshd)"; '
-            'else echo "ssh service unit not found"; fi; '
-            'if systemctl list-unit-files nginx.service >/dev/null 2>&1; then echo "nginx: $(systemctl is-active nginx)"; '
-            'else echo "nginx service unit not found"; fi; '
-            'else echo "systemctl not available"; fi',
-        ]
+        if detailed:
+            commands = [
+                'set -u',
+                'echo "== date =="',
+                'date -Is',
+                'echo',
+                'echo "== uptime =="',
+                'uptime',
+                'echo',
+                'echo "== filesystem usage =="',
+                'df -h',
+                'echo',
+                'echo "== inode usage =="',
+                'df -ih',
+                'echo',
+                'echo "== memory (MB) =="',
+                'free -m',
+                'echo',
+                'echo "== top processes by memory =="',
+                'ps -eo pid,ppid,%mem,%cpu,etime,cmd --sort=-%mem | head -n 15',
+                'echo',
+                f'echo "== {app_path} usage =="',
+                f'if [ -d {app_path} ]; then du -sh {app_path}; else echo "{self.config["app_path"]} not found"; fi',
+                f'if [ -d {app_path}/data ]; then du -sh {app_path}/data; else echo "{self.config["app_path"]}/data not found"; fi',
+                'echo',
+                'echo "== journal disk usage =="',
+                'if command -v journalctl >/dev/null 2>&1; then journalctl --disk-usage; else echo "journalctl not available"; fi',
+                'echo',
+                'echo "== docker containers =="',
+                'if command -v docker >/dev/null 2>&1; then docker ps -a --format "table {{.Names}}\\t{{.Status}}\\t{{.RunningFor}}"; else echo "docker not installed"; fi',
+                'echo',
+                'echo "== docker live stats =="',
+                'if command -v docker >/dev/null 2>&1; then docker stats --no-stream --format "table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}"; else echo "docker not installed"; fi',
+                'echo',
+                'echo "== docker disk usage =="',
+                'if command -v docker >/dev/null 2>&1; then docker system df; else echo "docker not installed"; fi',
+                'echo',
+                'echo "== service state =="',
+                'if command -v systemctl >/dev/null 2>&1; then '
+                'if systemctl list-unit-files ssh.service >/dev/null 2>&1; then echo "ssh: $(systemctl is-active ssh)"; '
+                'elif systemctl list-unit-files sshd.service >/dev/null 2>&1; then echo "sshd: $(systemctl is-active sshd)"; '
+                'else echo "ssh service unit not found"; fi; '
+                'if systemctl list-unit-files nginx.service >/dev/null 2>&1; then echo "nginx: $(systemctl is-active nginx)"; '
+                'else echo "nginx service unit not found"; fi; '
+                'else echo "systemctl not available"; fi',
+            ]
+            comment = 'VDW SSM diagnostics'
+        else:
+            commands = [
+                'set -u',
+                'echo "== date =="',
+                'date -Is',
+                'echo',
+                'echo "== uptime =="',
+                'uptime',
+                'echo',
+                'echo "== key filesystem usage =="',
+                f'df -h / {app_path} {app_path}/data 2>/dev/null || df -h /',
+                'echo',
+                'echo "== memory (MB) =="',
+                'free -m',
+                'echo',
+                'echo "== docker disk usage =="',
+                'if command -v docker >/dev/null 2>&1; then docker system df; else echo "docker not installed"; fi',
+                'echo',
+                'echo "== service state =="',
+                'if command -v systemctl >/dev/null 2>&1; then '
+                'if systemctl list-unit-files ssh.service >/dev/null 2>&1; then echo "ssh: $(systemctl is-active ssh)"; '
+                'elif systemctl list-unit-files sshd.service >/dev/null 2>&1; then echo "sshd: $(systemctl is-active sshd)"; '
+                'else echo "ssh service unit not found"; fi; '
+                'if systemctl list-unit-files nginx.service >/dev/null 2>&1; then echo "nginx: $(systemctl is-active nginx)"; '
+                'else echo "nginx service unit not found"; fi; '
+                'else echo "systemctl not available"; fi',
+            ]
+            comment = 'VDW SSM summary'
         return self._run_ssm_shell_command(
             instance_id=instance_id,
             commands=commands,
-            comment='VDW SSM diagnostics',
+            comment=comment,
             timeout_seconds=120,
         )
 
@@ -1390,6 +1423,44 @@ class DockerDeployment:
             fetch_version=fetch_version,
         )
 
+    def _django_log_summary_command(self, app_path: str) -> str:
+        app_path_q = shlex.quote(app_path)
+        return (
+            f"cd {app_path_q} && "
+            "logs=$(sudo docker compose logs django --since=45m --tail=400 2>/dev/null || true); "
+            "if [ -z \"$logs\" ]; then echo 'No Django logs in the last 45m'; "
+            "else "
+            "echo 'status summary:'; "
+            "printf '%s\n' \"$logs\" | "
+            "awk 'match($0, /\" [0-9][0-9][0-9] /) { code=substr($0, RSTART+2, 3); counts[code]++ } "
+            "END { "
+            "if (length(counts) == 0) print \"  no access-log status codes found\"; "
+            "else { "
+            "for (code in counts) print code \" \" counts[code]; "
+            "} "
+            "}' | sort; "
+            "echo; "
+            "echo 'error lines:'; "
+            "errors=$(printf '%s\n' \"$logs\" | "
+            "grep -E 'Traceback|ERROR|CRITICAL|Exception|\" 5[0-9][0-9] ' | tail -n 20 || true); "
+            "if [ -n \"$errors\" ]; then printf '%s\n' \"$errors\"; "
+            "else echo '  none'; fi; "
+            "fi"
+        )
+
+    def _meilisearch_log_summary_command(self, app_path: str) -> str:
+        app_path_q = shlex.quote(app_path)
+        return (
+            f"cd {app_path_q} && "
+            "logs=$(sudo docker compose logs meilisearch --since=45m --tail=200 2>/dev/null || true); "
+            "if [ -z \"$logs\" ]; then echo 'No Meilisearch logs in the last 45m'; "
+            "else "
+            "printf '%s\n' \"$logs\" | "
+            "grep -E '\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T' | tail -n 20 || "
+            "echo '  no timestamped runtime log lines found'; "
+            "fi"
+        )
+
     @staticmethod
     def _format_bytes(num_bytes):
         """Convert byte counts into a human readable string"""
@@ -1536,10 +1607,7 @@ class DockerDeployment:
                 "🐳 Container status",
                 f"cd {app_path_q} && sudo docker compose ps -a",
             )
-            self._run_remote_diagnostic_command(
-                "📋 Django logs (last 15m, tail 120)",
-                f"cd {app_path_q} && sudo docker compose logs django --since=15m --tail=120",
-            )
+            print("ℹ️  Skipping log summary here; use option 8 if you need detailed post-cleanup diagnostics.")
             print("\n✅ Safe disk cleanup completed.")
             return True
 
@@ -1583,6 +1651,75 @@ class DockerDeployment:
         self.perform_remote_cleanup(remote_app_path)
         return True
 
+    def prepare_meilisearch_storage(self, remote_app_path: str) -> Optional[bool]:
+        """Ensure Meilisearch uses /app/data and migrate old named-volume data when needed.
+
+        Returns True when the target storage is empty and search should be reindexed
+        after the stack is restarted.
+        """
+        remote_meili_dir = f"{remote_app_path}/data/meilisearch"
+        remote_meili_dir_q = shlex.quote(remote_meili_dir)
+
+        print("💽 Preparing persistent Meilisearch storage...")
+        success, _, error = self.execute_command(
+            f"sudo mkdir -p {remote_meili_dir_q}",
+            show_output=False,
+        )
+        if not success:
+            print(f"❌ Failed to create Meilisearch data directory: {error}")
+            return None
+
+        non_empty_cmd = (
+            f"if sudo find {remote_meili_dir_q} -mindepth 1 -print -quit | grep -q .; "
+            "then echo present; else echo empty; fi"
+        )
+        success, output, error = self.execute_command(non_empty_cmd, show_output=False)
+        if not success:
+            print(f"❌ Failed to inspect Meilisearch data directory: {error}")
+            return None
+
+        storage_has_data = output.strip() == "present"
+        if not storage_has_data:
+            success, output, error = self.execute_command(
+                "sudo docker volume ls -q | grep meilisearch_data | head -n 1 || true",
+                show_output=False,
+            )
+            if not success:
+                print(f"❌ Failed to inspect Docker volumes for Meilisearch data: {error}")
+                return None
+
+            volume_name = output.strip()
+            if volume_name:
+                print(f"   Migrating existing Meilisearch data from volume {volume_name}...")
+                copy_cmd = (
+                    "sudo docker run --rm "
+                    f"-v {shlex.quote(volume_name)}:/from "
+                    f"-v {remote_meili_dir_q}:/to "
+                    "getmeili/meilisearch:v1.5 sh -lc 'cp -a /from/. /to/'"
+                )
+                success, _, error = self.execute_command(copy_cmd, show_output=False)
+                if not success:
+                    print(f"❌ Failed to migrate Meilisearch data: {error}")
+                    return None
+
+                success, output, error = self.execute_command(non_empty_cmd, show_output=False)
+                if not success:
+                    print(f"❌ Failed to re-check Meilisearch data directory: {error}")
+                    return None
+                storage_has_data = output.strip() == "present"
+            else:
+                print("   No existing Meilisearch volume found; next deploy will rebuild the search index.")
+
+        success, _, error = self.execute_command(
+            f"sudo chown -R 1000:1000 {remote_meili_dir_q} && sudo chmod 755 {remote_meili_dir_q}",
+            show_output=False,
+        )
+        if not success:
+            print(f"❌ Failed to set Meilisearch directory permissions: {error}")
+            return None
+
+        return not storage_has_data
+
     def upload_code(self):
         """Upload application code via SCP"""
         print("📤 Uploading application code...")
@@ -1611,12 +1748,17 @@ class DockerDeployment:
                 
                 # Upload directories (pages, templates, static, etc.)
                 for dir_path in Path('.').iterdir():
-                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode', 'data.ms']:
+                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode', 'data', 'data.ms']:
                         print(f"   Uploading directory {dir_path}...")
                         scp.put(str(dir_path), app_path, recursive=True)
             
-            # Set ownership
-            success, output, error = self.execute_command(f"sudo chown -R {self.config['user']}:{self.config['user']} {app_path}")
+            # Preserve /app/data ownership because it contains the live SQLite DB
+            # and persistent Meilisearch files on the dedicated data volume.
+            success, output, error = self.execute_command(
+                f"sudo chown {remote_user}:{remote_user} {remote_app_path} && "
+                f"sudo find {remote_app_path} -mindepth 1 -maxdepth 1 ! -name data "
+                f"-exec chown -R {remote_user}:{remote_user} {{}} +"
+            )
             if not success:
                 print(f"❌ Failed to set ownership: {error}")
                 return False
@@ -1657,7 +1799,13 @@ class DockerDeployment:
             if not self._refresh_nginx_proxy_for_deploy():
                 return False
 
-            if not self.rebuild_and_restart_stack():
+            needs_search_reindex = self.prepare_meilisearch_storage(self.config['app_path'])
+            if needs_search_reindex is None:
+                return False
+            if needs_search_reindex:
+                print("🔍 Meilisearch storage is empty; this deploy will rebuild the search index.")
+
+            if not self.rebuild_and_restart_stack(reindex_search=needs_search_reindex):
                 return False
 
             print("✅ Code deployment completed successfully!")
@@ -2037,7 +2185,7 @@ class DockerDeployment:
         Steps:
           - sudo docker compose down
           - remove SQLite DB at /app/data/db.sqlite3
-          - remove MeiliSearch data volume(s)
+          - remove MeiliSearch data and leftover named volume(s)
           - prune docker builder cache + unused images
           - truncate docker json logs, vacuum systemd journal, clean apt caches, purge large /tmp files
         Leaves containers stopped so you can upload a fresh DB next.
@@ -2052,8 +2200,10 @@ class DockerDeployment:
             app_path = self.config['app_path']
             remote_db_dir = f"{app_path}/data"
             remote_db_path = f"{remote_db_dir}/db.sqlite3"
+            remote_meili_dir = f"{remote_db_dir}/meilisearch"
             remote_db_dir_q = shlex.quote(remote_db_dir)
             remote_db_path_q = shlex.quote(remote_db_path)
+            remote_meili_dir_q = shlex.quote(remote_meili_dir)
 
             # Measure free space before (show multiple mounts)
             try:
@@ -2064,6 +2214,7 @@ class DockerDeployment:
             cmds = [
                 ("Stopping containers", f"cd {shlex.quote(app_path)} && sudo docker compose down"),
                 ("Removing SQLite database", f"sudo rm -f {remote_db_path_q}"),
+                ("Removing MeiliSearch bind-mount data", f"sudo rm -rf {remote_meili_dir_q}"),
                 (
                     "Removing MeiliSearch volume(s)",
                     "for v in $(sudo docker volume ls -q | grep meilisearch_data || true); do sudo docker volume rm -f $v || true; done"
@@ -2127,7 +2278,7 @@ class DockerDeployment:
             print(f"\n⚠️  CloudWatch metric lookup failed: {exc}")
 
         try:
-            self.run_ssm_diagnostics(target_host)
+            self.run_ssm_diagnostics(target_host, detailed=False)
         except Exception as exc:
             print(f"\n⚠️  SSM diagnostics failed: {exc}")
 
@@ -2156,14 +2307,8 @@ class DockerDeployment:
                 "🔎 Meilisearch health / version",
                 self._meilisearch_probe_command(app_path),
             )
-            self._run_remote_diagnostic_command(
-                "📋 Django logs (last 2h, tail 200)",
-                f"cd {shlex.quote(app_path)} && sudo docker compose logs django --since=2h --tail=200",
-            )
-            self._run_remote_diagnostic_command(
-                "📋 Meilisearch logs (last 2h, tail 200)",
-                f"cd {shlex.quote(app_path)} && sudo docker compose logs meilisearch --since=2h --tail=200",
-            )
+            print("\n📋 Logs:")
+            print("ℹ️  Skipped in compact status mode. Use option 17 if you need log-heavy diagnostics.")
 
             lock_state_command = (
                 f"cd {shlex.quote(app_path)} && "
@@ -2501,75 +2646,26 @@ class DockerDeployment:
         except json.JSONDecodeError:
             return None
 
-    def _host_options(self, forced_options: Optional[List] = None) -> List:
-        options = forced_options[:] if forced_options else []
-        if not options:
-            if self.production_host:
-                options.append(('0', self.production_host, 'prod (Elastic IP)'))
-            latest = self._load_provision_state()
-            latest_ip = latest.get('public_ip') if latest else None
-            if latest_ip:
-                ts = latest.get('written_at')
-                label = 'test (latest provisioned)'
-                if ts:
-                    label += f" ({ts})"
-                options.append(('1', latest_ip, label))
-        return options
-
     def choose_active_host(self, forced_options: Optional[List] = None) -> None:
-        options = self._host_options(forced_options)
-
-        if not options:
-            print("❌ No alternate hosts available (capture provisioning config or provision first)")
+        if not self.production_host:
+            print("❌ No production host configured")
             return
-
-        print("\nAvailable targets:")
-        for key, host, description in options:
-            marker = '*' if host == self.active_host else ' '
-            print(f"  [{key}] {host} {description} {marker}")
-
-        prompt_keys = '/'.join(key for key, _, _ in options)
-        choice = input(f"Select target ({prompt_keys}): ").strip().lower()
-        for key, host, description in options:
-            if choice == key:
-                label = 'prod' if key == '0' else 'test'
-                self.set_active_host(host, label)
-                return
-        print("❌ Invalid target selection")
+        self.set_active_host(self.production_host, 'prod')
+        print("ℹ️  The deployment tool is pinned to the production Elastic IP host.")
 
     def require_active_host(self, prompt_keys: Optional[str] = None) -> str:
-        host = self.active_host
-        if host:
-            return host
-        print("❌ No active host selected.")
-        self.choose_active_host()
-        if not self.active_host:
-            raise RuntimeError("No active host selected")
-        return self.active_host
+        if self.production_host:
+            if self.active_host != self.production_host or self.active_host_label != 'prod':
+                self.set_active_host(self.production_host, 'prod', announce=False)
+            return self.production_host
+        if self.active_host:
+            return self.active_host
+        raise RuntimeError("No production host configured")
 
     def prompt_host_for_operation(self, operation: str) -> str:
-        options = self._host_options()
-        if not options:
-            raise RuntimeError("No host choices available. Provision a server or configure the Elastic IP host.")
-
-        print(f"\nTarget selection for {operation}:")
-        for key, host, description in options:
-            marker = ''
-            if host == self.active_host:
-                marker = ' (current)'
-            print(f"  [{key}] {host} {description}{marker}")
-
-        prompt_keys = '/'.join(key for key, _, _ in options)
-        while True:
-            choice = input(f"Select target ({prompt_keys}) [Enter to cancel]: ").strip().lower()
-            if not choice:
-                raise RuntimeError("Operation cancelled by user")
-            for key, host, description in options:
-                if choice == key:
-                    label = 'prod' if key == '0' else 'test'
-                    self.set_active_host(host, label)
-                    return host
-            print("❌ Invalid selection; please try again.")
+        host = self.require_active_host()
+        print(f"\n🎯 Target for {operation}: {host} (prod)")
+        return host
 
     def _run_certbot_dns01(self, host: str) -> bool:
         domains = self._all_domains()
@@ -3296,14 +3392,18 @@ sudo chown %s:%s "$TARGET"
         print("✅ Data volume mounted at /app/data")
         return True
 
-    def rebuild_and_restart_stack(self) -> bool:
+    def rebuild_and_restart_stack(self, reindex_search: bool = False) -> bool:
         app_path = shlex.quote(self.config['app_path'])
         steps = [
             ("🐳 Rebuilding Docker containers", f"cd {app_path} && sudo docker compose up --build -d"),
             ("🔄 Running database migrations", f"cd {app_path} && sudo docker compose exec -T django python manage.py migrate"),
             ("📦 Collecting static files", f"cd {app_path} && sudo docker compose exec -T django python manage.py collectstatic --noinput"),
-            ("🔍 Checking container status", f"cd {app_path} && sudo docker compose ps"),
         ]
+        if reindex_search:
+            steps.append(
+                ("🔍 Rebuilding search index", f"cd {app_path} && sudo docker compose exec -T django python manage.py reindex_search")
+            )
+        steps.append(("🔍 Checking container status", f"cd {app_path} && sudo docker compose ps"))
 
         for description, cmd in steps:
             print(f"   {description}...")
@@ -3311,6 +3411,22 @@ sudo chown %s:%s "$TARGET"
             if not success:
                 print(f"❌ Failed during {description}: {error}")
                 return False
+
+        cleanup_steps = [
+            ("🧹 Pruning Docker builder cache", "sudo docker builder prune -af"),
+            ("🧹 Pruning unused Docker images", "sudo docker image prune -af"),
+            ("🧹 Pruning unused Docker volumes", "sudo docker volume prune -f"),
+        ]
+        for description, cmd in cleanup_steps:
+            print(f"   {description}...")
+            success, _, error = self.execute_command(cmd, show_output=False)
+            if not success:
+                print(f"⚠️  {description} failed: {error}")
+
+        try:
+            self._print_remote_space_summary(self.config['app_path'], label_prefix="Post-deploy")
+        except Exception as exc:
+            print(f"⚠️  Failed to read post-deploy space summary: {exc}")
         return True
 
     def provision_server(self):
@@ -3365,13 +3481,13 @@ sudo chown %s:%s "$TARGET"
                 'data_volume_id': data_volume_id,
                 'app_path': self.config['app_path'],
             })
-            self.set_active_host(public_ip, 'test')
 
             print("\n🎉 Provisioning complete!")
             print("Next steps:")
-            print("  • With the new host selected (see menu banner), run option 5 (Full Deploy) to upload code + DB")
-            print("  • Test via http://{} before swapping DNS".format(public_ip))
-            print("  • Once satisfied, run menu option 2 (Associate Elastic IP) to swap traffic")
+            print(f"  • Temporary host: {public_ip}")
+            print(f"  • Provision details saved to {self.provision_state_path}")
+            print("  • This tool stays pinned to the production Elastic IP host")
+            print("  • If you want to cut over, run menu option 2 to associate the Elastic IP to the newly provisioned instance")
             return True
 
         except Exception as exc:
@@ -3387,7 +3503,6 @@ sudo chown %s:%s "$TARGET"
 
         state = self._load_provision_state() or {}
         latest_instance = state.get('instance_id')
-        latest_label = state.get('public_ip')
         current_instance = None
 
         try:
@@ -3399,35 +3514,23 @@ sudo chown %s:%s "$TARGET"
             print(f"❌ Failed to inspect Elastic IP: {exc}")
             return False
 
-        print("\nElastic IP options:")
-        options = []
-        if current_instance:
-            options.append(('0', current_instance, f"prod (currently attached)"))
-        if latest_instance and latest_instance != current_instance:
-            label = f"test (latest provisioned @ {latest_label})" if latest_label else 'test (latest provisioned)'
-            options.append(('1', latest_instance, label))
-
-        if not options:
-            print("❌ No instance IDs available to associate. Provision first.")
+        if not latest_instance:
+            print("❌ No last provisioned instance found. Provision first.")
             return False
 
-        for key, instance_id, description in options:
-            print(f"  [{key}] {instance_id} {description}")
-
-        prompt_keys = '/'.join(key for key, _, _ in options)
-        choice = input(f"Select target ({prompt_keys}): ").strip()
-        target_instance = None
-        for key, instance_id, description in options:
-            if choice == key:
-                target_instance = instance_id
-                break
-
-        if not target_instance:
-            print("❌ Invalid selection")
-            return False
+        target_instance = latest_instance
+        target_ip = state.get('public_ip') or 'unknown'
 
         print(f"Elastic IP {public_ip} currently attached to: {current_instance or 'none'}")
-        if input(f"Associate {public_ip} with {target_instance}? (y/n): ").lower() != 'y':
+        if current_instance == target_instance:
+            print(f"ℹ️  Elastic IP {public_ip} is already attached to the last provisioned instance {target_instance}")
+            return True
+
+        prompt = (
+            f"Associate {public_ip} with the last provisioned instance "
+            f"{target_instance} ({target_ip})? (y/n): "
+        )
+        if input(prompt).lower() != 'y':
             print("❌ Operation cancelled")
             return False
 
@@ -3465,8 +3568,7 @@ def print_menu(active_host: str, label: str):
     print("5. Deploy Code and Database from Local (upload code + upload db + run migrations + reindex search)")
     print("6. Reindex Search")
     print("7. Free Disk (safe cleanup by default; preserve DB + Meili)")
-    print("8. Troubleshoot (AWS/EIP/CloudWatch/SSM + docker ps + django logs + lock state)")
-    print("9. Switch active host (production vs latest)")
+    print("8. Troubleshoot (compact summary: AWS/EIP/CloudWatch/SSM + container/log snapshot)")
     print("10. Issue HTTPS certificate (manual DNS-01)")
     print("11. Reset HTTPS configuration")
     print("12. Update /etc/hosts for testing")
@@ -3474,7 +3576,7 @@ def print_menu(active_host: str, label: str):
     print("14. Lock security group to SSH + HTTPS only")
     print("15. Issue HTTPS certificate (HTTP-01, auto-renew)")
     print("16. HTTPS renew dry-run (certbot renew --dry-run)")
-    print("17. Run SSM diagnostics (disk/memory/services)")
+    print("17. Run SSM diagnostics (full disk/memory/services dump)")
     print("18. Enable AWS management (auto-create profile + install SSM/CloudWatch)")
     print("19. Reboot EC2 instance")
     print("20. Exit")
@@ -3487,7 +3589,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-20]: ").strip()
+        choice = input("Enter choice [0-8,10-20]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -3514,7 +3616,7 @@ def main():
             print("CODE DEPLOYMENT")
             print("=" * 50)
             print("This will:")
-            print("  • Upload your current local code to the selected server")
+            print("  • Upload your current local code to the production server")
             print("  • Rebuild Docker containers")
             print("  • Restart services")
             
@@ -3543,20 +3645,18 @@ def main():
             print("=" * 50)
             print("Choose cleanup mode:")
             print("  1. Safe cleanup (preserve DB + Meili, prune logs/caches, restart Django)")
-            print("  2. Aggressive cleanup (stop containers, delete DB, remove Meili volume)")
+            print("  2. Aggressive cleanup (stop containers, delete DB, remove Meili data)")
             cleanup_choice = input("\nEnter choice [1-2, Enter to cancel]: ").strip()
             if cleanup_choice == '1':
                 deployer.safe_free_disk_on_server()
             elif cleanup_choice == '2':
-                print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data volume\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
+                print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
                 if input("\nProceed? (y/n): ").lower() == 'y':
                     deployer.free_disk_on_server()
             elif cleanup_choice:
                 print("❌ Invalid cleanup choice")
         elif choice == '8':
             deployer.show_status()
-        elif choice == '9':
-            deployer.choose_active_host()
         elif choice == '10':
             deployer.issue_https_certificate()
         elif choice == '11':

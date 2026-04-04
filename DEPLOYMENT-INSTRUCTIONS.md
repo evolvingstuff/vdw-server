@@ -88,7 +88,7 @@ Example `config/provisioning.json` (placeholder values):
 Edit this file directly if you ever need to change defaults (AMI, sizes, domains, etc.).
 You never need to add a `Name=` tag here—the provisioner automatically tags each instance as `vdw<YYYYMMDDHHMMSS>` (UTC timestamp) so every server is clearly labeled.
 
-Whenever you run options 3–8 the CLI prompts you to choose between `[0] prod (Elastic IP host)` or `[1] test (latest provisioned host)`, so there’s never ambiguity about where the action lands. Option 9 just changes the banner label, but each command still asks explicitly. HTTPS commands (options 10/11/15/16) follow the same prompt.
+Normal operations are pinned to the production Elastic IP host. The CLI no longer asks you to choose between prod/test targets for deploy, troubleshoot, HTTPS, or maintenance commands.
 
 ### Step 4: Deploy to Server
 
@@ -109,7 +109,7 @@ python deployment-manager.py
 - Ensures security group rules for SSH/HTTP/HTTPS/Django/Meilisearch
 - Installs Docker, docker compose, nginx, and (optionally) mounts a dedicated `/app/data` volume
 - Auto-creates / reuses the EC2 management profile, then bootstraps `amazon-ssm-agent` and the CloudWatch agent so the new box publishes disk/memory metrics from the start
-- Uploads the current codebase + `.env`, builds containers, and leaves the app running on the instance’s temporary public IP (Elastic IP not yet reassigned)
+- Leaves the new instance reachable on its temporary public IP and saves that instance metadata to `tmp/provision-state.json` for option 2. The CLI itself stays pinned to the production Elastic IP host.
 
 ### 2. Associate Elastic IP
 - Moves the configured Elastic IP allocation to any instance ID (defaults to the most recent provisioning run stored in `tmp/provision-state.json`)
@@ -117,7 +117,8 @@ python deployment-manager.py
 
 ### 3. Deploy Code
 - Uploads fresh code from your local working copy
-- Rebuilds Docker images, restarts containers under Gunicorn, and runs Django migrations
+- Rebuilds Docker images, restarts containers under Gunicorn, runs Django migrations, and prunes old Docker build/image/volume artifacts after the deploy
+- Preserves `/app/data` during upload, keeps Meilisearch on `/app/data/meilisearch`, and rebuilds search automatically if the Meili data directory is empty
 
 ### 4. Deploy Database
 - Uploads the local SQLite database to `/app/data/db.sqlite3`
@@ -127,31 +128,29 @@ python deployment-manager.py
 - Runs option 3 followed by option 4 in one flow (code + database)
 
 ### 6. Reindex Search
-- Rebuilds the Meilisearch index on the chosen host without touching code or the DB
+- Rebuilds the Meilisearch index on the production host without touching code or the DB
 
 ### 7. Free Disk
 - Prompts for cleanup mode:
 - Safe cleanup preserves the remote SQLite DB + Meilisearch data, prunes Docker caches, truncates Docker JSON logs, clears temp files, and then attempts to bring Django back up.
-- Aggressive cleanup stops all containers, deletes the remote SQLite DB + Meilisearch volume, prunes Docker caches/logs, and leaves the host ready for a fresh DB upload.
+- Aggressive cleanup stops all containers, deletes the remote SQLite DB + Meilisearch data, prunes Docker caches/logs, and leaves the host ready for a fresh DB upload.
 
 ### 8. Troubleshoot / Show Status
-- Shows AWS host diagnostics for the chosen target (Elastic IP attachment, EC2 state, status checks, security-group exposure for `22/80/443`)
+- Shows AWS host diagnostics for the production host (Elastic IP attachment, EC2 state, status checks, security-group exposure for `22/80/443`)
 - Shows the latest CloudWatch agent metrics if the instance is publishing them (`disk_used_percent`, memory, swap)
-- If the instance is managed by AWS Systems Manager, also runs remote diagnostics (`date`, `uptime`, `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, service state) even when SSH is broken
+- If the instance is managed by AWS Systems Manager, also runs a compact remote summary (`date`, `uptime`, key filesystem usage, memory, Docker disk usage, service state) even when SSH is broken
 - Probes public reachability from your machine (`22` with SSH-banner detection, plus HTTP/HTTPS checks on `80/443`)
-- If SSH works, also shows `docker compose ps -a`, container restart/lifecycle details, `docker stats --no-stream`, Meilisearch health/version probes, recent Django logs, recent Meilisearch logs, and maintenance / restore lock state
-
-### 9. Switch Active Host
-- Toggle between the production Elastic-IP host and the latest provisioned (temporary) host for subsequent commands.
+- If SSH works, also shows `docker compose ps -a`, container restart/lifecycle details, `docker stats --no-stream`, Meilisearch health/version probes, and maintenance / restore lock state
+- Compact mode skips container log retrieval entirely so the output stays fast and pasteable; use option 17 if you need log-heavy diagnostics
 
 ### 10. Issue HTTPS Certificate (manual DNS-01)
-- Installs Certbot (if needed), runs the manual DNS-01 workflow for the selected host, and automatically updates nginx to listen on 443 using the newly issued certificates.
+- Installs Certbot (if needed), runs the manual DNS-01 workflow for the production host, and automatically updates nginx to listen on 443 using the newly issued certificates.
 
 ### 11. Reset HTTPS Configuration
-- Removes the existing Let's Encrypt files on the selected host and reverts nginx to HTTP-only mode so you can re-issue certificates from scratch.
+- Removes the existing Let's Encrypt files on the production host and reverts nginx to HTTP-only mode so you can re-issue certificates from scratch.
 
 ### 12. Update /etc/hosts for testing
-- Adds an entry on your local machine so vitamindwiki.com (and alternate domains) resolve to the selected host, writing a backup copy at `/etc/hosts.vdw-backup` so you can revert later.
+- Adds an entry on your local machine so vitamindwiki.com (and alternate domains) resolve to the production host, writing a backup copy at `/etc/hosts.vdw-backup` so you can revert later.
 
 ### 13. Restore Local Database from S3 Backup
 - Lists manual backups stored under `s3://<bucket>/db_backups/manual_backups/`, downloads the selected file, and swaps it into `DEPLOY_LOCAL_DB` so you can inspect production data locally.
@@ -162,7 +161,7 @@ python deployment-manager.py
 - If validation fails, the original DB is restored and maintenance mode is lifted automatically.
 
 ### 14. Lock Security Group to SSH + HTTPS Only
-- Prompts you to pick the prod/test host, inspects that instance’s attached security group (letting you choose if multiple are present), removes all existing inbound rules, then recreates just two: port 22/tcp (respecting `ssh_ingress_cidr`) and port 443/tcp for everyone. Run this once nginx or your load balancer handles HTTPS so no other ports stay open publicly.
+- Targets the production host, inspects that instance’s attached security group (letting you choose if multiple are present), removes all existing inbound rules, then recreates just two: port 22/tcp (respecting `ssh_ingress_cidr`) and port 443/tcp for everyone. Run this once nginx or your load balancer handles HTTPS so no other ports stay open publicly.
 - Note: If you use the HTTP-01 auto-renew flow (Option 15), port 80 must remain open or renewals will fail.
 
 ### 15. Issue HTTPS Certificate (HTTP-01, auto-renew)
@@ -172,16 +171,17 @@ python deployment-manager.py
 - Runs a simulated renewal against the active host to confirm HTTP-01 validation and renewal configuration work without actually replacing certificates. Ensures port 80 is open and requires port 80 to be reachable from the public internet.
 
 ### 17. Run SSM Diagnostics
-- Prompts for prod/test and, if the instance is registered and online in AWS Systems Manager, runs remote diagnostics including `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, and `ssh/nginx` service state.
+- Runs remote diagnostics against the production host including `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, and `ssh/nginx` service state.
 - Use this when SSH is dead but the instance still appears healthy in EC2.
+- Option 8 now keeps the SSM portion compact; use Option 17 when you want the full dump.
 
 ### 18. Enable AWS Management
-- Prompts for prod/test, auto-creates an EC2 instance profile if needed, attaches the AWS-managed policies for SSM + CloudWatch (`AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`), and associates the profile to the instance.
+- Auto-creates an EC2 instance profile if needed, attaches the AWS-managed policies for SSM + CloudWatch (`AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`), and associates the profile to the production instance.
 - If SSM is already online, the tool installs/configures the CloudWatch agent through SSM. Otherwise it falls back to SSH to install/configure both `amazon-ssm-agent` and the CloudWatch agent, then starts publishing disk/memory metrics automatically.
 - The chosen profile name is saved to `config/provisioning.json` so future provisioned instances inherit the same management profile and bootstrap path.
 
 ### 19. Reboot EC2 Instance
-- Prompts for prod/test, resolves the backing EC2 instance for that host, calls AWS `reboot_instances`, and waits for both AWS reachability checks to return to `ok`.
+- Resolves the backing EC2 instance for the production host, calls AWS `reboot_instances`, and waits for both AWS reachability checks to return to `ok`.
 - Use this when the box is still “running” in EC2 but `22/80/443` are hung.
 
 ### 20. Exit
@@ -226,11 +226,10 @@ python deployment-manager.py
 1. Make sure `primary_domain`, `alt_domains`, and `certbot_email` are set in config/provisioning.json
 2. Run: python deployment-manager.py
 3. Select: Option 10 (Issue HTTPS Certificate)
-4. When prompted, choose `[1] test` (or `[0] prod` if you're refreshing the live box)
+4. Complete the certificate flow on the production host
 5. For each domain, add the requested TXT record in your DNS provider and press Enter once it propagates
-6. After nginx reloads, hit https://<primary-domain> while manually pointing that domain at the new server's IP (e.g., via your hosts file) to confirm HTTPS works before touching real DNS
-7. When satisfied, run Option 2 (Associate Elastic IP) to move real traffic
-8. If you ever need to re-issue from scratch, run Option 11 (Reset HTTPS Configuration) and repeat the steps above
+6. After nginx reloads, hit https://<primary-domain> to confirm HTTPS works
+7. If you ever need to re-issue from scratch, run Option 11 (Reset HTTPS Configuration) and repeat the steps above
 ```
 
 **Tip:** If you provision a brand-new server frequently, you can copy `/etc/letsencrypt/{live,archive,renewal}` from the previous server before cutting over. Once the files are in place, `certbot.timer` on the new server will continue renewing automatically without re-running the DNS-01 flow.
@@ -240,7 +239,7 @@ python deployment-manager.py
 1. Ensure port 80/tcp is reachable from the public internet (the script can open it for you)
 2. Run: python deployment-manager.py
 3. Select: Option 15 (Issue HTTPS Certificate - HTTP-01)
-4. When prompted, choose `[1] test` (or `[0] prod` if you're refreshing the live box)
+4. Complete the certificate flow on the production host
 5. After nginx reloads, hit https://<primary-domain> to confirm HTTPS works
 6. `certbot.timer` is enabled automatically; renewals run unattended
 7. Optional: run Option 16 (HTTPS Renew Dry-Run) anytime to validate renewals
@@ -272,9 +271,11 @@ python deployment-manager.py
 1. Connects to the current deployment target via SSH
 2. Uploads all Python files, requirements, Docker configs
 3. Uploads application directories (pages, templates, static, etc.)
-4. Excludes: .git, __pycache__, .env, db.sqlite3, venv
-5. Rebuilds and restarts Docker containers, serves Django through Gunicorn, runs database migrations, and executes `collectstatic` so images/CSS land in `/app/static`
-6. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`
+4. Excludes: `.git`, `__pycache__`, `.env`, local `data/`, `db.sqlite3`, `venv`
+5. Preserves ownership on `/app/data` so code deploys do not rewrite the live SQLite DB or persistent Meilisearch files
+6. Ensures Meilisearch stores data under `/app/data/meilisearch`; if an older named volume exists and the target directory is empty, the deploy migrates that data before restarting containers
+7. Rebuilds and restarts Docker containers, serves Django through Gunicorn, runs database migrations, executes `collectstatic`, and prunes old Docker builder/image/volume artifacts after the deploy
+8. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`, and Meilisearch storage lives at `/app/data/meilisearch`
 
 ### Database Deployment Process
 1. Stops Django container to release database lock
