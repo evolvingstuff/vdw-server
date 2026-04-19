@@ -9,14 +9,17 @@
 {% block content %}
   <h1>{{ title }}</h1>
 
-  <p>{% blocktrans %}Select tags to add to the {{ queryset|length }} selected page(s).{% endblocktrans %}</p>
+  <p>{% blocktrans %}Select tags to add to the {{ selected_page_count }} selected page(s).{% endblocktrans %}</p>
+  {% if select_across %}
+    <p>All pages matching the current changelist filters will be updated.</p>
+  {% endif %}
 
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
 
-    {% for obj in queryset %}
-      <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">
+    {% for page_id in selected_page_ids %}
+      <input type="hidden" name="{{ action_checkbox_name }}" value="{{ page_id }}">
     {% endfor %}
 
     <input type="hidden" name="action" value="{{ action_name }}">
@@ -32,10 +35,16 @@
   </form>
 
   <h2>Selected pages</h2>
-  <ul>
-    {% for obj in queryset %}
-      <li>{{ obj.title }}</li>
-    {% endfor %}
-  </ul>
+  {% if selected_pages_preview %}
+    <ul>
+      {% for title in selected_pages_preview %}
+        <li>{{ title }}</li>
+      {% endfor %}
+    </ul>
+    {% if selected_page_count > selected_pages_preview|length %}
+      <p>Showing the first {{ selected_pages_preview|length }} of {{ selected_page_count }} selected pages.</p>
+    {% endif %}
+  {% else %}
+    <p>No pages selected.</p>
+  {% endif %}
 {% endblock %}
-

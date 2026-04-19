@@ -420,6 +420,22 @@ class PageAdminBulkTagActionTests(TestCase):
         request.session = self.client.session
         request._messages = FallbackStorage(request)
 
+    def _bulk_create_pages(self, count: int):
+        Page.objects.bulk_create(
+            [
+                Page(
+                    title=f"P{index}",
+                    slug=f"p{index}",
+                    content_md="Body",
+                    content_html="<p>Body</p>",
+                    content_text="Body",
+                    character_count=4,
+                    status="draft",
+                )
+                for index in range(count)
+            ]
+        )
+
     def test_add_tags_action_renders_confirmation_form(self):
         page = Page.objects.create(title="P1", content_md="Body", status="draft")
         request = self.factory.post(
@@ -435,6 +451,37 @@ class PageAdminBulkTagActionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.template_name, "admin/posts/page/add_tags.html")
+
+    def test_add_tags_action_select_across_omits_hidden_ids_and_limits_preview(self):
+        total_pages = 1100
+        self._bulk_create_pages(total_pages)
+
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, Page.objects.order_by("pk"))
+        response.render()
+
+        self.assertEqual(response.context_data["selected_page_count"], total_pages)
+        self.assertEqual(len(response.context_data["selected_page_ids"]), 1)
+        self.assertEqual(
+            len(response.context_data["selected_pages_preview"]),
+            self.admin.BULK_TAG_PREVIEW_LIMIT,
+        )
+        self.assertIn(
+            "All pages matching the current changelist filters will be updated.",
+            response.content.decode(),
+        )
+        self.assertEqual(
+            response.content.decode().count(f'name="{helpers.ACTION_CHECKBOX_NAME}"'),
+            1,
+        )
 
     def test_add_tags_action_adds_existing_and_new_tags(self):
         existing = Tag.objects.create(name="Existing", slug="existing")
@@ -466,6 +513,61 @@ class PageAdminBulkTagActionTests(TestCase):
             self.assertTrue(page.tags.filter(name="Existing").exists())
             self.assertTrue(page.tags.filter(name="Beta").exists())
             self.assertTrue(page.tags.filter(name="Gamma").exists())
+
+    def test_add_tags_action_select_across_applies_tags_to_entire_queryset(self):
+        existing = Tag.objects.create(name="Existing", slug="existing")
+        self._bulk_create_pages(60)
+
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "apply": "1",
+                "select_across": "1",
+                "tags": [str(existing.pk)],
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, Page.objects.all())
+
+        self.assertIsNone(response)
+        self.assertEqual(Page.objects.filter(tags=existing).count(), 60)
+        self.assertEqual(Page.objects.filter(derived_tags=existing).count(), 60)
+
+    def test_add_tags_action_select_across_full_admin_flow_creates_new_tag(self):
+        self._bulk_create_pages(60)
+        self.client.force_login(self.user)
+
+        confirmation_response = self.client.post(
+            "/admin/posts/page/",
+            {
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+                "index": "0",
+                helpers.ACTION_CHECKBOX_NAME: [str(Page.objects.order_by("pk").first().pk)],
+            },
+        )
+
+        self.assertEqual(confirmation_response.status_code, 200)
+        confirmation_selected_ids = confirmation_response.context["selected_page_ids"]
+        self.assertEqual(len(confirmation_selected_ids), 1)
+
+        apply_response = self.client.post(
+            "/admin/posts/page/",
+            {
+                "apply": "1",
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+                "new_tags": "Foobar",
+                helpers.ACTION_CHECKBOX_NAME: [str(confirmation_selected_ids[0])],
+            },
+        )
+
+        self.assertEqual(apply_response.status_code, 302)
+        self.assertTrue(Tag.objects.filter(name="Foobar").exists())
+        created_tag = Tag.objects.get(name="Foobar")
+        self.assertEqual(Page.objects.filter(tags=created_tag).count(), 60)
+        self.assertEqual(Page.objects.filter(derived_tags=created_tag).count(), 60)
 
 
 class MostRecentPageListTests(TestCase):
