@@ -31,7 +31,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - File upload: staff POST to `pages.views.upload_media` → content-type validation → S3 storage → URL returned
 - Admin edit protection: `pages/static/pages/admin/form_edit_guard.js` (loaded by `pages.admin.PageAdmin` + `site_pages.admin.SitePageAdmin`) → beforeunload/navigate prompt + localStorage draft restore
 - Admin copy links: `pages/admin.py` + `pages/static/pages/admin/copy_page_link.js` → copy Markdown (`[title](url)`) or HTML (`<a href="url">title</a>`) to clipboard (also used by `site_pages/admin.py`)
-- Admin bulk tagging: Pages changelist action → `pages.admin.PageAdmin.add_tags_to_selected` → adds tags to selected pages (and mirrors into `derived_tags`)
+- Admin bulk tagging: Pages changelist action → `pages.admin.PageAdmin.add_tags_to_selected` → confirmation screen shows count + short preview, keeps Django's confirmation POST valid for `select_across`, then batch-adds tags across the filtered queryset and mirrors them into `derived_tags`
 - Admin page search: `pages.admin.PageAdmin.get_search_results` → slugified title-only phrase match at the start of a word (`thyroid` matches `Thyroid Support`, not `Hypothyroidism`); keeps Django admin date/tag filters separate from visitor search ranking
 - Search: frontend query → `search.views.search_api` (`limit`+`offset`, capped at 1000) → MeiliSearch (`search/search.py`) → hits + `totalHits` (shown as `1000+` when ≥1000)
 - Most-recent index: `GET /pages/recent/` → `pages.views.recent_page_list` → latest 150 published pages by `modified_date` (display date `MM/YYYY`)
@@ -47,7 +47,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 export AWS_ACCESS_KEY_ID=...  # plus AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_DEFAULT_REGION
 export MEILISEARCH_MASTER_KEY=...  # and optional MEILISEARCH_URL
-export DJANGO_DEBUG=false  # default is already false unless DEBUG/DJANGO_DEBUG is set truthy
+export DJANGO_DEBUG=true  # local runserver needs DEBUG on to serve admin/static assets
 python manage.py runserver  # auto-starts MeiliSearch locally if available
 ```
 

@@ -1,4 +1,5 @@
 import re
+from itertools import islice
 from urllib.parse import urljoin
 
 from django.contrib import admin, messages
@@ -82,6 +83,14 @@ def _is_changelist_request(request) -> bool:
     return url_name.endswith('_changelist')
 
 
+def _batched(iterable, batch_size: int):
+    assert batch_size > 0, "batch_size must be positive"
+
+    iterator = iter(iterable)
+    while batch := list(islice(iterator, batch_size)):
+        yield batch
+
+
 PAGE_CHANGELIST_DEFERRED_FIELDS = (
     'content_md',
     'content_html',
@@ -141,6 +150,9 @@ class PageAdminForm(forms.ModelForm):
 
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
+    BULK_TAG_PAGE_BATCH_SIZE = 250
+    BULK_TAG_PREVIEW_LIMIT = 50
+
     form = PageAdminForm
     list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'created_date_display', 'modified_date_display']
     list_display_links = ('title',)
@@ -355,7 +367,53 @@ class PageAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
+    def _bulk_add_tags_to_pages(self, queryset, tag_ids: list[int]) -> None:
+        assert tag_ids, "tag_ids must not be empty"
+
+        tags_through = Page.tags.through
+        derived_through = Page.derived_tags.through
+        page_id_iterator = queryset.values_list("pk", flat=True).iterator(
+            chunk_size=self.BULK_TAG_PAGE_BATCH_SIZE
+        )
+
+        with transaction.atomic():
+            for page_id_batch in _batched(page_id_iterator, self.BULK_TAG_PAGE_BATCH_SIZE):
+                tags_links = [
+                    tags_through(page_id=page_id, tag_id=tag_id)
+                    for page_id in page_id_batch
+                    for tag_id in tag_ids
+                ]
+                derived_links = [
+                    derived_through(page_id=page_id, tag_id=tag_id)
+                    for page_id in page_id_batch
+                    for tag_id in tag_ids
+                ]
+
+                tags_through.objects.bulk_create(tags_links, ignore_conflicts=True)
+                derived_through.objects.bulk_create(derived_links, ignore_conflicts=True)
+
+    def _get_bulk_tag_selection_context(self, queryset, *, select_across: bool) -> dict:
+        ordered_queryset = queryset.order_by("pk")
+        selected_page_count = queryset.count()
+        selected_pages_preview = list(
+            ordered_queryset.values_list("title", flat=True)[: self.BULK_TAG_PREVIEW_LIMIT]
+        )
+        if select_across:
+            # Django admin requires at least one selected checkbox value on the
+            # confirmation POST before it will re-run the action.
+            selected_page_ids = list(ordered_queryset.values_list("pk", flat=True)[:1])
+        else:
+            selected_page_ids = list(queryset.values_list("pk", flat=True))
+
+        return {
+            "selected_page_count": selected_page_count,
+            "selected_page_ids": selected_page_ids,
+            "selected_pages_preview": selected_pages_preview,
+        }
+
     def add_tags_to_selected(self, request, queryset):
+        select_across = request.POST.get("select_across") == "1"
+
         if request.POST.get("apply"):
             form = BulkTagPagesActionForm(request.POST)
             if form.is_valid():
@@ -365,31 +423,15 @@ class PageAdmin(admin.ModelAdmin):
                 created_tags = [_create_tag_with_unique_slug(name=name) for name in new_tag_names]
                 all_tags = [*existing_tags, *created_tags]
 
-                page_ids = list(queryset.values_list("pk", flat=True))
+                page_count = queryset.count()
                 tag_ids = [tag.pk for tag in all_tags]
                 assert all(tag_ids), "All tags must be saved before bulk-add"
 
-                tags_through = Page.tags.through
-                derived_through = Page.derived_tags.through
-
-                tags_links = [
-                    tags_through(page_id=page_id, tag_id=tag_id)
-                    for page_id in page_ids
-                    for tag_id in tag_ids
-                ]
-                derived_links = [
-                    derived_through(page_id=page_id, tag_id=tag_id)
-                    for page_id in page_ids
-                    for tag_id in tag_ids
-                ]
-
-                with transaction.atomic():
-                    tags_through.objects.bulk_create(tags_links, ignore_conflicts=True)
-                    derived_through.objects.bulk_create(derived_links, ignore_conflicts=True)
+                self._bulk_add_tags_to_pages(queryset, tag_ids)
 
                 self.message_user(
                     request,
-                    f"Added {len(tag_ids)} tag(s) to {len(page_ids)} page(s).",
+                    f"Added {len(tag_ids)} tag(s) to {page_count} page(s).",
                     messages.SUCCESS,
                 )
                 return None
@@ -399,12 +441,12 @@ class PageAdmin(admin.ModelAdmin):
         context = {
             **self.admin_site.each_context(request),
             "title": "Add tags to selected pages",
-            "queryset": queryset,
             "form": form,
             "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             "action_name": "add_tags_to_selected",
-            "select_across": request.POST.get("select_across"),
+            "select_across": "1" if select_across else "",
         }
+        context.update(self._get_bulk_tag_selection_context(queryset, select_across=select_across))
 
         return TemplateResponse(request, "admin/posts/page/add_tags.html", context)
 
