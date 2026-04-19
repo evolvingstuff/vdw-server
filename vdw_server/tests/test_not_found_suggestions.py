@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.http import HttpResponsePermanentRedirect
 from django.http import Http404
 from django.test import RequestFactory, TestCase, override_settings
 
@@ -8,6 +9,7 @@ from site_pages.models import SitePage
 from vdw_server.not_found_suggestions import (
     clear_not_found_suggestions_cache,
     get_not_found_requested_phrase,
+    get_not_found_redirect_url,
     get_not_found_suggestions,
     reload_not_found_suggestions,
 )
@@ -92,6 +94,19 @@ class NotFoundSuggestionTests(TestCase):
             'tiki index.php styles vitamindwiki magiczoom trial magiczoom Stronger rowers have higher levels of Vitamin D Jan 2024',
         )
 
+    def test_get_not_found_redirect_url_returns_exact_normalized_match(self):
+        page = Page.objects.create(
+            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
+            content_md='Body text',
+            status='published',
+        )
+        reload_not_found_suggestions()
+        request = self.factory.get('/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/')
+
+        redirect_url = get_not_found_redirect_url(request)
+
+        self.assertEqual(redirect_url, f'/pages/{page.slug}/')
+
     @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=True)
     def test_custom_404_renders_requested_phrase_and_matches(self):
         page = Page.objects.create(
@@ -108,6 +123,38 @@ class NotFoundSuggestionTests(TestCase):
         self.assertContains(response, 'Vitamin D for Asthma Supports', status_code=404)
         self.assertContains(response, page.title, status_code=404)
         self.assertContains(response, f'/pages/{page.slug}/', status_code=404)
+
+    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=True)
+    def test_custom_404_redirects_exact_normalized_match(self):
+        page = Page.objects.create(
+            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
+            content_md='Body text',
+            status='published',
+        )
+        reload_not_found_suggestions()
+
+        response = self.client.get(
+            '/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/'
+        )
+
+        self.assertEqual(response.status_code, HttpResponsePermanentRedirect.status_code)
+        self.assertEqual(response['Location'], f'/pages/{page.slug}/')
+
+    @override_settings(DEBUG=True, ENABLE_404_SUGGESTIONS=True)
+    def test_page_detail_fallback_redirects_exact_normalized_match_in_debug(self):
+        page = Page.objects.create(
+            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
+            content_md='Body text',
+            status='published',
+        )
+        reload_not_found_suggestions()
+
+        response = self.client.get(
+            '/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/'
+        )
+
+        self.assertEqual(response.status_code, HttpResponsePermanentRedirect.status_code)
+        self.assertEqual(response['Location'], f'/pages/{page.slug}/')
 
     @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=False)
     def test_custom_404_cheap_mode_skips_suggestion_scoring(self):

@@ -1,6 +1,6 @@
 import re
 from itertools import islice
-from urllib.parse import urljoin
+from urllib.parse import parse_qsl, urljoin, urlparse
 
 from django.contrib import admin, messages
 from django.contrib.admin import helpers
@@ -58,20 +58,81 @@ def _normalize_admin_search_phrase(raw_phrase: str) -> str:
     return slugify(phrase)
 
 
-def _title_matches_admin_search_phrase(title: str, raw_phrase: str) -> bool:
-    assert isinstance(title, str), f"title must be str, got {type(title)}"
+def _normalized_admin_search_phrases(raw_phrase: str) -> tuple[str, ...]:
     assert isinstance(raw_phrase, str), f"raw_phrase must be str, got {type(raw_phrase)}"
 
-    title_slug = slugify(title)
-    if not title_slug:
+    phrase = raw_phrase.strip()
+    if not phrase:
+        return tuple()
+
+    is_quoted = len(phrase) >= 2 and phrase[0] == phrase[-1] and phrase[0] in {'"', "'"}
+    if is_quoted:
+        phrase = unescape_string_literal(phrase)
+
+    candidates = [phrase]
+    parsed_source = phrase
+    if '://' not in parsed_source and (
+        parsed_source.startswith('/')
+        or parsed_source.startswith('pages/')
+        or '?' in parsed_source
+    ):
+        parsed_source = f'/{parsed_source.lstrip("/")}'
+
+    parsed_phrase = urlparse(parsed_source)
+    if parsed_phrase.path or parsed_phrase.query:
+        normalized_path = parsed_phrase.path.strip('/')
+        if normalized_path:
+            candidates.append(normalized_path)
+
+            if normalized_path.startswith('pages/'):
+                _, _, remainder = normalized_path.partition('/')
+                if remainder:
+                    candidates.append(remainder)
+
+            if '/' in normalized_path:
+                candidates.append(normalized_path.rsplit('/', 1)[-1])
+
+        for key, value in parse_qsl(parsed_phrase.query, keep_blank_values=False):
+            if key in {'page', 'page_id', 'slug', 'title', 'q'}:
+                candidates.append(value)
+
+    normalized_phrases = []
+    seen = set()
+    for candidate in candidates:
+        normalized_candidate = _normalize_admin_search_phrase(candidate)
+        if not normalized_candidate or normalized_candidate in seen:
+            continue
+        seen.add(normalized_candidate)
+        normalized_phrases.append(normalized_candidate)
+
+    return tuple(normalized_phrases)
+
+
+def _value_matches_admin_search_phrase(value: str, normalized_phrases: tuple[str, ...]) -> bool:
+    assert isinstance(value, str), f"value must be str, got {type(value)}"
+    assert isinstance(normalized_phrases, tuple), f"normalized_phrases must be tuple, got {type(normalized_phrases)}"
+
+    value_slug = slugify(value)
+    if not value_slug:
         return False
 
-    normalized_phrase = _normalize_admin_search_phrase(raw_phrase)
-    if not normalized_phrase:
+    value_haystack = f"-{value_slug}-"
+    return any(f"-{normalized_phrase}" in value_haystack for normalized_phrase in normalized_phrases)
+
+
+def _page_matches_admin_search_phrase(title: str, page_slug: str, raw_phrase: str) -> bool:
+    assert isinstance(title, str), f"title must be str, got {type(title)}"
+    assert isinstance(page_slug, str), f"page_slug must be str, got {type(page_slug)}"
+    assert isinstance(raw_phrase, str), f"raw_phrase must be str, got {type(raw_phrase)}"
+
+    normalized_phrases = _normalized_admin_search_phrases(raw_phrase)
+    if not normalized_phrases:
         return False
 
-    title_haystack = f"-{title_slug}-"
-    return f"-{normalized_phrase}" in title_haystack
+    if _value_matches_admin_search_phrase(title, normalized_phrases):
+        return True
+
+    return _value_matches_admin_search_phrase(page_slug, normalized_phrases)
 
 
 def _is_changelist_request(request) -> bool:
@@ -183,8 +244,8 @@ class PageAdmin(admin.ModelAdmin):
 
         matching_page_ids = [
             page_id
-            for page_id, title in queryset.values_list('pk', 'title')
-            if _title_matches_admin_search_phrase(title, trimmed_search_term)
+            for page_id, title, page_slug in queryset.values_list('pk', 'title', 'slug')
+            if _page_matches_admin_search_phrase(title, page_slug, trimmed_search_term)
         ]
 
         if not matching_page_ids:

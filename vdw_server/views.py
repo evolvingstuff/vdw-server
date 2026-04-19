@@ -1,17 +1,33 @@
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponsePermanentRedirect
 from django.shortcuts import render
 from vdw_server.not_found_suggestions import (
+    get_not_found_redirect_url,
     get_not_found_requested_phrase,
     get_not_found_suggestions,
 )
 
 
+def page_detail_fallback(request, raw_slug):
+    """Handle page-like URLs that failed the `<slug:slug>` route."""
+
+    assert isinstance(raw_slug, str), f"raw_slug must be str, got {type(raw_slug)}"
+
+    redirect_url = get_not_found_redirect_url(request)
+    if redirect_url:
+        return HttpResponsePermanentRedirect(redirect_url)
+
+    return custom_page_not_found(request, Http404(f"Page not found for raw slug {raw_slug!r}"))
+
+
 def custom_page_not_found(request, exception, template_name="404.html"):
     """Render a friendly 404 page with the correct status code."""
     if settings.ENABLE_404_SUGGESTIONS:
+        redirect_url = get_not_found_redirect_url(request)
+        if redirect_url:
+            return HttpResponsePermanentRedirect(redirect_url)
         requested_phrase, suggestions = get_not_found_suggestions(request)
     else:
         requested_phrase = get_not_found_requested_phrase(request)
