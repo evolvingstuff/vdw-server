@@ -163,6 +163,28 @@ PAGE_CHANGELIST_DEFERRED_FIELDS = (
     'original_tiki',
 )
 
+BULK_TAG_EXCLUDED_IDS_FIELD = "_bulk_tag_excluded_page_ids"
+
+
+def _parse_bulk_action_page_ids(raw_values: list[str]) -> list[int]:
+    page_ids: list[int] = []
+    seen_page_ids: set[int] = set()
+
+    for raw_value in raw_values:
+        for token in raw_value.split(","):
+            normalized_token = token.strip()
+            if not normalized_token:
+                continue
+
+            page_id = int(normalized_token)
+            if page_id in seen_page_ids:
+                continue
+
+            seen_page_ids.add(page_id)
+            page_ids.append(page_id)
+
+    return page_ids
+
 
 class BulkTagPagesActionForm(forms.Form):
     tags = forms.ModelMultipleChoiceField(
@@ -460,8 +482,8 @@ class PageAdmin(admin.ModelAdmin):
             ordered_queryset.values_list("title", flat=True)[: self.BULK_TAG_PREVIEW_LIMIT]
         )
         if select_across:
-            # Django admin requires at least one selected checkbox value on the
-            # confirmation POST before it will re-run the action.
+            # Preserve one checkbox value for the normal select-across
+            # confirmation roundtrip when a selected page still exists.
             selected_page_ids = list(ordered_queryset.values_list("pk", flat=True)[:1])
         else:
             selected_page_ids = list(queryset.values_list("pk", flat=True))
@@ -472,8 +494,17 @@ class PageAdmin(admin.ModelAdmin):
             "selected_pages_preview": selected_pages_preview,
         }
 
+    def _get_bulk_tag_excluded_page_ids(self, request) -> list[int]:
+        return _parse_bulk_action_page_ids(
+            request.POST.getlist(BULK_TAG_EXCLUDED_IDS_FIELD)
+        )
+
     def add_tags_to_selected(self, request, queryset):
         select_across = request.POST.get("select_across") == "1"
+        excluded_page_ids = self._get_bulk_tag_excluded_page_ids(request)
+
+        if excluded_page_ids:
+            queryset = queryset.exclude(pk__in=excluded_page_ids)
 
         if request.POST.get("apply"):
             form = BulkTagPagesActionForm(request.POST)
@@ -506,6 +537,9 @@ class PageAdmin(admin.ModelAdmin):
             "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             "action_name": "add_tags_to_selected",
             "select_across": "1" if select_across else "",
+            "bulk_tag_excluded_ids_field": BULK_TAG_EXCLUDED_IDS_FIELD,
+            "excluded_page_ids": excluded_page_ids,
+            "excluded_page_count": len(excluded_page_ids),
         }
         context.update(self._get_bulk_tag_selection_context(queryset, select_across=select_across))
 

@@ -13,6 +13,9 @@
   {% if select_across %}
     <p>All pages matching the current changelist filters will be updated.</p>
   {% endif %}
+  {% if excluded_page_count %}
+    <p>{{ excluded_page_count }} unchecked page(s) will be skipped.</p>
+  {% endif %}
 
   <form method="post">
     {% csrf_token %}
@@ -26,6 +29,13 @@
 
     {% if select_across %}
       <input type="hidden" name="select_across" value="{{ select_across }}">
+    {% endif %}
+    {% if excluded_page_ids %}
+      <input
+        type="hidden"
+        name="{{ bulk_tag_excluded_ids_field }}"
+        value="{% for page_id in excluded_page_ids %}{% if not forloop.first %},{% endif %}{{ page_id }}{% endfor %}"
+      >
     {% endif %}
 
     <div class="submit-row">

@@ -14,7 +14,7 @@ from django.utils.text import slugify
 
 from _retired.conversion_md_to_db import get_created_and_modified_dates, process_tags
 from pages.alias_cache import lookup_path, lookup_plain, reload_alias_redirects
-from pages.admin import PageAdmin
+from pages.admin import BULK_TAG_EXCLUDED_IDS_FIELD, PageAdmin
 from pages.models import Page
 from pages.recent_cache import clear_recent_pages_cache, get_recent_pages, reload_recent_pages
 from tags.models import Tag
@@ -512,6 +512,29 @@ class PageAdminBulkTagActionTests(TestCase):
             1,
         )
 
+    def test_add_tags_action_select_across_excludes_unchecked_pages_from_confirmation(self):
+        self._bulk_create_pages(5)
+        excluded_pages = list(Page.objects.order_by("pk")[:2])
+
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+                BULK_TAG_EXCLUDED_IDS_FIELD: ",".join(str(page.pk) for page in excluded_pages),
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, Page.objects.order_by("pk"))
+        response.render()
+
+        self.assertEqual(response.context_data["selected_page_count"], 3)
+        self.assertEqual(response.context_data["excluded_page_ids"], [page.pk for page in excluded_pages])
+        self.assertEqual(response.context_data["excluded_page_count"], 2)
+        self.assertEqual(response.context_data["selected_pages_preview"], ["P2", "P3", "P4"])
+        self.assertIn("2 unchecked page(s) will be skipped.", response.content.decode())
+
     def test_add_tags_action_adds_existing_and_new_tags(self):
         existing = Tag.objects.create(name="Existing", slug="existing")
         Tag.objects.create(name="Slug Taken", slug="beta")
@@ -563,6 +586,29 @@ class PageAdminBulkTagActionTests(TestCase):
         self.assertEqual(Page.objects.filter(tags=existing).count(), 60)
         self.assertEqual(Page.objects.filter(derived_tags=existing).count(), 60)
 
+    def test_add_tags_action_select_across_skips_excluded_pages_on_apply(self):
+        existing = Tag.objects.create(name="Existing", slug="existing")
+        self._bulk_create_pages(6)
+        excluded_pages = list(Page.objects.order_by("pk")[:2])
+
+        request = self.factory.post(
+            "/admin/posts/page/",
+            {
+                "apply": "1",
+                "select_across": "1",
+                "tags": [str(existing.pk)],
+                BULK_TAG_EXCLUDED_IDS_FIELD: ",".join(str(page.pk) for page in excluded_pages),
+            },
+        )
+        self._attach_messages(request)
+
+        response = self.admin.add_tags_to_selected(request, Page.objects.all())
+
+        self.assertIsNone(response)
+        self.assertEqual(Page.objects.filter(tags=existing).count(), 4)
+        self.assertFalse(Page.objects.filter(pk=excluded_pages[0].pk, tags=existing).exists())
+        self.assertFalse(Page.objects.filter(pk=excluded_pages[1].pk, tags=existing).exists())
+
     def test_add_tags_action_select_across_full_admin_flow_creates_new_tag(self):
         self._bulk_create_pages(60)
         self.client.force_login(self.user)
@@ -597,6 +643,44 @@ class PageAdminBulkTagActionTests(TestCase):
         created_tag = Tag.objects.get(name="Foobar")
         self.assertEqual(Page.objects.filter(tags=created_tag).count(), 60)
         self.assertEqual(Page.objects.filter(derived_tags=created_tag).count(), 60)
+
+    def test_add_tags_action_select_across_full_admin_flow_skips_excluded_pages(self):
+        self._bulk_create_pages(6)
+        excluded_pages = list(Page.objects.order_by("pk")[:2])
+        self.client.force_login(self.user)
+
+        confirmation_response = self.client.post(
+            "/admin/posts/page/",
+            {
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+                "index": "0",
+                BULK_TAG_EXCLUDED_IDS_FIELD: ",".join(str(page.pk) for page in excluded_pages),
+                helpers.ACTION_CHECKBOX_NAME: [str(Page.objects.order_by("pk").first().pk)],
+            },
+        )
+
+        self.assertEqual(confirmation_response.status_code, 200)
+        self.assertEqual(confirmation_response.context["selected_page_count"], 4)
+
+        confirmation_selected_ids = confirmation_response.context["selected_page_ids"]
+        apply_response = self.client.post(
+            "/admin/posts/page/",
+            {
+                "apply": "1",
+                "action": "add_tags_to_selected",
+                "select_across": "1",
+                "new_tags": "Foobar",
+                BULK_TAG_EXCLUDED_IDS_FIELD: ",".join(str(page.pk) for page in excluded_pages),
+                helpers.ACTION_CHECKBOX_NAME: [str(confirmation_selected_ids[0])],
+            },
+        )
+
+        self.assertEqual(apply_response.status_code, 302)
+        created_tag = Tag.objects.get(name="Foobar")
+        self.assertEqual(Page.objects.filter(tags=created_tag).count(), 4)
+        self.assertFalse(Page.objects.filter(pk=excluded_pages[0].pk, tags=created_tag).exists())
+        self.assertFalse(Page.objects.filter(pk=excluded_pages[1].pk, tags=created_tag).exists())
 
 
 class MostRecentPageListTests(TestCase):

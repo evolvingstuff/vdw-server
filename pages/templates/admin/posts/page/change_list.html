@@ -1,0 +1,7 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'pages/admin/select_across_exclusions.js' %}"></script>
+{% endblock %}
