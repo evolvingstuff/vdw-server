@@ -23,7 +23,7 @@ from pages.views import preview_markdown, page_list, recent_page_list, page_deta
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
-from vdw_server.views import google_site_verification, sitemap_xml
+from vdw_server.views import google_site_verification, page_detail_fallback, sitemap_xml
 
 handler404 = 'vdw_server.views.custom_page_not_found'
 handler500 = 'vdw_server.views.custom_server_error'
@@ -42,6 +42,7 @@ urlpatterns = [
     path('pages/recent/', recent_page_list, name='recent_page_list'),
     path('pages/<slug:slug>/preview/', page_preview, name='page_preview'),
     path('pages/<slug:slug>/', page_detail, name='page_detail'),
+    path('pages/<path:raw_slug>/', page_detail_fallback, name='page_detail_fallback'),
     # Legacy URLs for backwards compatibility
     path('posts/', RedirectView.as_view(pattern_name='page_list', permanent=True)),
     path('posts/<slug:slug>/', RedirectView.as_view(pattern_name='page_detail', permanent=True)),

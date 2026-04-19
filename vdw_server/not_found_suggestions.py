@@ -55,6 +55,7 @@ class _SuggestionIndexEntry:
 _entries_by_key: dict[str, _SuggestionIndexEntry] = {}
 _key_tokens: dict[str, frozenset[str]] = {}
 _key_trigrams: dict[str, frozenset[str]] = {}
+_exact_slug_index: DefaultDict[str, set[str]] = defaultdict(set)
 _token_index: DefaultDict[str, set[str]] = defaultdict(set)
 _trigram_index: DefaultDict[str, set[str]] = defaultdict(set)
 _loaded = False
@@ -64,7 +65,7 @@ _lock = RLock()
 def load_not_found_suggestions(force: bool = False) -> None:
     """Populate the in-memory suggestion index from published content."""
 
-    global _entries_by_key, _key_tokens, _key_trigrams, _token_index, _trigram_index, _loaded
+    global _entries_by_key, _key_tokens, _key_trigrams, _exact_slug_index, _token_index, _trigram_index, _loaded
 
     with _lock:
         if _loaded and not force:
@@ -73,23 +74,25 @@ def load_not_found_suggestions(force: bool = False) -> None:
     entries_by_key: dict[str, _SuggestionIndexEntry] = {}
     key_tokens: dict[str, frozenset[str]] = {}
     key_trigrams: dict[str, frozenset[str]] = {}
+    exact_slug_index: DefaultDict[str, set[str]] = defaultdict(set)
     token_index: DefaultDict[str, set[str]] = defaultdict(set)
     trigram_index: DefaultDict[str, set[str]] = defaultdict(set)
 
     pages = Page.objects.filter(status='published').only('id', 'slug', 'title')
     for page in pages.iterator():
         entry = _page_entry(page)
-        _register_entry(entry, entries_by_key, key_tokens, key_trigrams, token_index, trigram_index)
+        _register_entry(entry, entries_by_key, key_tokens, key_trigrams, exact_slug_index, token_index, trigram_index)
 
     site_pages = SitePage.objects.filter(is_published=True).only('id', 'slug', 'title', 'page_type')
     for site_page in site_pages.iterator():
         entry = _site_page_entry(site_page)
-        _register_entry(entry, entries_by_key, key_tokens, key_trigrams, token_index, trigram_index)
+        _register_entry(entry, entries_by_key, key_tokens, key_trigrams, exact_slug_index, token_index, trigram_index)
 
     with _lock:
         _entries_by_key = entries_by_key
         _key_tokens = key_tokens
         _key_trigrams = key_trigrams
+        _exact_slug_index = exact_slug_index
         _token_index = token_index
         _trigram_index = trigram_index
         _loaded = True
@@ -104,12 +107,13 @@ def reload_not_found_suggestions() -> None:
 def clear_not_found_suggestions_cache() -> None:
     """Reset the suggestion index. Primarily used in tests."""
 
-    global _entries_by_key, _key_tokens, _key_trigrams, _token_index, _trigram_index, _loaded
+    global _entries_by_key, _key_tokens, _key_trigrams, _exact_slug_index, _token_index, _trigram_index, _loaded
 
     with _lock:
         _entries_by_key = {}
         _key_tokens = {}
         _key_trigrams = {}
+        _exact_slug_index = defaultdict(set)
         _token_index = defaultdict(set)
         _trigram_index = defaultdict(set)
         _loaded = False
@@ -160,6 +164,31 @@ def get_not_found_suggestions(request: HttpRequest) -> tuple[str, tuple[NotFound
         for _, entry in ranked_entries[:MAX_NOT_FOUND_SUGGESTIONS]
     )
     return query_texts[0], suggestions
+
+
+def get_not_found_redirect_url(request: HttpRequest) -> str:
+    """Return the canonical URL when the missing request is an exact normalized match."""
+
+    load_not_found_suggestions()
+
+    query_texts = _extract_request_queries(request)
+    if not query_texts:
+        return ''
+
+    with _lock:
+        for query_text in query_texts:
+            query_slug = slugify(query_text)
+            if len(query_slug) < MIN_QUERY_SLUG_LENGTH:
+                continue
+
+            candidate_keys = _exact_slug_index.get(query_slug)
+            if not candidate_keys or len(candidate_keys) != 1:
+                continue
+
+            cache_key = next(iter(candidate_keys))
+            return _entries_by_key[cache_key].url
+
+    return ''
 
 
 def get_not_found_requested_phrase(request: HttpRequest) -> str:
@@ -245,6 +274,7 @@ def _register_entry(
     entries_by_key: dict[str, _SuggestionIndexEntry],
     key_tokens: dict[str, frozenset[str]],
     key_trigrams: dict[str, frozenset[str]],
+    exact_slug_index: DefaultDict[str, set[str]],
     token_index: DefaultDict[str, set[str]],
     trigram_index: DefaultDict[str, set[str]],
 ) -> None:
@@ -254,6 +284,9 @@ def _register_entry(
     entries_by_key[entry.cache_key] = entry
     key_tokens[entry.cache_key] = tokens
     key_trigrams[entry.cache_key] = trigrams
+    for slug in {entry.title_slug, entry.route_slug}:
+        if slug:
+            exact_slug_index[slug].add(entry.cache_key)
 
     for token in tokens:
         token_index[token].add(entry.cache_key)
@@ -392,7 +425,7 @@ def _upsert_entry(entry: _SuggestionIndexEntry) -> None:
         if not _loaded:
             return
         _remove_entry_locked(entry.cache_key)
-        _register_entry(entry, _entries_by_key, _key_tokens, _key_trigrams, _token_index, _trigram_index)
+        _register_entry(entry, _entries_by_key, _key_tokens, _key_trigrams, _exact_slug_index, _token_index, _trigram_index)
 
 
 def _remove_entry(cache_key: str) -> None:
@@ -403,9 +436,20 @@ def _remove_entry(cache_key: str) -> None:
 
 
 def _remove_entry_locked(cache_key: str) -> None:
+    entry = _entries_by_key.pop(cache_key, None)
     entry_tokens = _key_tokens.pop(cache_key, frozenset())
     entry_trigrams = _key_trigrams.pop(cache_key, frozenset())
-    _entries_by_key.pop(cache_key, None)
+
+    if entry is not None:
+        for slug in {entry.title_slug, entry.route_slug}:
+            if not slug:
+                continue
+            exact_slug_cache_keys = _exact_slug_index.get(slug)
+            if exact_slug_cache_keys is None:
+                continue
+            exact_slug_cache_keys.discard(cache_key)
+            if not exact_slug_cache_keys:
+                del _exact_slug_index[slug]
 
     for token in entry_tokens:
         token_cache_keys = _token_index.get(token)

@@ -108,6 +108,35 @@ class PageAdminSearchTests(TestCase):
         self.assertIn(self.phrase_prefix_hit, results)
         self.assertNotIn(self.phrase_mid_word_hit, results)
 
+    def test_search_matches_page_url_last_segment(self):
+        page = Page.objects.create(
+            title="17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies",
+            content_md="Body text",
+            status='published',
+        )
+        search_term = "https://www.vitamindwiki.com/pages/17-autism-risk-factors-low-vitamin-d-virus-vaccine-mercury-etc-many-studies/"
+        request = self.factory.get('/admin/posts/page/', {'q': search_term})
+        queryset = Page.objects.all()
+
+        results, _ = self.admin.get_search_results(request, queryset, search_term)
+
+        self.assertIn(page, results)
+
+    def test_search_matches_page_url_slug_when_slug_differs_from_title(self):
+        page = Page.objects.create(
+            title="Some hospitals record which supplements are taken, but rarely dosage, frequency, or form",
+            slug="some-hospitals-record-which-supplements-are-taken-but-not-dosage-frequency-or-form",
+            content_md="Body text",
+            status='published',
+        )
+        search_term = "https://www.vitamindwiki.com/pages/some-hospitals-record-which-supplements-are-taken-but-not-dosage-frequency-or-form/"
+        request = self.factory.get('/admin/posts/page/', {'q': search_term})
+        queryset = Page.objects.all()
+
+        results, _ = self.admin.get_search_results(request, queryset, search_term)
+
+        self.assertIn(page, results)
+
 
 class PageAdminQueryOptimizationTests(TestCase):
     def setUp(self):
