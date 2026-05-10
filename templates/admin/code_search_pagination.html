@@ -1,0 +1,23 @@
+{% if pagination.total_count %}
+<nav class="code-search-pagination" aria-label="Search result pages">
+    <span>
+        Showing {{ pagination.start_index }}-{{ pagination.end_index }}
+        of {{ pagination.total_count }}
+    </span>
+    {% if pagination.total_pages > 1 %}
+    <span>Page {{ pagination.current_page }} of {{ pagination.total_pages }}</span>
+    <span class="code-search-pagination__links">
+        {% if pagination.has_previous %}
+        <a class="code-search-pagination__link" href="{{ pagination.previous_url }}">Previous</a>
+        {% else %}
+        <span class="code-search-pagination__disabled">Previous</span>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a class="code-search-pagination__link" href="{{ pagination.next_url }}">Next</a>
+        {% else %}
+        <span class="code-search-pagination__disabled">Next</span>
+        {% endif %}
+    </span>
+    {% endif %}
+</nav>
+{% endif %}

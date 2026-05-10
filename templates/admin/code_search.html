@@ -4,25 +4,36 @@
 <div class="code-search-wrapper">
     <h1>Code Search</h1>
     <form method="get" class="code-search-form">
-        {{ form.q.label_tag }}
-        {{ form.q }}
-        <button type="submit" class="button default">Search</button>
-        {% if form.q.errors %}
-        <div class="code-search-errors">{{ form.q.errors }}</div>
-        {% endif %}
+        <div class="code-search-field code-search-field--primary">
+            {{ form.q.label_tag }}
+            {{ form.q }}
+            {% if form.q.errors %}
+            <div class="code-search-errors">{{ form.q.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="code-search-field">
+            {{ form.exclude_q.label_tag }}
+            {{ form.exclude_q }}
+            {% if form.exclude_q.errors %}
+            <div class="code-search-errors">{{ form.exclude_q.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="code-search-actions">
+            <button type="submit" class="button default">Search</button>
+        </div>
     </form>
 
     {% if has_searched and form.is_valid %}
         <div class="code-search-summary">
             {{ result_count }} result{{ result_count|pluralize }} found.
-            {% if page_has_more or site_page_has_more %}
-                Showing the first {{ result_limit }} matches per content type; refine the search string to narrow results.
-            {% endif %}
         </div>
 
         {% if page_results %}
         <section class="code-search-section">
-            <h2>Pages</h2>
+            <div class="code-search-section-header">
+                <h2>Pages</h2>
+                {% include "admin/code_search_pagination.html" with pagination=page_pagination %}
+            </div>
             {% for result in page_results %}
             <article class="code-search-result">
                 <header>
@@ -41,12 +52,16 @@
                 {% endfor %}
             </article>
             {% endfor %}
+            {% include "admin/code_search_pagination.html" with pagination=page_pagination %}
         </section>
         {% endif %}
 
         {% if site_page_results %}
         <section class="code-search-section">
-            <h2>Site Pages</h2>
+            <div class="code-search-section-header">
+                <h2>Site Pages</h2>
+                {% include "admin/code_search_pagination.html" with pagination=site_page_pagination %}
+            </div>
             {% for result in site_page_results %}
             <article class="code-search-result">
                 <header>
@@ -65,6 +80,7 @@
                 {% endfor %}
             </article>
             {% endfor %}
+            {% include "admin/code_search_pagination.html" with pagination=site_page_pagination %}
         </section>
         {% endif %}
     {% endif %}
@@ -78,23 +94,30 @@
     max-width: 1180px;
 }
 .code-search-form {
-    align-items: flex-start;
-    display: flex;
-    flex-wrap: wrap;
+    align-items: end;
+    display: grid;
     gap: 0.75rem;
+    grid-template-columns: minmax(320px, 2fr) minmax(260px, 1fr) auto;
     margin: 0 0 1.25rem;
 }
+.code-search-field {
+    min-width: 0;
+}
 .code-search-form label {
+    display: block;
     font-weight: 700;
-    line-height: 2rem;
+    margin-bottom: 0.25rem;
 }
 .code-search-form input[type="text"] {
-    flex: 1 1 520px;
-    max-width: 820px;
+    box-sizing: border-box;
+    width: 100%;
+}
+.code-search-actions {
+    padding-bottom: 1px;
 }
 .code-search-errors {
     color: #ba2121;
-    flex-basis: 100%;
+    margin-top: 0.35rem;
 }
 .code-search-errors ul {
     margin: 0;
@@ -107,10 +130,38 @@
 .code-search-section {
     margin-top: 1.5rem;
 }
-.code-search-section h2 {
+.code-search-section-header {
+    align-items: center;
     border-bottom: 1px solid var(--hairline-color);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    justify-content: space-between;
     margin: 0 0 0.75rem;
     padding-bottom: 0.4rem;
+}
+.code-search-section h2 {
+    margin: 0;
+}
+.code-search-pagination {
+    align-items: center;
+    color: #374151;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.code-search-pagination__links {
+    display: flex;
+    gap: 0.4rem;
+}
+.code-search-pagination__link,
+.code-search-pagination__disabled {
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+}
+.code-search-pagination__disabled {
+    color: #6b7280;
 }
 .code-search-result {
     border: 1px solid var(--hairline-color);
@@ -149,6 +200,15 @@
     padding: 0.75rem;
     white-space: pre-wrap;
     word-break: break-word;
+}
+@media (max-width: 900px) {
+    .code-search-form {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+    .code-search-actions {
+        padding-bottom: 0;
+    }
 }
 </style>
 {% endblock %}

@@ -37,8 +37,10 @@ from vdw_server.sitemap_utils import refresh_sitemap as regenerate_sitemap
 logger = logging.getLogger(__name__)
 
 BACKUP_PREFIX = "db_backups/manual_backups"
-CODE_SEARCH_RESULT_LIMIT = 100
+CODE_SEARCH_PAGE_SIZE = 100
 CODE_SEARCH_CONTEXT_CHARS = 140
+PAGE_CODE_SEARCH_PAGE_PARAM = "page_results_page"
+SITE_PAGE_CODE_SEARCH_PAGE_PARAM = "site_page_results_page"
 
 PAGE_CODE_SEARCH_FIELDS = (
     ("content_md", "Markdown source"),
@@ -49,10 +51,22 @@ PAGE_CODE_SEARCH_FIELDS = (
     ("front_matter", "Front matter"),
     ("meta_description", "Meta description"),
 )
+PAGE_CODE_SEARCH_EXCLUDE_FIELDS = (
+    *PAGE_CODE_SEARCH_FIELDS,
+    ("title", "Title"),
+    ("slug", "Slug"),
+    ("content_text", "Plain text"),
+)
 SITE_PAGE_CODE_SEARCH_FIELDS = (
     ("content_md", "Markdown source"),
     ("content_html", "Generated HTML"),
     ("meta_description", "Meta description"),
+)
+SITE_PAGE_CODE_SEARCH_EXCLUDE_FIELDS = (
+    *SITE_PAGE_CODE_SEARCH_FIELDS,
+    ("title", "Title"),
+    ("slug", "Slug"),
+    ("content_text", "Plain text"),
 )
 
 
@@ -70,10 +84,118 @@ class AdminCodeSearchForm(forms.Form):
             }
         ),
     )
+    exclude_q = forms.CharField(
+        label="Exclude text",
+        required=False,
+        max_length=500,
+        strip=True,
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "off",
+                "placeholder": "Optional text, such as fluoride or -fluoride",
+                "size": 64,
+            }
+        ),
+    )
+
+    def clean_exclude_q(self) -> str:
+        exclude_query = self.cleaned_data["exclude_q"]
+        if exclude_query.startswith("-"):
+            exclude_query = exclude_query[1:].strip()
+        if exclude_query and len(exclude_query) < 2:
+            raise forms.ValidationError("Exclude text must be at least 2 characters.")
+        return exclude_query
 
 
 def _backup_prefix_path(filename: str) -> str:
     return f"{BACKUP_PREFIX}/{filename}"
+
+
+def _requested_page_number(request: HttpRequest, page_param: str) -> int:
+    assert page_param, "page_param must not be empty"
+
+    raw_page_number = request.GET.get(page_param, "1")
+    try:
+        page_number = int(raw_page_number)
+    except ValueError:
+        return 1
+    if page_number < 1:
+        return 1
+    return page_number
+
+
+def _code_search_page_url(request: HttpRequest, page_param: str, page_number: int) -> str:
+    assert page_param, "page_param must not be empty"
+    assert page_number > 0, f"page_number must be positive, got {page_number}"
+
+    query_params = request.GET.copy()
+    query_params[page_param] = str(page_number)
+    return f"?{query_params.urlencode()}"
+
+
+def _code_search_pagination(total_count: int, requested_page: int) -> dict[str, object]:
+    assert total_count >= 0, f"total_count must not be negative, got {total_count}"
+    assert requested_page > 0, f"requested_page must be positive, got {requested_page}"
+
+    if total_count == 0:
+        return {
+            "total_count": 0,
+            "total_pages": 0,
+            "current_page": 1,
+            "offset": 0,
+            "start_index": 0,
+            "end_index": 0,
+            "has_previous": False,
+            "has_next": False,
+            "previous_page_number": 0,
+            "next_page_number": 0,
+        }
+
+    total_pages = (total_count + CODE_SEARCH_PAGE_SIZE - 1) // CODE_SEARCH_PAGE_SIZE
+    current_page = min(requested_page, total_pages)
+    offset = (current_page - 1) * CODE_SEARCH_PAGE_SIZE
+    end_index = min(offset + CODE_SEARCH_PAGE_SIZE, total_count)
+    return {
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": current_page,
+        "offset": offset,
+        "start_index": offset + 1,
+        "end_index": end_index,
+        "has_previous": current_page > 1,
+        "has_next": current_page < total_pages,
+        "previous_page_number": current_page - 1,
+        "next_page_number": current_page + 1,
+    }
+
+
+def _code_search_pagination_urls(
+    request: HttpRequest,
+    page_param: str,
+    pagination: dict[str, object],
+) -> dict[str, object]:
+    assert page_param, "page_param must not be empty"
+
+    previous_url = ""
+    next_url = ""
+    if pagination["has_previous"]:
+        previous_url = _code_search_page_url(
+            request,
+            page_param,
+            pagination["previous_page_number"],
+        )
+    if pagination["has_next"]:
+        next_url = _code_search_page_url(
+            request,
+            page_param,
+            pagination["next_page_number"],
+        )
+
+    return {
+        **pagination,
+        "previous_url": previous_url,
+        "next_url": next_url,
+    }
 
 
 def _build_code_search_filter(field_specs: tuple[tuple[str, str], ...], query: str) -> Q:
@@ -130,17 +252,49 @@ def _matched_code_fields(
     return matches
 
 
-def _search_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
+def _filtered_code_search_queryset(
+    queryset,
+    field_specs: tuple[tuple[str, str], ...],
+    exclude_field_specs: tuple[tuple[str, str], ...],
+    query: str,
+    exclude_query: str,
+):
+    assert query, "Code search query must not be empty"
+    assert isinstance(exclude_query, str), f"exclude_query must be str, got {type(exclude_query)}"
+
+    filtered_queryset = queryset.filter(_build_code_search_filter(field_specs, query))
+    if exclude_query:
+        filtered_queryset = filtered_queryset.exclude(
+            _build_code_search_filter(exclude_field_specs, exclude_query)
+        )
+    return filtered_queryset
+
+
+def _search_page_code(
+    query: str,
+    exclude_query: str,
+    requested_page: int,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    assert requested_page > 0, f"requested_page must be positive, got {requested_page}"
+
     field_names = [field_name for field_name, _label in PAGE_CODE_SEARCH_FIELDS]
-    pages = list(
-        Page.objects.filter(_build_code_search_filter(PAGE_CODE_SEARCH_FIELDS, query))
-        .only("id", "title", "slug", "status", "modified_date", *field_names)
-        .order_by("-modified_date", "pk")[: CODE_SEARCH_RESULT_LIMIT + 1]
+    filtered_pages = _filtered_code_search_queryset(
+        Page.objects,
+        PAGE_CODE_SEARCH_FIELDS,
+        PAGE_CODE_SEARCH_EXCLUDE_FIELDS,
+        query,
+        exclude_query,
     )
-    has_more = len(pages) > CODE_SEARCH_RESULT_LIMIT
+    total_count = filtered_pages.count()
+    pagination = _code_search_pagination(total_count, requested_page)
+    offset = pagination["offset"]
+    pages = list(
+        filtered_pages.only("id", "title", "slug", "status", "modified_date", *field_names)
+        .order_by("-modified_date", "pk")[offset : offset + CODE_SEARCH_PAGE_SIZE]
+    )
 
     results = []
-    for page in pages[:CODE_SEARCH_RESULT_LIMIT]:
+    for page in pages:
         assert page.slug, f"Page {page.pk} has no slug"
         if page.status == "published":
             public_url = reverse("page_detail", args=[page.slug])
@@ -156,20 +310,34 @@ def _search_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
                 "matched_fields": _matched_code_fields(page, PAGE_CODE_SEARCH_FIELDS, query),
             }
         )
-    return results, has_more
+    return results, pagination
 
 
-def _search_site_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
+def _search_site_page_code(
+    query: str,
+    exclude_query: str,
+    requested_page: int,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    assert requested_page > 0, f"requested_page must be positive, got {requested_page}"
+
     field_names = [field_name for field_name, _label in SITE_PAGE_CODE_SEARCH_FIELDS]
-    site_pages = list(
-        SitePage.objects.filter(_build_code_search_filter(SITE_PAGE_CODE_SEARCH_FIELDS, query))
-        .only("id", "title", "slug", "page_type", "is_published", "modified_date", *field_names)
-        .order_by("-modified_date", "pk")[: CODE_SEARCH_RESULT_LIMIT + 1]
+    filtered_site_pages = _filtered_code_search_queryset(
+        SitePage.objects,
+        SITE_PAGE_CODE_SEARCH_FIELDS,
+        SITE_PAGE_CODE_SEARCH_EXCLUDE_FIELDS,
+        query,
+        exclude_query,
     )
-    has_more = len(site_pages) > CODE_SEARCH_RESULT_LIMIT
+    total_count = filtered_site_pages.count()
+    pagination = _code_search_pagination(total_count, requested_page)
+    offset = pagination["offset"]
+    site_pages = list(
+        filtered_site_pages.only("id", "title", "slug", "page_type", "is_published", "modified_date", *field_names)
+        .order_by("-modified_date", "pk")[offset : offset + CODE_SEARCH_PAGE_SIZE]
+    )
 
     results = []
-    for site_page in site_pages[:CODE_SEARCH_RESULT_LIMIT]:
+    for site_page in site_pages:
         results.append(
             {
                 "type_label": "Site page",
@@ -184,7 +352,7 @@ def _search_site_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
                 ),
             }
         )
-    return results, has_more
+    return results, pagination
 
 
 @staff_member_required
@@ -194,12 +362,32 @@ def code_search(request: HttpRequest) -> HttpResponse:
 
     page_results = []
     site_page_results = []
-    page_has_more = False
-    site_page_has_more = False
+    page_pagination = _code_search_pagination(0, 1)
+    site_page_pagination = _code_search_pagination(0, 1)
     if has_searched and form.is_valid():
         query = form.cleaned_data["q"]
-        page_results, page_has_more = _search_page_code(query)
-        site_page_results, site_page_has_more = _search_site_page_code(query)
+        exclude_query = form.cleaned_data["exclude_q"]
+        page_results, page_pagination = _search_page_code(
+            query,
+            exclude_query,
+            _requested_page_number(request, PAGE_CODE_SEARCH_PAGE_PARAM),
+        )
+        site_page_results, site_page_pagination = _search_site_page_code(
+            query,
+            exclude_query,
+            _requested_page_number(request, SITE_PAGE_CODE_SEARCH_PAGE_PARAM),
+        )
+
+    page_pagination = _code_search_pagination_urls(
+        request,
+        PAGE_CODE_SEARCH_PAGE_PARAM,
+        page_pagination,
+    )
+    site_page_pagination = _code_search_pagination_urls(
+        request,
+        SITE_PAGE_CODE_SEARCH_PAGE_PARAM,
+        site_page_pagination,
+    )
 
     context = admin.site.each_context(request)
     context.update(
@@ -209,10 +397,10 @@ def code_search(request: HttpRequest) -> HttpResponse:
             "has_searched": has_searched,
             "page_results": page_results,
             "site_page_results": site_page_results,
-            "page_has_more": page_has_more,
-            "site_page_has_more": site_page_has_more,
-            "result_count": len(page_results) + len(site_page_results),
-            "result_limit": CODE_SEARCH_RESULT_LIMIT,
+            "page_pagination": page_pagination,
+            "site_page_pagination": site_page_pagination,
+            "result_count": page_pagination["total_count"] + site_page_pagination["total_count"],
+            "result_page_size": CODE_SEARCH_PAGE_SIZE,
         }
     )
     return TemplateResponse(request, "admin/code_search.html", context)
