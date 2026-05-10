@@ -9,7 +9,7 @@ from django import forms
 from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
-from django.utils.html import format_html, escape
+from django.utils.html import format_html, json_script, escape
 from django.utils.text import slugify, unescape_string_literal
 from django.template.response import TemplateResponse
 from django.utils import timezone
@@ -164,6 +164,9 @@ PAGE_CHANGELIST_DEFERRED_FIELDS = (
 )
 
 BULK_TAG_EXCLUDED_IDS_FIELD = "_bulk_tag_excluded_page_ids"
+MARKDOWN_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(?P<heading>.+?)\s*#*\s*$", re.MULTILINE)
+HTML_HEADING_RE = re.compile(r"<h[1-6][^>]*>(?P<heading>.*?)</h[1-6]>", re.IGNORECASE | re.DOTALL)
+HTML_TAG_RE = re.compile(r"<[^>]+>")
 
 
 def _parse_bulk_action_page_ids(raw_values: list[str]) -> list[int]:
@@ -184,6 +187,57 @@ def _parse_bulk_action_page_ids(raw_values: list[str]) -> list[int]:
             page_ids.append(page_id)
 
     return page_ids
+
+
+def _markdown_heading_texts(markdown_source: str) -> list[str]:
+    assert isinstance(markdown_source, str), f"markdown_source must be str, got {type(markdown_source)}"
+
+    headings = []
+    for match in MARKDOWN_HEADING_RE.finditer(markdown_source):
+        heading = match.group("heading").strip()
+        if heading:
+            headings.append(heading)
+
+    for match in HTML_HEADING_RE.finditer(markdown_source):
+        heading = HTML_TAG_RE.sub("", match.group("heading")).strip()
+        if heading:
+            headings.append(heading)
+
+    return headings
+
+
+def _tag_suggestion_haystack(*, title: str, content_md: str) -> str:
+    assert isinstance(title, str), f"title must be str, got {type(title)}"
+    assert isinstance(content_md, str), f"content_md must be str, got {type(content_md)}"
+
+    source_phrases = [title, *_markdown_heading_texts(content_md)]
+    slug_parts = []
+    for phrase in source_phrases:
+        phrase_slug = slugify(phrase)
+        if phrase_slug:
+            slug_parts.append(f"-{phrase_slug}-")
+
+    return "".join(slug_parts)
+
+
+def _suggested_tags_for_page(page: Page) -> list[Tag]:
+    assert page.pk, "Page must be saved before suggesting tags"
+
+    suggestion_haystack = _tag_suggestion_haystack(title=page.title, content_md=page.content_md)
+    if not suggestion_haystack:
+        return []
+
+    assigned_tag_ids = set(page.tags.values_list("pk", flat=True))
+    suggestions = []
+    for tag in Tag.objects.only("id", "name", "slug"):
+        if tag.pk in assigned_tag_ids:
+            continue
+        if not tag.slug:
+            continue
+        if f"-{tag.slug}" in suggestion_haystack:
+            suggestions.append(tag)
+
+    return suggestions
 
 
 class BulkTagPagesActionForm(forms.Form):
@@ -248,7 +302,13 @@ class PageAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
-    readonly_fields = ['live_link', 'markdown_link_helper', 'html_link_helper', 'tiki_markdown_comparison']
+    readonly_fields = [
+        'live_link',
+        'markdown_link_helper',
+        'html_link_helper',
+        'tiki_markdown_comparison',
+        'suggested_tags_helper',
+    ]
     actions = ['add_tags_to_selected']
     list_per_page = 25
     show_full_result_count = False
@@ -295,7 +355,7 @@ class PageAdmin(admin.ModelAdmin):
         # Add remaining sections
         fieldsets.extend([
             ('Tags', {
-                'fields': ('tags',)
+                'fields': ('suggested_tags_helper', 'tags')
             }),
             ('SEO', {
                 'fields': ('meta_description',),
@@ -325,6 +385,20 @@ class PageAdmin(admin.ModelAdmin):
             ''', obj.original_tiki, obj.content_md)
         return "No original Tiki data available"
     tiki_markdown_comparison.short_description = ""
+
+    def suggested_tags_helper(self, obj):
+        tag_payload = list(Tag.objects.order_by("name").values("id", "name", "slug"))
+
+        return format_html(
+            '{}'
+            '<div class="vdw-suggested-tags" data-target-select-id="id_tags">'
+            '<div class="vdw-suggested-tags__chips"></div>'
+            '<div class="vdw-suggested-tags__empty">No suggested tags from the title or headings.</div>'
+            '<p class="help">Suggestions come from existing tags found at the start of words in the page title or Markdown headings.</p>'
+            '</div>',
+            json_script(tag_payload, "vdw-suggested-tags-data"),
+        )
+    suggested_tags_helper.short_description = "Suggested tags"
     
     def live_link(self, obj):
         if obj.pk and obj.status == 'published':
@@ -552,4 +626,5 @@ class PageAdmin(admin.ModelAdmin):
             'pages/admin/form_edit_guard.js',
             'pages/admin/copy_page_link.js',
             'pages/admin/title_length_warning.js',
+            'pages/admin/suggested_tags.js',
         )

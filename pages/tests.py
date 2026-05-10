@@ -14,7 +14,12 @@ from django.utils.text import slugify
 
 from _retired.conversion_md_to_db import get_created_and_modified_dates, process_tags
 from pages.alias_cache import lookup_path, lookup_plain, reload_alias_redirects
-from pages.admin import BULK_TAG_EXCLUDED_IDS_FIELD, PageAdmin
+from pages.admin import (
+    BULK_TAG_EXCLUDED_IDS_FIELD,
+    PageAdmin,
+    _markdown_heading_texts,
+    _suggested_tags_for_page,
+)
 from pages.models import Page
 from pages.recent_cache import clear_recent_pages_cache, get_recent_pages, reload_recent_pages
 from tags.models import Tag
@@ -220,6 +225,93 @@ class DerivedTagsFromTitleTests(TestCase):
         derived_slugs = set(page.derived_tags.values_list("slug", flat=True))
         self.assertIn("alcohol", derived_slugs)
         self.assertIn("vitamin-d", derived_slugs)
+
+
+class PageAdminSuggestedTagsTests(TestCase):
+    def setUp(self):
+        self.site = AdminSite()
+        self.admin = PageAdmin(Page, self.site)
+
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_markdown_heading_texts_reads_markdown_and_html_headings(self):
+        headings = _markdown_heading_texts(
+            "# Vitamin D status\n"
+            "Body\n"
+            "### Magnesium deficiency ###\n"
+            "<h2>Calcium intake</h2>\n"
+        )
+
+        self.assertEqual(
+            headings,
+            ["Vitamin D status", "Magnesium deficiency", "Calcium intake"],
+        )
+
+    def test_suggested_tags_use_title_and_headings(self):
+        Tag.objects.create(name="Vitamin D", slug="vitamin-d")
+        Tag.objects.create(name="Magnesium", slug="magnesium")
+        Tag.objects.create(name="Calcium", slug="calcium")
+        page = Page.objects.create(
+            title="Vitamin D research",
+            slug="vitamin-d-research",
+            content_md="# Magnesium deficiency\n\n## Calcium intake",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["calcium", "magnesium", "vitamin-d"])
+
+    def test_suggested_tags_skip_explicitly_assigned_tags(self):
+        assigned = Tag.objects.create(name="Vitamin D", slug="vitamin-d")
+        Tag.objects.create(name="Magnesium", slug="magnesium")
+        page = Page.objects.create(
+            title="Vitamin D research",
+            slug="vitamin-d-research",
+            content_md="# Magnesium deficiency",
+            status="draft",
+        )
+        page.tags.add(assigned)
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["magnesium"])
+
+    def test_suggested_tags_ignore_mid_word_matches(self):
+        Tag.objects.create(name="Thyroid", slug="thyroid")
+        page = Page.objects.create(
+            title="Hypothyroidism overview",
+            slug="hypothyroidism-overview",
+            content_md="# Hypothyroidism causes",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, [])
+
+    def test_suggested_tags_helper_renders_dynamic_container_and_tag_data(self):
+        tag = Tag.objects.create(name="Magnesium", slug="magnesium")
+        page = Page.objects.create(
+            title="A page",
+            slug="a-page",
+            content_md="# Magnesium deficiency",
+            status="draft",
+        )
+
+        html = self.admin.suggested_tags_helper(page)
+
+        self.assertIn('id="vdw-suggested-tags-data"', html)
+        self.assertIn('class="vdw-suggested-tags"', html)
+        self.assertIn('"name": "Magnesium"', html)
+        self.assertIn(f'"id": {tag.pk}', html)
 
 
 class ConversionDateParsingTests(SimpleTestCase):
