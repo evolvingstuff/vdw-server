@@ -10,6 +10,7 @@
     <span class="home-link"><a href="{% url 'homepage' %}">Back to site</a></span>
     {% if user.is_staff %}
     <div class="manual-backup-actions">
+        <a href="{% url 'admin_code_search' %}" class="admin-code-search-button">Code Search</a>
         <form method="post" action="{% url 'manual_backup' %}" class="manual-backup-form" id="manual-backup-form">
             {% csrf_token %}
             <button type="submit" class="manual-backup-button" id="manual-backup-button">Trigger Manual Backup</button>
@@ -60,6 +61,18 @@
 #site-name .manual-backup-button:hover,
 #site-name .manual-backup-button:focus {
     background-color: #095fa7;
+}
+#site-name .admin-code-search-button {
+    background-color: #6d28d9;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+    text-decoration: none;
+}
+#site-name .admin-code-search-button:hover,
+#site-name .admin-code-search-button:focus {
+    background-color: #5b21b6;
 }
 #site-name .refresh-sitemap-button {
     background-color: #059669;

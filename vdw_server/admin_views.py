@@ -10,18 +10,22 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List
 
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import connections
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
+from pages.models import Page
+from site_pages.models import SitePage
 from vdw_server.restore_state import (
     clear_pending_restore_restart,
     maintenance_lock,
@@ -33,10 +37,185 @@ from vdw_server.sitemap_utils import refresh_sitemap as regenerate_sitemap
 logger = logging.getLogger(__name__)
 
 BACKUP_PREFIX = "db_backups/manual_backups"
+CODE_SEARCH_RESULT_LIMIT = 100
+CODE_SEARCH_CONTEXT_CHARS = 140
+
+PAGE_CODE_SEARCH_FIELDS = (
+    ("content_md", "Markdown source"),
+    ("content_html", "Generated HTML"),
+    ("original_tiki", "Original Tiki"),
+    ("notes", "Internal notes"),
+    ("aliases", "Legacy aliases"),
+    ("front_matter", "Front matter"),
+    ("meta_description", "Meta description"),
+)
+SITE_PAGE_CODE_SEARCH_FIELDS = (
+    ("content_md", "Markdown source"),
+    ("content_html", "Generated HTML"),
+    ("meta_description", "Meta description"),
+)
+
+
+class AdminCodeSearchForm(forms.Form):
+    q = forms.CharField(
+        label="Text string",
+        min_length=2,
+        max_length=500,
+        strip=True,
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "off",
+                "placeholder": "Paste a URL, HTML tag, markdown fragment, or other source text",
+                "size": 96,
+            }
+        ),
+    )
 
 
 def _backup_prefix_path(filename: str) -> str:
     return f"{BACKUP_PREFIX}/{filename}"
+
+
+def _build_code_search_filter(field_specs: tuple[tuple[str, str], ...], query: str) -> Q:
+    assert field_specs, "At least one code search field is required"
+    assert query, "Code search query must not be empty"
+
+    field_name = field_specs[0][0]
+    query_filter = Q(**{f"{field_name}__icontains": query})
+    for field_name, _label in field_specs[1:]:
+        query_filter |= Q(**{f"{field_name}__icontains": query})
+    return query_filter
+
+
+def _value_contains_query(raw_value: object, query: str) -> bool:
+    assert query, "Code search query must not be empty"
+    if raw_value is None:
+        return False
+    assert isinstance(raw_value, str), f"Searchable value must be str, got {type(raw_value)}"
+    return query.lower() in raw_value.lower()
+
+
+def _build_code_search_snippet(value: str, query: str) -> str:
+    assert isinstance(value, str), f"value must be str, got {type(value)}"
+    assert query, "Code search query must not be empty"
+
+    match_index = value.lower().find(query.lower())
+    assert match_index >= 0, "Cannot build snippet for a value that does not contain the query"
+
+    start = max(0, match_index - CODE_SEARCH_CONTEXT_CHARS)
+    end = min(len(value), match_index + len(query) + CODE_SEARCH_CONTEXT_CHARS)
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(value) else ""
+    snippet = value[start:end].replace("\r\n", "\n").replace("\r", "\n")
+    return f"{prefix}{snippet}{suffix}"
+
+
+def _matched_code_fields(
+    instance: object,
+    field_specs: tuple[tuple[str, str], ...],
+    query: str,
+) -> list[dict[str, str]]:
+    matches = []
+    for field_name, label in field_specs:
+        raw_value = getattr(instance, field_name)
+        if not _value_contains_query(raw_value, query):
+            continue
+        assert isinstance(raw_value, str), f"{field_name} must be str once matched"
+        matches.append(
+            {
+                "label": label,
+                "snippet": _build_code_search_snippet(raw_value, query),
+            }
+        )
+    return matches
+
+
+def _search_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
+    field_names = [field_name for field_name, _label in PAGE_CODE_SEARCH_FIELDS]
+    pages = list(
+        Page.objects.filter(_build_code_search_filter(PAGE_CODE_SEARCH_FIELDS, query))
+        .only("id", "title", "slug", "status", "modified_date", *field_names)
+        .order_by("-modified_date", "pk")[: CODE_SEARCH_RESULT_LIMIT + 1]
+    )
+    has_more = len(pages) > CODE_SEARCH_RESULT_LIMIT
+
+    results = []
+    for page in pages[:CODE_SEARCH_RESULT_LIMIT]:
+        assert page.slug, f"Page {page.pk} has no slug"
+        if page.status == "published":
+            public_url = reverse("page_detail", args=[page.slug])
+        else:
+            public_url = reverse("page_preview", args=[page.slug])
+        results.append(
+            {
+                "type_label": "Page",
+                "title": page.title,
+                "admin_url": reverse("admin:posts_page_change", args=[page.pk]),
+                "public_url": public_url,
+                "modified_date": page.modified_date,
+                "matched_fields": _matched_code_fields(page, PAGE_CODE_SEARCH_FIELDS, query),
+            }
+        )
+    return results, has_more
+
+
+def _search_site_page_code(query: str) -> tuple[list[dict[str, object]], bool]:
+    field_names = [field_name for field_name, _label in SITE_PAGE_CODE_SEARCH_FIELDS]
+    site_pages = list(
+        SitePage.objects.filter(_build_code_search_filter(SITE_PAGE_CODE_SEARCH_FIELDS, query))
+        .only("id", "title", "slug", "page_type", "is_published", "modified_date", *field_names)
+        .order_by("-modified_date", "pk")[: CODE_SEARCH_RESULT_LIMIT + 1]
+    )
+    has_more = len(site_pages) > CODE_SEARCH_RESULT_LIMIT
+
+    results = []
+    for site_page in site_pages[:CODE_SEARCH_RESULT_LIMIT]:
+        results.append(
+            {
+                "type_label": "Site page",
+                "title": site_page.title,
+                "admin_url": reverse("admin:pages_sitepage_change", args=[site_page.pk]),
+                "public_url": site_page.get_absolute_url(),
+                "modified_date": site_page.modified_date,
+                "matched_fields": _matched_code_fields(
+                    site_page,
+                    SITE_PAGE_CODE_SEARCH_FIELDS,
+                    query,
+                ),
+            }
+        )
+    return results, has_more
+
+
+@staff_member_required
+def code_search(request: HttpRequest) -> HttpResponse:
+    has_searched = "q" in request.GET
+    form = AdminCodeSearchForm(request.GET if has_searched else None)
+
+    page_results = []
+    site_page_results = []
+    page_has_more = False
+    site_page_has_more = False
+    if has_searched and form.is_valid():
+        query = form.cleaned_data["q"]
+        page_results, page_has_more = _search_page_code(query)
+        site_page_results, site_page_has_more = _search_site_page_code(query)
+
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "Code Search",
+            "form": form,
+            "has_searched": has_searched,
+            "page_results": page_results,
+            "site_page_results": site_page_results,
+            "page_has_more": page_has_more,
+            "site_page_has_more": site_page_has_more,
+            "result_count": len(page_results) + len(site_page_results),
+            "result_limit": CODE_SEARCH_RESULT_LIMIT,
+        }
+    )
+    return TemplateResponse(request, "admin/code_search.html", context)
 
 
 @staff_member_required

@@ -22,7 +22,7 @@ from django.views.generic import RedirectView
 from pages.views import preview_markdown, page_list, recent_page_list, page_detail, page_preview, upload_media
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
-from vdw_server.admin_views import manual_backup, manual_restore, refresh_sitemap
+from vdw_server.admin_views import code_search, manual_backup, manual_restore, refresh_sitemap
 from vdw_server.views import google_site_verification, page_detail_fallback, sitemap_xml
 
 handler404 = 'vdw_server.views.custom_page_not_found'
@@ -31,6 +31,7 @@ handler500 = 'vdw_server.views.custom_server_error'
 urlpatterns = [
     path('admin/preview-markdown/', preview_markdown, name='preview_markdown'),
     path('admin/upload-media/', upload_media, name='upload_media'),
+    path('admin/code-search/', admin.site.admin_view(code_search), name='admin_code_search'),
     path('admin/manual-backup/', admin.site.admin_view(manual_backup), name='manual_backup'),
     path('admin/manual-restore/', admin.site.admin_view(manual_restore), name='manual_restore'),
     path('admin/refresh-sitemap/', admin.site.admin_view(refresh_sitemap), name='refresh_sitemap'),

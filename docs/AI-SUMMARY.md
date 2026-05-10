@@ -31,6 +31,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - File upload: staff POST to `pages.views.upload_media` → content-type validation → S3 storage → URL returned
 - Admin edit protection: `pages/static/pages/admin/form_edit_guard.js` (loaded by `pages.admin.PageAdmin` + `site_pages.admin.SitePageAdmin`) → beforeunload/navigate prompt + localStorage draft restore
 - Admin copy links: `pages/admin.py` + `pages/static/pages/admin/copy_page_link.js` → copy Markdown (`[title](url)`) or HTML (`<a href="url">title</a>`) to clipboard (also used by `site_pages/admin.py`)
+- Admin code search: `/admin/code-search/` (`vdw_server.admin_views.code_search`) scans raw Markdown/generated HTML/original Tiki/meta/admin-only fields for exact source text across `Page` + `SitePage`; read-only, capped at 100 results per content type
 - Admin bulk tagging: Pages changelist action → `pages.admin.PageAdmin.add_tags_to_selected` → confirmation screen shows count + short preview, preserves `select_across`, supports "all filtered pages except these unchecked rows" via `pages/static/pages/admin/select_across_exclusions.js`, then batch-adds tags across the filtered queryset and mirrors them into `derived_tags`
 - Admin page search: `pages.admin.PageAdmin.get_search_results` → slugified title/slug phrase match at the start of a word (`thyroid` matches `Thyroid Support`, not `Hypothyroidism`) and also understands pasted page URLs/path-like input; keeps Django admin date/tag filters separate from visitor search ranking
 - Search: frontend query → `search.views.search_api` (`limit`+`offset`, capped at 1000) → MeiliSearch (`search/search.py`) → hits + `totalHits` (shown as `1000+` when ≥1000)
@@ -60,6 +61,7 @@ python manage.py runserver  # auto-starts MeiliSearch locally if available
 - S3 media upload flow: `pages/views.py#L74`
 - Search client & index setup: `search/search.py#L1`
 - Bulk-tag select-across exclusions: `pages/admin.py`, `pages/templates/admin/posts/page/change_list.html`, `pages/static/pages/admin/select_across_exclusions.js`
+- Admin code search: `vdw_server/admin_views.py:code_search`, `templates/admin/code_search.html`, header link in `templates/admin/base_site.html`
 - Admin redirect middleware: `vdw_server/middleware.py#L1`
 - Legacy alias redirect flow: `pages/alias_cache.py`, `vdw_server/middleware.py#L1`
 - Frontend post-processing fixes: `templates/base.html` + `pages/static/pages/js/legacy_box_rendering.js` (URL linkify, legacy Tiki bracket linkify, RCT cleanup, legacy box/hr conversion, box markdown reconstruction, inline-link spacing repair, clickable images)
