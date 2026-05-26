@@ -159,7 +159,46 @@
 
     .fullscreen-buttons {
         display: flex;
+        align-items: center;
         gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .fullscreen-mode-toggle {
+        display: flex;
+        overflow: hidden;
+        border: 1px solid #b8c6cf;
+        border-radius: 4px;
+        background: white;
+    }
+
+    .fullscreen-mode-btn {
+        background: white;
+        color: #333;
+        border: none;
+        border-right: 1px solid #b8c6cf;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .fullscreen-mode-btn:last-child {
+        border-right: none;
+    }
+
+    .fullscreen-mode-btn.active {
+        background: #417690;
+        color: white;
+        font-weight: bold;
+    }
+
+    .fullscreen-mode-btn:hover {
+        background: #eef3f6;
+    }
+
+    .fullscreen-mode-btn.active:hover {
+        background: #205067;
     }
 
     /* Confirmation modal */
@@ -281,6 +320,14 @@
         border-radius: 4px;
     }
 
+    .fullscreen-overlay.editor-only .fullscreen-preview-container {
+        display: none;
+    }
+
+    .fullscreen-overlay.editor-only .fullscreen-editor {
+        flex-basis: 100%;
+    }
+
 </style>
 
 <script>
@@ -323,6 +370,10 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="fullscreen-header">
                 <div class="fullscreen-title">Markdown Editor (Fullscreen)</div>
                 <div class="fullscreen-buttons">
+                    <div class="fullscreen-mode-toggle" role="group" aria-label="Fullscreen editor display mode">
+                        <button type="button" class="fullscreen-mode-btn fullscreen-editor-only active" aria-pressed="true">Fullscreen</button>
+                        <button type="button" class="fullscreen-mode-btn fullscreen-code-display" aria-pressed="false">Code + Display</button>
+                    </div>
                     <button type="button" class="fullscreen-save-close">💾 Save and Close</button>
                     <button type="button" class="fullscreen-close">✕ Close</button>
                 </div>
@@ -372,6 +423,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullscreenPreview = fullscreenOverlay.querySelector('.fullscreen-preview');
         const fullscreenClose = fullscreenOverlay.querySelector('.fullscreen-close');
         const fullscreenSaveClose = fullscreenOverlay.querySelector('.fullscreen-save-close');
+        const fullscreenEditorOnly = fullscreenOverlay.querySelector('.fullscreen-editor-only');
+        const fullscreenCodeDisplay = fullscreenOverlay.querySelector('.fullscreen-code-display');
 
         function updateTitleContext() {
             const pageTitle = titleField ? titleField.value.trim() : '';
@@ -477,8 +530,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fullscreenOverlay.classList.add('active');
             fullscreenTextarea.value = contentField.value;
             originalContent = contentField.value;  // Store original content
+            setFullscreenEditorMode(true);
             updateTitleContext();
-            updatePreview(fullscreenPreview);
             fullscreenTextarea.focus();
             if (typeof fullscreenTextarea.setSelectionRange === 'function') {
                 fullscreenTextarea.setSelectionRange(0, 0);
@@ -525,6 +578,28 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmModal.classList.remove('active');
         }
 
+        function setFullscreenEditorMode(isEditorOnly) {
+            assertModeButtonsExist();
+            fullscreenOverlay.classList.toggle('editor-only', isEditorOnly);
+            fullscreenEditorOnly.classList.toggle('active', isEditorOnly);
+            fullscreenCodeDisplay.classList.toggle('active', !isEditorOnly);
+            fullscreenEditorOnly.setAttribute('aria-pressed', isEditorOnly ? 'true' : 'false');
+            fullscreenCodeDisplay.setAttribute('aria-pressed', isEditorOnly ? 'false' : 'true');
+            if (!isEditorOnly) {
+                updatePreview(fullscreenPreview);
+            }
+            fullscreenTextarea.focus();
+        }
+
+        function assertModeButtonsExist() {
+            if (!fullscreenEditorOnly) {
+                throw new Error('Fullscreen editor-only button is missing');
+            }
+            if (!fullscreenCodeDisplay) {
+                throw new Error('Fullscreen code/display button is missing');
+            }
+        }
+
         // Sync content between normal and fullscreen editors
         function syncToFullscreen() {
             if (fullscreenOverlay.classList.contains('active')) {
@@ -539,7 +614,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Event listeners
+        assertModeButtonsExist();
         fullscreenBtn.addEventListener('click', openFullscreen);
+        fullscreenEditorOnly.addEventListener('click', function() {
+            setFullscreenEditorMode(true);
+        });
+        fullscreenCodeDisplay.addEventListener('click', function() {
+            setFullscreenEditorMode(false);
+        });
         fullscreenClose.addEventListener('click', showConfirmModal);
         fullscreenSaveClose.addEventListener('click', saveAndClose);
 
