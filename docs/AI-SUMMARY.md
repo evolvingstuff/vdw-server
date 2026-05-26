@@ -30,6 +30,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - Markdown preview: admin JS hits `pages.views.preview_markdown` → `markdown2` render → JSON response
 - File upload: staff POST to `pages.views.upload_media` → content-type validation → S3 storage → URL returned
 - Admin edit protection: `pages/static/pages/admin/form_edit_guard.js` (loaded by `pages.admin.PageAdmin` + `site_pages.admin.SitePageAdmin`) → beforeunload/navigate prompt + localStorage draft restore
+- Admin Markdown editor: `pages/templates/admin/posts/page/change_form.html` + `site_pages/templates/admin/pages/sitepage/change_form.html` wrap `content_md` with a fullscreen editor overlay; overlay opens as full-width editor and can toggle to Code + Display preview mode
 - Admin copy links: `pages/admin.py` + `pages/static/pages/admin/copy_page_link.js` → copy Markdown (`[title](url)`) or HTML (`<a href="url">title</a>`) to clipboard (also used by `site_pages/admin.py`)
 - Admin suggested tags: `pages.admin.PageAdmin.suggested_tags_helper` exposes existing tag data inside the existing Tags fieldset; `pages/static/pages/admin/suggested_tags.js` recomputes suggestions live from unsaved title/Markdown heading edits and current chosen tags, then moves clicked suggestions into the normal chosen-tags selector
 - Admin code search: `/admin/code-search/` (`vdw_server.admin_views.code_search`) scans raw Markdown/generated HTML/original Tiki/meta/admin-only fields for exact source text across `Page` + `SitePage`; optional exclude text filters records containing a negative match in source/title/slug/plain text and accepts a leading `-`; read-only with exact totals and 100-result pagination per content type
@@ -63,6 +64,7 @@ python manage.py runserver  # auto-starts MeiliSearch locally if available
 - Search client & index setup: `search/search.py#L1`
 - Bulk-tag select-across exclusions: `pages/admin.py`, `pages/templates/admin/posts/page/change_list.html`, `pages/static/pages/admin/select_across_exclusions.js`
 - Suggested tags UI: `pages/admin.py`, `pages/static/pages/admin/suggested_tags.js`, `pages/templates/admin/posts/page/change_form.html`
+- Admin Markdown fullscreen UI: `pages/templates/admin/posts/page/change_form.html`, `site_pages/templates/admin/pages/sitepage/change_form.html`
 - Admin code search: `vdw_server/admin_views.py:code_search`, `templates/admin/code_search.html`, header link in `templates/admin/base_site.html`
 - Admin redirect middleware: `vdw_server/middleware.py#L1`
 - Legacy alias redirect flow: `pages/alias_cache.py`, `vdw_server/middleware.py#L1`
