@@ -68,10 +68,10 @@ def clear_recent_pages_cache() -> None:
         _loaded = False
 
 
-def get_recent_pages() -> Tuple[RecentPageEntry, ...]:
+def get_recent_pages(force_refresh: bool = False) -> Tuple[RecentPageEntry, ...]:
     """Return cached pages sorted by most recently updated."""
 
-    load_recent_pages()
+    load_recent_pages(force=force_refresh)
     with _lock:
         return tuple(_recent_pages)
 

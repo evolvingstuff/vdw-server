@@ -829,6 +829,22 @@ class MostRecentPageListTests(TestCase):
         self.assertEqual(pages[0].pk, newer_page.pk)
         self.assertEqual(pages[1].pk, older_page.pk)
 
+    def test_recent_page_list_refreshes_stale_worker_cache(self):
+        page = Page.objects.create(
+            title="Stale worker title",
+            content_md="Body",
+            status="published",
+        )
+        Page.objects.filter(pk=page.pk).update(
+            title="Fresh worker title",
+            modified_date=timezone.make_aware(datetime(2025, 3, 4)),
+        )
+
+        response = self.client.get(reverse('recent_page_list'))
+
+        self.assertContains(response, "Fresh worker title")
+        self.assertNotContains(response, "Stale worker title")
+
     def test_recent_page_list_renders_month_year_date_format(self):
         page = Page.objects.create(
             title="Date format page",
