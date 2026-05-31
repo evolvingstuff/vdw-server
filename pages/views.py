@@ -29,7 +29,7 @@ def page_list(request):
 
 
 def recent_page_list(request):
-    pages = get_recent_pages()
+    pages = get_recent_pages(force_refresh=True)
     return render(request, 'pages/recent_page_list.html', {'pages': pages})
 
 
