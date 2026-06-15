@@ -894,6 +894,22 @@ class PageDetailPrintTemplateTests(TestCase):
         self.assertContains(response, 'data-print-generated-at')
         self.assertContains(response, '@page')
 
+    def test_page_detail_includes_phone_width_layout_css(self):
+        page = Page.objects.create(
+            title="Mobile Friendly Page",
+            content_md="Body copy for phones",
+            status="published",
+        )
+
+        response = self.client.get(reverse('page_detail', args=[page.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+        self.assertContains(response, '@media (max-width: 768px)')
+        self.assertContains(response, 'max-width: none;')
+        self.assertContains(response, 'font-size: 18px;')
+        self.assertContains(response, 'padding-right: 8px;')
+
 
 class RecentPageCacheTests(TestCase):
     def setUp(self):

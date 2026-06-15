@@ -22,7 +22,18 @@
             margin: 0 auto;
             padding: 20px;
             color: #333;
+            box-sizing: border-box;
             /* padding-top will be overridden by global search bar CSS */
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+
+        main {
+            width: 100%;
         }
         
         .header {
@@ -269,6 +280,29 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                width: 100%;
+                max-width: none;
+                padding-right: 10px;
+                padding-left: 10px;
+                font-size: 18px;
+                line-height: 1.55;
+            }
+
+            main,
+            article,
+            .page-content,
+            .markdown-content {
+                max-width: 100%;
+            }
+
+            article > h1,
+            .page-content > h1 {
+                font-size: 1.8rem;
+                line-height: 1.18;
+                margin: 0.7em 0;
+            }
+
             .scroll-controls {
                 right: 10px;
                 top: auto;
@@ -279,6 +313,13 @@
             .scroll-button {
                 width: 44px;
                 height: 44px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding-right: 8px;
+                padding-left: 8px;
             }
         }
 
