@@ -893,6 +893,8 @@ class PageDetailPrintTemplateTests(TestCase):
         self.assertContains(response, f'URL: http://testserver/pages/{page.slug}/')
         self.assertContains(response, 'data-print-generated-at')
         self.assertContains(response, '@page')
+        self.assertContains(response, '.post-toc {')
+        self.assertNotContains(response, '.post-toc,')
 
     def test_page_detail_includes_phone_width_layout_css(self):
         page = Page.objects.create(
@@ -905,6 +907,9 @@ class PageDetailPrintTemplateTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+        self.assertContains(response, 'max-width: 1600px;')
+        self.assertContains(response, 'overflow-wrap: anywhere;')
+        self.assertContains(response, 'word-wrap: break-word;')
         self.assertContains(response, '@media (max-width: 768px)')
         self.assertContains(response, 'max-width: none;')
         self.assertContains(response, 'font-size: 18px;')
