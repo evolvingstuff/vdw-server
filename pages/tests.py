@@ -907,7 +907,8 @@ class PageDetailPrintTemplateTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<meta name="viewport" content="width=device-width, initial-scale=1.0">')
-        self.assertContains(response, 'max-width: 1600px;')
+        self.assertContains(response, 'max-width: 800px;')
+        self.assertContains(response, 'width: 200vw;')
         self.assertContains(response, 'overflow-wrap: anywhere;')
         self.assertContains(response, 'word-wrap: break-word;')
         self.assertContains(response, '@media (max-width: 768px)')
