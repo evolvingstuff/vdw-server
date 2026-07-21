@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 from core.models import ContentBase
@@ -18,8 +19,13 @@ class SitePage(ContentBase):
     is_published = models.BooleanField(default=True)
     meta_description = models.TextField(blank=True, help_text="SEO meta description")
     modified_date = models.DateTimeField(auto_now=True)
+    public_modified_date = models.DateTimeField(default=timezone.now, editable=False)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, update_public_modified_date=True, **kwargs):
+        assert isinstance(update_public_modified_date, bool), (
+            "update_public_modified_date must be a bool"
+        )
+
         # Enforce homepage singleton
         if self.page_type == 'homepage':
             # Check for existing homepage
@@ -38,6 +44,9 @@ class SitePage(ContentBase):
             while SitePage.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
+
+        if update_public_modified_date:
+            self.public_modified_date = timezone.now()
 
         # Call parent save (ContentBase) which handles markdown processing
         super().save(*args, **kwargs)

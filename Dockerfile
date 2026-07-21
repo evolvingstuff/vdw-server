@@ -24,9 +24,11 @@ COPY . .
 
 # Create directory for SQLite database (will be mounted as volume)
 RUN mkdir -p /app/data
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 8000
 
 # Command to run the application
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "vdw_server.wsgi:application"]

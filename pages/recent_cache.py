@@ -20,7 +20,7 @@ class RecentPageEntry:
     slug: str
     title: str
     status: str
-    modified_date: datetime
+    public_modified_date: datetime
     created_date: datetime
 
 
@@ -43,9 +43,9 @@ def load_recent_pages(force: bool = False) -> None:
         'slug',
         'title',
         'status',
-        'modified_date',
+        'public_modified_date',
         'created_date',
-    ).order_by('-modified_date', '-created_date', '-id')[:MAX_RECENT_PAGES]
+    ).order_by('-public_modified_date', '-created_date', '-id')[:MAX_RECENT_PAGES]
     entries = [_entry_from_page(page) for page in pages]
 
     with _lock:
@@ -112,20 +112,20 @@ def get_cached_recent_count() -> int:
 
 def _entry_from_page(page: Page) -> RecentPageEntry:
     assert page.pk, "Page must have a primary key before caching"
-    assert page.modified_date, "Page modified_date is required for cache sorting"
+    assert page.public_modified_date, "Page public_modified_date is required for cache sorting"
     assert page.created_date, "Page created_date is required for cache sorting"
     return RecentPageEntry(
         pk=page.pk,
         slug=page.slug,
         title=page.title,
         status=page.status,
-        modified_date=page.modified_date,
+        public_modified_date=page.public_modified_date,
         created_date=page.created_date,
     )
 
 
 def _sort_key(entry: RecentPageEntry) -> tuple[datetime, datetime, int]:
-    return entry.modified_date, entry.created_date, entry.pk
+    return entry.public_modified_date, entry.created_date, entry.pk
 
 
 def _replace_entries(entries: List[RecentPageEntry]) -> None:

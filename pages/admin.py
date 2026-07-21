@@ -14,6 +14,7 @@ from django.utils.text import slugify, unescape_string_literal
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
+from core.admin import PublicUpdateAdminMixin
 from core.admin_filters import DateRangeFieldListFilter
 from .models import Page
 from tags.models import Tag
@@ -286,16 +287,17 @@ class PageAdminForm(forms.ModelForm):
 
 
 @admin.register(Page)
-class PageAdmin(admin.ModelAdmin):
+class PageAdmin(PublicUpdateAdminMixin, admin.ModelAdmin):
     BULK_TAG_PAGE_BATCH_SIZE = 250
     BULK_TAG_PREVIEW_LIMIT = 50
 
     form = PageAdminForm
-    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'created_date_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'status_link', 'chars_display', 'created_date_display', 'public_modified_date_display', 'modified_date_display']
     list_display_links = ('title',)
     list_filter = [
         'status',
         ('created_date', DateRangeFieldListFilter),
+        ('public_modified_date', DateRangeFieldListFilter),
         ('modified_date', DateRangeFieldListFilter),
         'tags',
     ]
@@ -308,6 +310,8 @@ class PageAdmin(admin.ModelAdmin):
         'html_link_helper',
         'tiki_markdown_comparison',
         'suggested_tags_helper',
+        'modified_date',
+        'public_modified_date',
     ]
     actions = ['add_tags_to_selected']
     list_per_page = 25
@@ -362,7 +366,7 @@ class PageAdmin(admin.ModelAdmin):
                 'classes': ('collapse',)
             }),
             ('Timestamps', {
-                'fields': ('created_date',),
+                'fields': ('created_date', 'public_modified_date', 'modified_date'),
                 'classes': ('collapse',)
             }),
         ])
@@ -518,11 +522,13 @@ class PageAdmin(admin.ModelAdmin):
 
     def modified_date_display(self, obj):
         return timezone.localtime(obj.modified_date).strftime('%Y/%m/%d')
-    modified_date_display.short_description = "Modified"
+    modified_date_display.short_description = "Last edited"
     modified_date_display.admin_order_field = 'modified_date'
 
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
+    def public_modified_date_display(self, obj):
+        return timezone.localtime(obj.public_modified_date).strftime('%Y/%m/%d')
+    public_modified_date_display.short_description = "Public update"
+    public_modified_date_display.admin_order_field = 'public_modified_date'
 
     def _bulk_add_tags_to_pages(self, queryset, tag_ids: list[int]) -> None:
         assert tag_ids, "tag_ids must not be empty"

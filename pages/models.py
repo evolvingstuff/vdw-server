@@ -27,6 +27,7 @@ class Page(ContentBase):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     created_date = models.DateTimeField(default=timezone.now)
     modified_date = models.DateTimeField(auto_now=True)
+    public_modified_date = models.DateTimeField(default=timezone.now, editable=False)
     
     # Tag system with ontology support
     tags = models.ManyToManyField(Tag, related_name='pages', blank=True)
@@ -45,7 +46,11 @@ class Page(ContentBase):
     original_tiki = models.TextField(blank=True, null=True, editable=False, help_text="Original Tiki wiki markup for reference")
     redacted_count = models.IntegerField(default=0, help_text="Number of censored sections from Tiki conversion")
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, update_public_modified_date=True, **kwargs):
+        assert isinstance(update_public_modified_date, bool), (
+            "update_public_modified_date must be a bool"
+        )
+
         # Auto-generate slug if not provided
         if not self.slug:
             self.slug = slugify(self.title)
@@ -55,6 +60,9 @@ class Page(ContentBase):
             while Page.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
+
+        if update_public_modified_date:
+            self.public_modified_date = timezone.now()
 
         # Call parent save (ContentBase) which handles markdown processing
         super().save(*args, **kwargs)

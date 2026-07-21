@@ -6,6 +6,7 @@ After=network.target
 User=ubuntu
 Group=www-data
 WorkingDirectory=/var/www/vdw-server
+ExecStartPre=/var/www/vdw-server/venv/bin/python /var/www/vdw-server/manage.py migrate --noinput
 ExecStart=/var/www/vdw-server/venv/bin/gunicorn \
           --workers 3 \
           --threads 4 \

@@ -20,6 +20,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - Pattern: abstract `ContentBase` model centralizes Markdown (`markdown2` extras: footnotes, fenced code) → HTML/text caching
 - Storage: Django-Storages S3 backend enforced; media uploads crash if backend mismatch
 - Search: MeiliSearch client wrappers encapsulate index config, ranking, and CRUD; production deploys persist Meili data under `/app/data/meilisearch` instead of Docker root storage
+- Startup migrations: local `manage.py runserver` applies migrations before rebuilding Meilisearch; Docker uses `docker-entrypoint.sh` to migrate and collect static files before Gunicorn, and deployment waits for container health before optional reindexing
 - Middleware: `AdminPageRedirectMiddleware` rewrites admin redirects to edit concrete models; `LegacyAliasRedirectMiddleware` also warms alias + 404 caches on startup
 - 404 handling: custom handler ranks cached title/slug matches with token+trigram scoring; no DB scan on steady-state misses
 - Error handling philosophy: internal bugs crash immediately; only external I/O gets validation
@@ -30,6 +31,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - Markdown preview: admin JS hits `pages.views.preview_markdown` → `markdown2` render → JSON response
 - File upload: staff POST to `pages.views.upload_media` → content-type validation → S3 storage → URL returned
 - Admin edit protection: `pages/static/pages/admin/form_edit_guard.js` (loaded by `pages.admin.PageAdmin` + `site_pages.admin.SitePageAdmin`) → beforeunload/navigate prompt + localStorage draft restore
+- Admin minor edits: Page/SitePage change forms expose **Save as minor edit** via `core.admin.PublicUpdateAdminMixin`; `modified_date` always tracks the internal save while `public_modified_date` advances only on regular saves. Public page dates, recent-page ordering, sitemap `lastmod`, and search recency use `public_modified_date`.
 - Admin Markdown editor: `pages/templates/admin/posts/page/change_form.html` + `site_pages/templates/admin/pages/sitepage/change_form.html` wrap `content_md` with a fullscreen editor overlay; overlay opens as full-width editor and can toggle to Code + Display preview mode
 - Admin copy links: `pages/admin.py` + `pages/static/pages/admin/copy_page_link.js` → copy Markdown (`[title](url)`) or HTML (`<a href="url">title</a>`) to clipboard (also used by `site_pages/admin.py`)
 - Admin suggested tags: `pages.admin.PageAdmin.suggested_tags_helper` exposes existing tag data inside the existing Tags fieldset; `pages/static/pages/admin/suggested_tags.js` recomputes suggestions live from unsaved title/Markdown heading edits and current chosen tags, then moves clicked suggestions into the normal chosen-tags selector
@@ -37,7 +39,7 @@ Django 5.2 site that manages long-form content and static pages with Markdown-to
 - Admin bulk tagging: Pages changelist action → `pages.admin.PageAdmin.add_tags_to_selected` → confirmation screen shows count + short preview, preserves `select_across`, supports "all filtered pages except these unchecked rows" via `pages/static/pages/admin/select_across_exclusions.js`, then batch-adds tags across the filtered queryset and mirrors them into `derived_tags`
 - Admin page search: `pages.admin.PageAdmin.get_search_results` → slugified title/slug phrase match at the start of a word (`thyroid` matches `Thyroid Support`, not `Hypothyroidism`) and also understands pasted page URLs/path-like input; keeps Django admin date/tag filters separate from visitor search ranking
 - Search: frontend query → `search.views.search_api` (`limit`+`offset`, capped at 1000) → MeiliSearch (`search/search.py`) → hits + `totalHits` (shown as `1000+` when ≥1000)
-- Most-recent index: `GET /pages/recent/` → `pages.views.recent_page_list` → force-refreshes `pages.recent_cache` from DB, then renders latest 150 published pages by `modified_date` (display date `MM/YYYY`); avoids stale per-worker cache after admin saves under multi-worker Gunicorn
+- Most-recent index: `GET /pages/recent/` → `pages.views.recent_page_list` → force-refreshes `pages.recent_cache` from DB, then renders latest 150 published pages by `public_modified_date` (display date `MM/YYYY`); avoids stale per-worker cache after admin saves under multi-worker Gunicorn
 - Public layout: shared `templates/base.html` keeps the standard 800px desktop content container, uses a 2x-width phone layout, and wraps long legacy strings/URLs on mobile.
 - Print output: shared `templates/base.html` print CSS removes fixed UI (global search, scroll controls), keeps generated page ToC visible, sets page margins, and appends print metadata (URL/date) through `templates/components/print_page_metadata.html`
 - Smart 404 flow: unmatched request or malformed `/pages/...` path → exact normalized title/slug redirect when unambiguous, otherwise `vdw_server.views.custom_page_not_found` → `vdw_server.not_found_suggestions.get_not_found_suggestions()` → styled `templates/404.html` with likely matches and CTA to `/pages/recent/`
@@ -55,6 +57,8 @@ export DJANGO_DEBUG=true  # local runserver needs DEBUG on to serve admin/static
 python manage.py runserver  # auto-starts MeiliSearch locally if available
 ```
 
+`runserver` and production container startup apply pending migrations automatically; no separate server-side migration command is required.
+
 ## Quick Ref
 - Settings: `vdw_server/settings.py` (apps, markdownx config, Meili env)
 - 404 suggestion cache: `vdw_server/not_found_suggestions.py#L1`
@@ -68,6 +72,7 @@ python manage.py runserver  # auto-starts MeiliSearch locally if available
 - Admin Markdown fullscreen UI: `pages/templates/admin/posts/page/change_form.html`, `site_pages/templates/admin/pages/sitepage/change_form.html`
 - Admin code search: `vdw_server/admin_views.py:code_search`, `templates/admin/code_search.html`, header link in `templates/admin/base_site.html`
 - Admin redirect middleware: `vdw_server/middleware.py#L1`
+- Public/internal update split: `core/admin.py`, `templates/admin/submit_line.html`, `pages/models.py`, `site_pages/models.py`
 - Legacy alias redirect flow: `pages/alias_cache.py`, `vdw_server/middleware.py#L1`
 - Frontend post-processing fixes: `templates/base.html` + `pages/static/pages/js/legacy_box_rendering.js` (URL linkify, legacy Tiki bracket linkify, RCT cleanup, legacy box/hr conversion, box markdown reconstruction, inline-link spacing repair, clickable images)
 - Public layout + print CSS: `templates/base.html`; print metadata partial: `templates/components/print_page_metadata.html`

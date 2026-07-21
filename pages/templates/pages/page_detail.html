@@ -17,7 +17,7 @@
 
 	    <footer class="post-footer">
 	        <div class="post-meta">
-	            {% with created_month=page.created_date|date:"F Y" updated_month=page.modified_date|date:"F Y" %}
+	            {% with created_month=page.created_date|date:"F Y" updated_month=page.public_modified_date|date:"F Y" %}
 	                Created {{ created_month }}
 	                {% if updated_month != created_month %}
 	                    • Updated {{ updated_month }}

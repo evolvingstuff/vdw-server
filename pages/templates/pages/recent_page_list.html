@@ -54,7 +54,7 @@
     {% for page in pages %}
         <li class="recent-item">
             <a class="recent-link" href="{% url 'page_detail' page.slug %}">{{ page.title }}</a>
-            <span class="recent-date">{{ page.modified_date|date:"m/Y" }}</span>
+            <span class="recent-date">{{ page.public_modified_date|date:"m/Y" }}</span>
         </li>
     {% empty %}
         <li>No published pages yet.</li>

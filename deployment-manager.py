@@ -3395,9 +3395,7 @@ sudo chown %s:%s "$TARGET"
     def rebuild_and_restart_stack(self, reindex_search: bool = False) -> bool:
         app_path = shlex.quote(self.config['app_path'])
         steps = [
-            ("🐳 Rebuilding Docker containers", f"cd {app_path} && sudo docker compose up --build -d"),
-            ("🔄 Running database migrations", f"cd {app_path} && sudo docker compose exec -T django python manage.py migrate"),
-            ("📦 Collecting static files", f"cd {app_path} && sudo docker compose exec -T django python manage.py collectstatic --noinput"),
+            ("🐳 Rebuilding Docker containers", f"cd {app_path} && sudo docker compose up --build -d --wait"),
         ]
         if reindex_search:
             steps.append(

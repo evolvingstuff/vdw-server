@@ -1,4 +1,6 @@
 import json
+from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase
@@ -16,6 +18,7 @@ from search.search import (
     SEARCH_PRIORITY_SEVERAL_STUDIES,
     SEARCH_PRIORITY_SUMMARY,
     compute_search_priority,
+    format_page_for_search,
     has_overview_query_match,
     search_pages,
     sort_hits_by_priority,
@@ -33,6 +36,29 @@ def build_invalid_sort_error() -> MeilisearchApiError:
         }
     ).encode("utf-8")
     return MeilisearchApiError("invalid_search_sort", response)
+
+
+class SearchDocumentDateTests(SimpleTestCase):
+    def test_search_document_uses_public_update_date(self):
+        internal_date = datetime(2026, 7, 8, tzinfo=timezone.utc)
+        public_date = datetime(2024, 3, 4, tzinfo=timezone.utc)
+        page = SimpleNamespace(
+            pk=1,
+            title="Minor edit search result",
+            slug="minor-edit-search-result",
+            content_text="Body",
+            content_html="<p>Body</p>",
+            status="published",
+            created_date=datetime(2023, 1, 2, tzinfo=timezone.utc),
+            modified_date=internal_date,
+            public_modified_date=public_date,
+            derived_tags=SimpleNamespace(all=lambda: []),
+        )
+
+        document = format_page_for_search(page)
+
+        self.assertEqual(document["modified_date"], int(public_date.timestamp()))
+        self.assertNotEqual(document["modified_date"], int(internal_date.timestamp()))
 
 
 class SearchSortRecoveryTests(SimpleTestCase):

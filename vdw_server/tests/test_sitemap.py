@@ -56,8 +56,15 @@ class SitemapGenerationTests(TestCase):
         )
 
         desired_timestamp = timezone.make_aware(datetime(2024, 1, 2, 3, 4, 5), datetime_timezone.utc)
-        SitePage.objects.filter(pk=homepage.pk).update(modified_date=desired_timestamp)
-        Page.objects.filter(pk=published_page.pk).update(modified_date=desired_timestamp)
+        internal_timestamp = timezone.make_aware(datetime(2025, 6, 7, 8, 9, 10), datetime_timezone.utc)
+        SitePage.objects.filter(pk=homepage.pk).update(
+            modified_date=internal_timestamp,
+            public_modified_date=desired_timestamp,
+        )
+        Page.objects.filter(pk=published_page.pk).update(
+            modified_date=internal_timestamp,
+            public_modified_date=desired_timestamp,
+        )
 
         with override_settings(SITEMAP_FILE_PATH=self.sitemap_path):
             path = refresh_sitemap('https://example.com/')
@@ -70,6 +77,7 @@ class SitemapGenerationTests(TestCase):
         self.assertNotIn('draft-page', xml_payload)
         self.assertNotIn('hidden', xml_payload)
         self.assertIn('2024-01-02T03:04:05+00:00', xml_payload)
+        self.assertNotIn('2025-06-07T08:09:10+00:00', xml_payload)
 
     def test_sitemap_view_serves_generated_file(self):
         xml_contents = '<?xml version="1.0" encoding="utf-8"?><urlset></urlset>'

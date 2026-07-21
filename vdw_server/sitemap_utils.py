@@ -47,7 +47,7 @@ def _collect_entries(base_url: str) -> List[UrlEntry]:
         path = site_page.get_absolute_url()
         entries.append((
             _absolute_url(base_url, path),
-            _format_lastmod(site_page.modified_date),
+            _format_lastmod(site_page.public_modified_date),
         ))
 
     pages = Page.objects.filter(status='published').order_by('slug')
@@ -55,7 +55,7 @@ def _collect_entries(base_url: str) -> List[UrlEntry]:
         path = reverse('page_detail', args=[page.slug])
         entries.append((
             _absolute_url(base_url, path),
-            _format_lastmod(page.modified_date),
+            _format_lastmod(page.public_modified_date),
         ))
 
     # Keep output deterministic regardless of query ordering.

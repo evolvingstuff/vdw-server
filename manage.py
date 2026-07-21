@@ -23,6 +23,16 @@ def should_reindex_on_runserver(argv, environ) -> bool:
     return False
 
 
+def prepare_runserver() -> None:
+    """Apply schema changes before rebuilding search for the dev server."""
+
+    django.setup()
+    print("Applying database migrations before runserver...")
+    call_command('migrate', interactive=False)
+    print("Reindexing Meilisearch before runserver...")
+    call_command('reindex_search')
+
+
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vdw_server.settings')
@@ -38,9 +48,7 @@ def main():
 
         print("\nStart admin at: http://127.0.0.1:8000/admin/\n")
     if should_reindex_on_runserver(sys.argv, os.environ):
-        print("Reindexing Meilisearch before runserver...")
-        django.setup()
-        call_command('reindex_search')
+        prepare_runserver()
 
     execute_from_command_line(sys.argv)
 

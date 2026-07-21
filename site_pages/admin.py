@@ -3,6 +3,7 @@ from django import forms
 from django.conf import settings
 from django.utils.html import format_html, escape
 from urllib.parse import urljoin
+from core.admin import PublicUpdateAdminMixin
 from core.admin_filters import DateRangeFieldListFilter
 from .models import SitePage
 
@@ -40,12 +41,13 @@ class SitePageAdminForm(forms.ModelForm):
 
 
 @admin.register(SitePage)
-class SitePageAdmin(admin.ModelAdmin):
+class SitePageAdmin(PublicUpdateAdminMixin, admin.ModelAdmin):
     form = SitePageAdminForm
-    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'page_type', 'slug', 'is_published', 'chars_display', 'modified_date_display']
+    list_display = ['markdown_link_shortcut', 'html_link_shortcut', 'title', 'page_type', 'slug', 'is_published', 'chars_display', 'public_modified_date_display', 'modified_date_display']
     list_filter = [
         'page_type',
         'is_published',
+        ('public_modified_date', DateRangeFieldListFilter),
         ('modified_date', DateRangeFieldListFilter),
     ]
     search_fields = ['title', 'content_md', 'meta_description']
@@ -76,13 +78,13 @@ class SitePageAdmin(admin.ModelAdmin):
                 'classes': ('collapse',)
             }),
             ('Statistics', {
-                'fields': ('character_count', 'modified_date'),
+                'fields': ('character_count', 'public_modified_date', 'modified_date'),
                 'classes': ('collapse',)
             }),
         ]
 
     def get_readonly_fields(self, request, obj=None):
-        readonly = ['live_link', 'markdown_link_helper', 'html_link_helper', 'character_count', 'modified_date']
+        readonly = ['live_link', 'markdown_link_helper', 'html_link_helper', 'character_count', 'public_modified_date', 'modified_date']
         # Protect homepage slug and type
         if obj and obj.page_type == 'homepage':
             readonly.extend(['slug', 'page_type'])
@@ -192,8 +194,13 @@ class SitePageAdmin(admin.ModelAdmin):
 
     def modified_date_display(self, obj):
         return obj.modified_date.strftime('%B %d, %Y')
-    modified_date_display.short_description = "Modified Date"
+    modified_date_display.short_description = "Last edited"
     modified_date_display.admin_order_field = 'modified_date'
+
+    def public_modified_date_display(self, obj):
+        return obj.public_modified_date.strftime('%B %d, %Y')
+    public_modified_date_display.short_description = "Public update"
+    public_modified_date_display.admin_order_field = 'public_modified_date'
 
     class Media:
         js = (

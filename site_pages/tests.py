@@ -1,8 +1,10 @@
 from types import SimpleNamespace
+from datetime import datetime
 
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 from django.test import RequestFactory, TestCase
+from django.utils import timezone
 
 from site_pages.admin import SitePageAdmin
 from site_pages.models import SitePage
@@ -36,6 +38,39 @@ class SitePageAdminQueryOptimizationTests(TestCase):
         self.assertIn('"pages_page"."content_md"', sql)
         self.assertIn('"pages_page"."content_html"', sql)
         self.assertIn('"pages_page"."content_text"', sql)
+
+
+class SitePageAdminMinorEditTests(TestCase):
+    def setUp(self):
+        self.site = AdminSite()
+        self.admin = SitePageAdmin(SitePage, self.site)
+        self.factory = RequestFactory()
+
+    def test_minor_save_preserves_public_date_and_updates_internal_date(self):
+        page = SitePage.objects.create(
+            title="Before minor edit",
+            slug="before-minor-edit",
+            page_type="custom",
+            content_md="Body",
+            is_published=True,
+        )
+        previous_timestamp = timezone.make_aware(datetime(2024, 1, 2, 3, 4, 5))
+        SitePage.objects.filter(pk=page.pk).update(
+            modified_date=previous_timestamp,
+            public_modified_date=previous_timestamp,
+        )
+        page.refresh_from_db()
+        page.title = "After minor edit"
+        request = self.factory.post(
+            reverse("admin:pages_sitepage_change", args=[page.pk]),
+            {"_save_minor": "Save as minor edit"},
+        )
+
+        self.admin.save_model(request, page, form=None, change=True)
+
+        page.refresh_from_db()
+        self.assertEqual(page.public_modified_date, previous_timestamp)
+        self.assertGreater(page.modified_date, previous_timestamp)
 
 
 class SitePageDetailPrintTemplateTests(TestCase):

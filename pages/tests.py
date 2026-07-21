@@ -211,6 +211,140 @@ class PageAdminListFilterTests(TestCase):
         self.assertIn("tags", filter_titles)
 
 
+class PageAdminMinorEditTests(TestCase):
+    def setUp(self):
+        self.site = AdminSite()
+        self.admin = PageAdmin(Page, self.site)
+        self.factory = RequestFactory()
+
+        user_model = get_user_model()
+        self.user = user_model.objects.create_superuser(
+            username="minor-edit-admin",
+            email="minor-edit-admin@example.com",
+            password="password",
+        )
+
+        self.index_patch = patch('pages.signals.index_page')
+        self.remove_patch = patch('pages.signals.remove_page_from_search')
+        self.index_patch.start()
+        self.remove_patch.start()
+
+    def tearDown(self):
+        self.index_patch.stop()
+        self.remove_patch.stop()
+
+    def test_change_form_offers_save_as_minor_edit(self):
+        page = Page.objects.create(
+            title="Minor edit controls",
+            content_md="Body",
+            status="published",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("admin:posts_page_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="_save_minor"')
+        self.assertContains(response, "Save as minor edit")
+
+    def test_add_form_does_not_offer_save_as_minor_edit(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("admin:posts_page_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="_save_minor"')
+
+    def test_minor_save_preserves_public_date_and_updates_internal_date(self):
+        page = Page.objects.create(
+            title="Before minor edit",
+            content_md="Body",
+            status="published",
+        )
+        previous_timestamp = timezone.make_aware(datetime(2024, 1, 2, 3, 4, 5))
+        Page.objects.filter(pk=page.pk).update(
+            modified_date=previous_timestamp,
+            public_modified_date=previous_timestamp,
+        )
+        page.refresh_from_db()
+        page.title = "After minor edit"
+        request = self.factory.post(
+            reverse("admin:posts_page_change", args=[page.pk]),
+            {"_save_minor": "Save as minor edit"},
+        )
+
+        self.admin.save_model(request, page, form=None, change=True)
+
+        page.refresh_from_db()
+        self.assertEqual(page.title, "After minor edit")
+        self.assertEqual(page.public_modified_date, previous_timestamp)
+        self.assertGreater(page.modified_date, previous_timestamp)
+
+    def test_regular_save_updates_public_and_internal_dates(self):
+        page = Page.objects.create(
+            title="Before regular save",
+            content_md="Body",
+            status="published",
+        )
+        previous_timestamp = timezone.make_aware(datetime(2024, 1, 2, 3, 4, 5))
+        Page.objects.filter(pk=page.pk).update(
+            modified_date=previous_timestamp,
+            public_modified_date=previous_timestamp,
+        )
+        page.refresh_from_db()
+        page.title = "After regular save"
+        request = self.factory.post(
+            reverse("admin:posts_page_change", args=[page.pk]),
+            {"_save": "Save"},
+        )
+
+        self.admin.save_model(request, page, form=None, change=True)
+
+        page.refresh_from_db()
+        self.assertGreater(page.public_modified_date, previous_timestamp)
+        self.assertGreater(page.modified_date, previous_timestamp)
+
+    def test_minor_save_persists_tag_change_without_public_update(self):
+        original_tag = Tag.objects.create(name="Original", slug="original")
+        replacement_tag = Tag.objects.create(name="Replacement", slug="replacement")
+        page = Page.objects.create(
+            title="Tag-only minor edit",
+            content_md="Body",
+            status="published",
+        )
+        page.tags.add(original_tag)
+        previous_timestamp = timezone.make_aware(datetime(2024, 1, 2, 3, 4, 5))
+        Page.objects.filter(pk=page.pk).update(
+            modified_date=previous_timestamp,
+            public_modified_date=previous_timestamp,
+        )
+        page.refresh_from_db()
+        created_date = timezone.localtime(page.created_date)
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("admin:posts_page_change", args=[page.pk]),
+            {
+                "title": page.title,
+                "slug": page.slug,
+                "status": page.status,
+                "content_md": page.content_md,
+                "notes": page.notes,
+                "tags": [str(replacement_tag.pk)],
+                "meta_description": page.meta_description,
+                "created_date_0": created_date.strftime("%Y-%m-%d"),
+                "created_date_1": created_date.strftime("%H:%M:%S"),
+                "_save_minor": "Save as minor edit",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        page.refresh_from_db()
+        self.assertEqual(list(page.tags.all()), [replacement_tag])
+        self.assertEqual(page.public_modified_date, previous_timestamp)
+        self.assertGreater(page.modified_date, previous_timestamp)
+
+
 class DerivedTagsFromTitleTests(TestCase):
     def test_title_implies_existing_tags(self):
         Tag.objects.create(name="Alcohol", slug="alcohol")
@@ -820,14 +954,43 @@ class MostRecentPageListTests(TestCase):
 
         older_ts = timezone.make_aware(datetime(2024, 1, 1))
         newer_ts = timezone.make_aware(datetime(2025, 1, 1))
-        Page.objects.filter(pk=older_page.pk).update(modified_date=older_ts)
-        Page.objects.filter(pk=newer_page.pk).update(modified_date=newer_ts)
+        Page.objects.filter(pk=older_page.pk).update(public_modified_date=older_ts)
+        Page.objects.filter(pk=newer_page.pk).update(public_modified_date=newer_ts)
 
         response = self.client.get(reverse('recent_page_list'))
 
         pages = list(response.context['pages'])
         self.assertEqual(pages[0].pk, newer_page.pk)
         self.assertEqual(pages[1].pk, older_page.pk)
+
+    def test_recent_page_list_orders_by_public_update_not_internal_edit(self):
+        internally_newer_page = Page.objects.create(
+            title="Internally newer",
+            content_md="Body",
+            status="published",
+        )
+        publicly_newer_page = Page.objects.create(
+            title="Publicly newer",
+            content_md="Body",
+            status="published",
+        )
+
+        older_ts = timezone.make_aware(datetime(2024, 1, 1))
+        newer_ts = timezone.make_aware(datetime(2025, 1, 1))
+        Page.objects.filter(pk=internally_newer_page.pk).update(
+            modified_date=newer_ts,
+            public_modified_date=older_ts,
+        )
+        Page.objects.filter(pk=publicly_newer_page.pk).update(
+            modified_date=older_ts,
+            public_modified_date=newer_ts,
+        )
+
+        response = self.client.get(reverse('recent_page_list'))
+
+        pages = list(response.context['pages'])
+        self.assertEqual(pages[0].pk, publicly_newer_page.pk)
+        self.assertEqual(pages[1].pk, internally_newer_page.pk)
 
     def test_recent_page_list_refreshes_stale_worker_cache(self):
         page = Page.objects.create(
@@ -837,7 +1000,7 @@ class MostRecentPageListTests(TestCase):
         )
         Page.objects.filter(pk=page.pk).update(
             title="Fresh worker title",
-            modified_date=timezone.make_aware(datetime(2025, 3, 4)),
+            public_modified_date=timezone.make_aware(datetime(2025, 3, 4)),
         )
 
         response = self.client.get(reverse('recent_page_list'))
@@ -852,7 +1015,7 @@ class MostRecentPageListTests(TestCase):
             status="published",
         )
         Page.objects.filter(pk=page.pk).update(
-            modified_date=timezone.make_aware(datetime(2025, 2, 3))
+            public_modified_date=timezone.make_aware(datetime(2025, 2, 3))
         )
         reload_recent_pages()
 
@@ -878,6 +1041,23 @@ class PageDetailPrintTemplateTests(TestCase):
     def tearDown(self):
         self.index_patch.stop()
         self.remove_patch.stop()
+
+    def test_page_detail_uses_public_update_date(self):
+        page = Page.objects.create(
+            title="Public date display",
+            content_md="Body",
+            status="published",
+            created_date=timezone.make_aware(datetime(2023, 1, 2)),
+        )
+        Page.objects.filter(pk=page.pk).update(
+            modified_date=timezone.make_aware(datetime(2026, 7, 8)),
+            public_modified_date=timezone.make_aware(datetime(2024, 3, 4)),
+        )
+
+        response = self.client.get(reverse('page_detail', args=[page.slug]))
+
+        self.assertContains(response, "Updated March 2024")
+        self.assertNotContains(response, "Updated July 2026")
 
     def test_page_detail_renders_print_metadata_and_css(self):
         page = Page.objects.create(

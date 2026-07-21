@@ -429,7 +429,7 @@ def fetch_overview_hits(query: str, limit: int = 10) -> list[dict]:
         .filter(Q(title__icontains='overview') | Q(tags__name__icontains='overview'))
         .filter(Q(title__icontains=trimmed) | Q(tags__name__iexact=trimmed))
         .distinct()
-        .order_by('-modified_date')[:limit]
+        .order_by('-public_modified_date')[:limit]
     )
 
     return [format_page_for_search(page) for page in overview_pages]
@@ -441,7 +441,7 @@ def format_page_for_search(page):
     tag_names = [tag.name for tag in tags]
     tag_slugs = [tag.slug for tag in tags]
     search_priority = compute_search_priority(tag_names, tag_slugs, page.title)
-    modified_timestamp = int(page.modified_date.timestamp())
+    modified_timestamp = int(page.public_modified_date.timestamp())
 
     return {
         'id': page.pk,
