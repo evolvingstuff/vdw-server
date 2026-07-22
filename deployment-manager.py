@@ -35,6 +35,7 @@ MAINTENANCE_PAGE_REMOTE_PATH = f"{MAINTENANCE_PAGE_REMOTE_DIR}/maintenance.html"
 CLOUDWATCH_AGENT_CONFIG_REMOTE_PATH = "/opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-agent.json"
 DEFAULT_MANAGEMENT_INSTANCE_PROFILE = "vdw-ec2-management"
 DEFAULT_MANAGEMENT_ALERT_TOPIC_NAME = "vdw-ec2-health-alerts"
+SSM_PROGRESS_INTERVAL_SECONDS = 15
 PREVIOUS_BOOT_KERNEL_FAILURE_PATTERN = (
     "oom|out of memory|killed process|hung task|blocked for more than|"
     "kernel panic|soft lockup|hard lockup|watchdog.*lockup|I/O error|"
@@ -346,12 +347,20 @@ class DockerDeployment:
         data_volume_gb = self._prompt_int("Data volume size for /app/data (GB, 0 = skip)", data_volume_size or 0)
         ssh_cidr_default = existing.get('ssh_ingress_cidr', '0.0.0.0/0')
         ssh_cidr = self._prompt_with_default("SSH ingress CIDR", ssh_cidr_default)
-        alert_email_default = existing.get('management_alert_email') or ''
-        alert_email = input(
-            f"Management alert email [{alert_email_default}]: "
-        ).strip() or alert_email_default
-        if alert_email.count('@') != 1 or ' ' in alert_email:
-            print("❌ A valid management alert email is required")
+        existing_alert_emails = existing.get('management_alert_emails') or []
+        alert_email_default = ', '.join(existing_alert_emails)
+        alert_email_input = input(
+            f"Management alert emails (comma-separated) [{alert_email_default}]: "
+        ).strip()
+        raw_alert_emails = (
+            [email.strip() for email in alert_email_input.split(',')]
+            if alert_email_input
+            else existing_alert_emails
+        )
+        try:
+            alert_emails = self._validated_management_alert_emails(raw_alert_emails)
+        except ValueError as exc:
+            print(f"❌ {exc}")
             return False
 
         security_groups = instance.get('SecurityGroups', [])
@@ -391,7 +400,7 @@ class DockerDeployment:
             'elastic_ip_allocation_id': allocation_id,
             'elastic_hostname': elastic_ip_input,
             'elastic_ip_address': resolved_ip,
-            'management_alert_email': alert_email,
+            'management_alert_emails': alert_emails,
         }
 
         self._write_provisioning_config(payload)
@@ -644,9 +653,11 @@ class DockerDeployment:
         command_id = response['Command']['CommandId']
         print(f"   SSM command ID: {command_id}")
 
-        deadline = time.time() + timeout_seconds
+        started_at = time.monotonic()
+        deadline = started_at + timeout_seconds
+        next_progress_at = started_at + SSM_PROGRESS_INTERVAL_SECONDS
         invocation = None
-        while time.time() < deadline:
+        while time.monotonic() < deadline:
             try:
                 invocation = ssm.get_command_invocation(
                     CommandId=command_id,
@@ -661,6 +672,14 @@ class DockerDeployment:
 
             status = invocation['Status']
             if status in ('Pending', 'InProgress', 'Delayed'):
+                current_time = time.monotonic()
+                if current_time >= next_progress_at:
+                    elapsed_seconds = int(current_time - started_at)
+                    print(
+                        f"   Still working... SSM status: {status} "
+                        f"({elapsed_seconds}s elapsed)"
+                    )
+                    next_progress_at = current_time + SSM_PROGRESS_INTERVAL_SECONDS
                 time.sleep(2)
                 continue
             break
@@ -869,14 +888,29 @@ class DockerDeployment:
             'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy',
         ]
 
-    def _management_alert_email(self) -> str:
-        config = self._get_provisioning()
-        email = str(config.get('management_alert_email') or '').strip()
-        if email.count('@') != 1 or ' ' in email:
+    @staticmethod
+    def _validated_management_alert_emails(raw_emails) -> List[str]:
+        if not isinstance(raw_emails, list) or not raw_emails:
             raise ValueError(
-                'management_alert_email must be a valid email address in config/provisioning.json'
+                'management_alert_emails must be a non-empty list in config/provisioning.json'
             )
-        return email
+        emails: List[str] = []
+        for raw_email in raw_emails:
+            if not isinstance(raw_email, str):
+                raise ValueError('Every management alert email must be a string')
+            email = raw_email.strip()
+            if email.count('@') != 1 or ' ' in email:
+                raise ValueError(f'Invalid management alert email: {raw_email!r}')
+            emails.append(email)
+        if len(set(emails)) != len(emails):
+            raise ValueError('management_alert_emails must not contain duplicate addresses')
+        return emails
+
+    def _management_alert_emails(self) -> List[str]:
+        config = self._get_provisioning()
+        return self._validated_management_alert_emails(
+            config.get('management_alert_emails')
+        )
 
     def _management_alert_subscriptions(self, sns, topic_arn: str) -> List[Dict]:
         subscriptions: List[Dict] = []
@@ -892,40 +926,52 @@ class DockerDeployment:
             next_token = response.get('NextToken')
         return subscriptions
 
+    def _ensure_management_alert_subscriptions(
+        self,
+        sns,
+        topic_arn: str,
+        alert_emails: List[str],
+    ) -> None:
+        subscriptions = self._management_alert_subscriptions(sns, topic_arn)
+        requested_confirmation = False
+        for alert_email in alert_emails:
+            email_subscription = next(
+                (
+                    subscription
+                    for subscription in subscriptions
+                    if subscription.get('Protocol') == 'email'
+                    and subscription.get('Endpoint') == alert_email
+                ),
+                None,
+            )
+            if email_subscription is None:
+                sns.subscribe(
+                    TopicArn=topic_arn,
+                    Protocol='email',
+                    Endpoint=alert_email,
+                    ReturnSubscriptionArn=True,
+                )
+                print(f"   Confirmation email requested for {alert_email}")
+                requested_confirmation = True
+            elif email_subscription.get('SubscriptionArn') == 'PendingConfirmation':
+                print(f"   Email subscription for {alert_email} is awaiting confirmation")
+            else:
+                print(f"   Email subscription for {alert_email} is confirmed")
+        if requested_confirmation:
+            print("   Open each AWS email and confirm the SNS subscription before alerts can arrive.")
+
     def ensure_management_health_alarms(self, instance_id: str) -> bool:
         assert instance_id.startswith('i-'), f'Invalid EC2 instance ID: {instance_id}'
         config = self._get_provisioning()
         region = config.get('aws_region')
         if not region:
             raise ValueError('aws_region missing in provisioning config')
-        alert_email = self._management_alert_email()
+        alert_emails = self._management_alert_emails()
 
-        print(f"📧 Configuring EC2 health alerts for {alert_email}...")
+        print(f"📧 Configuring EC2 health alerts for {', '.join(alert_emails)}...")
         sns = self._aws_client('sns')
         topic_arn = sns.create_topic(Name=DEFAULT_MANAGEMENT_ALERT_TOPIC_NAME)['TopicArn']
-        subscriptions = self._management_alert_subscriptions(sns, topic_arn)
-        email_subscription = next(
-            (
-                subscription
-                for subscription in subscriptions
-                if subscription.get('Protocol') == 'email'
-                and subscription.get('Endpoint') == alert_email
-            ),
-            None,
-        )
-        if email_subscription is None:
-            sns.subscribe(
-                TopicArn=topic_arn,
-                Protocol='email',
-                Endpoint=alert_email,
-                ReturnSubscriptionArn=True,
-            )
-            print(f"   Confirmation email requested for {alert_email}")
-            print("   Open the AWS email and confirm the SNS subscription before alerts can arrive.")
-        elif email_subscription.get('SubscriptionArn') == 'PendingConfirmation':
-            print(f"   Email subscription for {alert_email} is awaiting confirmation")
-        else:
-            print(f"   Email subscription for {alert_email} is confirmed")
+        self._ensure_management_alert_subscriptions(sns, topic_arn, alert_emails)
 
         common_alarm = {
             'Namespace': 'AWS/EC2',
@@ -1110,7 +1156,7 @@ class DockerDeployment:
         config_dir = shlex.quote(raw_config_dir)
         config_path = shlex.quote(raw_config_path)
         return [
-            'set -euxo pipefail',
+            'set -eux',
             'sudo apt-get update',
             'sudo apt-get install -y curl snapd',
             'sudo systemctl enable --now snapd.service snapd.socket',
@@ -1146,6 +1192,7 @@ class DockerDeployment:
 
     def _bootstrap_management_via_ssm(self, instance_id: str, architecture: str) -> bool:
         print("🛠️  Installing/configuring CloudWatch agent via SSM...")
+        print("   This may take up to 5 minutes...")
         return self._run_ssm_shell_command(
             instance_id=instance_id,
             commands=self._management_bootstrap_commands(architecture),

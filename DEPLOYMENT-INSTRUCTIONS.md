@@ -79,7 +79,7 @@ Example `config/provisioning.json` (placeholder values):
   "primary_domain": "example.com",
   "alt_domains": ["www.example.com"],
   "certbot_email": "admin@example.com",
-  "management_alert_email": "ops@example.com",
+  "management_alert_emails": ["ops@example.com", "backup-ops@example.com"],
   "ssl_certificate_path": "",
   "ssl_certificate_key_path": "",
   "ssl_trusted_path": ""
@@ -183,7 +183,7 @@ python deployment-manager.py
 - Auto-creates an EC2 instance profile if needed, attaches the AWS-managed policies for SSM + CloudWatch (`AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`), and associates the profile to the production instance.
 - If SSM is already online, the tool installs/configures the CloudWatch agent through SSM. Otherwise it falls back to SSH to install/configure both `amazon-ssm-agent` and the CloudWatch agent, then starts publishing disk/memory metrics automatically.
 - Creates or updates a `StatusCheckFailed_Instance` alarm that reboots after three failed one-minute checks and a `StatusCheckFailed_System` alarm that recovers after two failed one-minute checks. Missing metrics remain `missing` instead of triggering recovery.
-- Creates/reuses the `vdw-ec2-health-alerts` SNS topic and subscribes `management_alert_email`. AWS sends a confirmation email on the first run; notifications begin only after that subscription is confirmed. Both alarms also email when health returns to OK.
+- Creates/reuses the `vdw-ec2-health-alerts` SNS topic and subscribes every address in `management_alert_emails`. AWS sends a confirmation email to each new address on the first run; notifications begin for an address only after its subscription is confirmed. Both alarms also email when health returns to OK.
 - The chosen profile name is saved to `config/provisioning.json` so future provisioned instances inherit the same management profile and bootstrap path.
 
 ### 19. Reboot EC2 Instance
