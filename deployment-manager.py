@@ -34,6 +34,28 @@ MAINTENANCE_PAGE_REMOTE_DIR = "/var/www/vdw"
 MAINTENANCE_PAGE_REMOTE_PATH = f"{MAINTENANCE_PAGE_REMOTE_DIR}/maintenance.html"
 CLOUDWATCH_AGENT_CONFIG_REMOTE_PATH = "/opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-agent.json"
 DEFAULT_MANAGEMENT_INSTANCE_PROFILE = "vdw-ec2-management"
+DEFAULT_MANAGEMENT_ALERT_TOPIC_NAME = "vdw-ec2-health-alerts"
+PREVIOUS_BOOT_KERNEL_FAILURE_PATTERN = (
+    "oom|out of memory|killed process|hung task|blocked for more than|"
+    "kernel panic|soft lockup|hard lockup|watchdog.*lockup|I/O error|"
+    "EXT4-fs error|XFS.*error|segfault|nf_conntrack: table full|NETDEV WATCHDOG"
+)
+PREVIOUS_BOOT_CONNECTIVITY_FAILURE_PATTERN = (
+    "network is unreachable|network unreachable|no route to host|link is down|"
+    "lost carrier|DHCP.*(failed|expired|lost)|EC2MetadataError|"
+    "failed to retrieve instance identity role|Failed to connect to Systems Manager"
+)
+ROOT_CODE_UPLOAD_PATTERNS = (
+    '*.py',
+    '*.sh',
+    '*.txt',
+    '*.yml',
+    '*.yaml',
+    'Dockerfile',
+    '.dockerignore',
+    'google*.html',
+)
+
 
 class DockerDeployment:
     def __init__(self):
@@ -324,6 +346,13 @@ class DockerDeployment:
         data_volume_gb = self._prompt_int("Data volume size for /app/data (GB, 0 = skip)", data_volume_size or 0)
         ssh_cidr_default = existing.get('ssh_ingress_cidr', '0.0.0.0/0')
         ssh_cidr = self._prompt_with_default("SSH ingress CIDR", ssh_cidr_default)
+        alert_email_default = existing.get('management_alert_email') or ''
+        alert_email = input(
+            f"Management alert email [{alert_email_default}]: "
+        ).strip() or alert_email_default
+        if alert_email.count('@') != 1 or ' ' in alert_email:
+            print("❌ A valid management alert email is required")
+            return False
 
         security_groups = instance.get('SecurityGroups', [])
         if not security_groups:
@@ -362,6 +391,7 @@ class DockerDeployment:
             'elastic_ip_allocation_id': allocation_id,
             'elastic_hostname': elastic_ip_input,
             'elastic_ip_address': resolved_ip,
+            'management_alert_email': alert_email,
         }
 
         self._write_provisioning_config(payload)
@@ -652,6 +682,62 @@ class DockerDeployment:
             return False
         return True
 
+    @staticmethod
+    def _previous_boot_diagnostic_commands(detailed: bool) -> List[str]:
+        """Build bounded journal commands that preserve evidence across a reboot."""
+        assert isinstance(detailed, bool)
+        kernel_indicator_limit = 50 if detailed else 20
+        connectivity_indicator_limit = 40 if detailed else 20
+        previous_boot_exists = (
+            "journalctl --list-boots --no-pager "
+            "| grep -Eq '^[[:space:]]*-1[[:space:]]'"
+        )
+        failure_pattern = PREVIOUS_BOOT_KERNEL_FAILURE_PATTERN
+
+        commands = [
+            'echo',
+            'echo "== recent boot history =="',
+            'if command -v journalctl >/dev/null 2>&1; then '
+            'journalctl --list-boots --no-pager | tail -n 5; '
+            'else echo "journalctl not available"; fi',
+            'echo',
+            'echo "== previous boot kernel failure indicators =="',
+            'if ! command -v journalctl >/dev/null 2>&1; then '
+            'echo "journalctl not available"; '
+            f'elif ! {previous_boot_exists}; then '
+            'echo "No previous boot journal is available"; '
+            f"elif journalctl -b -1 -k --no-pager | grep -Eiq '{failure_pattern}'; then "
+            f"journalctl -b -1 -k --no-pager | grep -Ei '{failure_pattern}' "
+            f'| tail -n {kernel_indicator_limit}; '
+            'else echo "No high-signal kernel failure indicators found in previous boot"; fi',
+            'echo',
+            'echo "== previous boot connectivity failure indicators =="',
+            'if ! command -v journalctl >/dev/null 2>&1; then '
+            'echo "journalctl not available"; '
+            f'elif ! {previous_boot_exists}; then '
+            'echo "No previous boot journal is available"; '
+            'elif journalctl -b -1 --no-pager '
+            f"| grep -Eiq '{PREVIOUS_BOOT_CONNECTIVITY_FAILURE_PATTERN}'; then "
+            'journalctl -b -1 --no-pager '
+            f"| grep -Ei '{PREVIOUS_BOOT_CONNECTIVITY_FAILURE_PATTERN}' "
+            f'| tail -n {connectivity_indicator_limit}; '
+            'else echo "No connectivity failure indicators found in previous boot"; fi',
+        ]
+
+        if detailed:
+            commands.extend([
+                'echo',
+                'echo "== previous boot final events (newest first) =="',
+                'if ! command -v journalctl >/dev/null 2>&1; then '
+                'echo "journalctl not available"; '
+                f'elif {previous_boot_exists}; then '
+                'journalctl -b -1 --no-pager --reverse -n 60; '
+                'else echo "No previous boot journal is available"; fi',
+            ])
+
+        assert commands
+        return commands
+
     def run_ssm_diagnostics(self, host: str, detailed: bool = True) -> bool:
         if detailed:
             print("\n📡 AWS Systems Manager diagnostics:")
@@ -738,6 +824,7 @@ class DockerDeployment:
                 'else echo "nginx service unit not found"; fi; '
                 'else echo "systemctl not available"; fi',
             ]
+            commands.extend(self._previous_boot_diagnostic_commands(detailed=True))
             comment = 'VDW SSM diagnostics'
         else:
             commands = [
@@ -766,6 +853,7 @@ class DockerDeployment:
                 'else echo "nginx service unit not found"; fi; '
                 'else echo "systemctl not available"; fi',
             ]
+            commands.extend(self._previous_boot_diagnostic_commands(detailed=False))
             comment = 'VDW SSM summary'
         return self._run_ssm_shell_command(
             instance_id=instance_id,
@@ -780,6 +868,102 @@ class DockerDeployment:
             'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore',
             'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy',
         ]
+
+    def _management_alert_email(self) -> str:
+        config = self._get_provisioning()
+        email = str(config.get('management_alert_email') or '').strip()
+        if email.count('@') != 1 or ' ' in email:
+            raise ValueError(
+                'management_alert_email must be a valid email address in config/provisioning.json'
+            )
+        return email
+
+    def _management_alert_subscriptions(self, sns, topic_arn: str) -> List[Dict]:
+        subscriptions: List[Dict] = []
+        response = sns.list_subscriptions_by_topic(TopicArn=topic_arn)
+        subscriptions.extend(response.get('Subscriptions', []))
+        next_token = response.get('NextToken')
+        while next_token:
+            response = sns.list_subscriptions_by_topic(
+                TopicArn=topic_arn,
+                NextToken=next_token,
+            )
+            subscriptions.extend(response.get('Subscriptions', []))
+            next_token = response.get('NextToken')
+        return subscriptions
+
+    def ensure_management_health_alarms(self, instance_id: str) -> bool:
+        assert instance_id.startswith('i-'), f'Invalid EC2 instance ID: {instance_id}'
+        config = self._get_provisioning()
+        region = config.get('aws_region')
+        if not region:
+            raise ValueError('aws_region missing in provisioning config')
+        alert_email = self._management_alert_email()
+
+        print(f"📧 Configuring EC2 health alerts for {alert_email}...")
+        sns = self._aws_client('sns')
+        topic_arn = sns.create_topic(Name=DEFAULT_MANAGEMENT_ALERT_TOPIC_NAME)['TopicArn']
+        subscriptions = self._management_alert_subscriptions(sns, topic_arn)
+        email_subscription = next(
+            (
+                subscription
+                for subscription in subscriptions
+                if subscription.get('Protocol') == 'email'
+                and subscription.get('Endpoint') == alert_email
+            ),
+            None,
+        )
+        if email_subscription is None:
+            sns.subscribe(
+                TopicArn=topic_arn,
+                Protocol='email',
+                Endpoint=alert_email,
+                ReturnSubscriptionArn=True,
+            )
+            print(f"   Confirmation email requested for {alert_email}")
+            print("   Open the AWS email and confirm the SNS subscription before alerts can arrive.")
+        elif email_subscription.get('SubscriptionArn') == 'PendingConfirmation':
+            print(f"   Email subscription for {alert_email} is awaiting confirmation")
+        else:
+            print(f"   Email subscription for {alert_email} is confirmed")
+
+        common_alarm = {
+            'Namespace': 'AWS/EC2',
+            'Statistic': 'Minimum',
+            'Period': 60,
+            'Threshold': 0.0,
+            'ComparisonOperator': 'GreaterThanThreshold',
+            'Dimensions': [{'Name': 'InstanceId', 'Value': instance_id}],
+            'ActionsEnabled': True,
+            'OKActions': [topic_arn],
+            'TreatMissingData': 'missing',
+        }
+        cloudwatch = self._aws_client('cloudwatch')
+        cloudwatch.put_metric_alarm(
+            AlarmName=f'vdw-{instance_id}-instance-health-reboot',
+            AlarmDescription=(
+                'Reboot the VDW instance after three consecutive failed instance status checks.'
+            ),
+            MetricName='StatusCheckFailed_Instance',
+            EvaluationPeriods=3,
+            DatapointsToAlarm=3,
+            AlarmActions=[topic_arn, f'arn:aws:automate:{region}:ec2:reboot'],
+            **common_alarm,
+        )
+        cloudwatch.put_metric_alarm(
+            AlarmName=f'vdw-{instance_id}-system-health-recover',
+            AlarmDescription=(
+                'Recover the VDW instance after two consecutive failed system status checks.'
+            ),
+            MetricName='StatusCheckFailed_System',
+            EvaluationPeriods=2,
+            DatapointsToAlarm=2,
+            AlarmActions=[topic_arn, f'arn:aws:automate:{region}:ec2:recover'],
+            **common_alarm,
+        )
+        print("   Instance health alarm: reboot after 3 failed one-minute checks")
+        print("   System health alarm: recover after 2 failed one-minute checks")
+        return True
 
     def _management_profile_name(self) -> str:
         configured = self._get_provisioning().get('iam_instance_profile')
@@ -1189,6 +1373,8 @@ class DockerDeployment:
 
         print("\n☁️  Enabling AWS management (IAM + SSM + CloudWatch)...")
         if not self.attach_instance_profile(host):
+            return False
+        if not self.ensure_management_health_alarms(instance_id):
             return False
 
         if self._wait_for_ssm_online(instance_id, timeout_seconds=90):
@@ -1740,7 +1926,7 @@ class DockerDeployment:
 
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 # Upload all important files
-                for pattern in ['*.py', '*.txt', '*.yml', '*.yaml', 'Dockerfile', '.dockerignore', 'google*.html']:
+                for pattern in ROOT_CODE_UPLOAD_PATTERNS:
                     for file_path in Path('.').glob(pattern):
                         if file_path.name not in ['.env', 'db.sqlite3']:
                             print(f"   Uploading {file_path}...")
@@ -3575,7 +3761,7 @@ def print_menu(active_host: str, label: str):
     print("15. Issue HTTPS certificate (HTTP-01, auto-renew)")
     print("16. HTTPS renew dry-run (certbot renew --dry-run)")
     print("17. Run SSM diagnostics (full disk/memory/services dump)")
-    print("18. Enable AWS management (auto-create profile + install SSM/CloudWatch)")
+    print("18. Enable AWS management (SSM/CloudWatch + health alarms + email)")
     print("19. Reboot EC2 instance")
     print("20. Exit")
     print()

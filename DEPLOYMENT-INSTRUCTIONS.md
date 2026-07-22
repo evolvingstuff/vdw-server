@@ -79,6 +79,7 @@ Example `config/provisioning.json` (placeholder values):
   "primary_domain": "example.com",
   "alt_domains": ["www.example.com"],
   "certbot_email": "admin@example.com",
+  "management_alert_email": "ops@example.com",
   "ssl_certificate_path": "",
   "ssl_certificate_key_path": "",
   "ssl_trusted_path": ""
@@ -117,6 +118,7 @@ python deployment-manager.py
 
 ### 3. Deploy Code
 - Uploads fresh code from your local working copy
+- Includes root deployment shell scripts so Dockerfile entrypoints cannot be omitted from the remote build context
 - Rebuilds Docker images, restarts containers under Gunicorn, runs Django migrations, and prunes old Docker build/image/volume artifacts after the deploy
 - Preserves `/app/data` during upload, keeps Meilisearch on `/app/data/meilisearch`, and rebuilds search automatically if the Meili data directory is empty
 
@@ -142,6 +144,7 @@ python deployment-manager.py
 - Probes public reachability from your machine (`22` with SSH-banner detection, plus HTTP/HTTPS checks on `80/443`)
 - If SSH works, also shows `docker compose ps -a`, container restart/lifecycle details, `docker stats --no-stream`, Meilisearch health/version probes, and maintenance / restore lock state
 - Compact mode skips container log retrieval entirely so the output stays fast and pasteable; use option 17 if you need log-heavy diagnostics
+- Includes recent boot history and bounded scans of the previous boot for OOM kills, hung tasks, kernel lockups, filesystem/I/O faults, panics, network watchdog failures, lost routes, and SSM/EC2-metadata connectivity failures. This evidence remains useful immediately after a recovery reboot.
 
 ### 10. Issue HTTPS Certificate (manual DNS-01)
 - Installs Certbot (if needed), runs the manual DNS-01 workflow for the production host, and automatically updates nginx to listen on 443 using the newly issued certificates.
@@ -172,12 +175,15 @@ python deployment-manager.py
 
 ### 17. Run SSM Diagnostics
 - Runs remote diagnostics against the production host including `df -h`, inode usage, memory, top processes, Docker container/live stats, Docker disk usage, and `ssh/nginx` service state.
+- Includes recent boot history, bounded high-signal kernel and connectivity evidence from the previous boot, and its final 60 journal events in newest-first order so AWS output limits preserve the incident tail.
 - Use this when SSH is dead but the instance still appears healthy in EC2.
 - Option 8 now keeps the SSM portion compact; use Option 17 when you want the full dump.
 
 ### 18. Enable AWS Management
 - Auto-creates an EC2 instance profile if needed, attaches the AWS-managed policies for SSM + CloudWatch (`AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`), and associates the profile to the production instance.
 - If SSM is already online, the tool installs/configures the CloudWatch agent through SSM. Otherwise it falls back to SSH to install/configure both `amazon-ssm-agent` and the CloudWatch agent, then starts publishing disk/memory metrics automatically.
+- Creates or updates a `StatusCheckFailed_Instance` alarm that reboots after three failed one-minute checks and a `StatusCheckFailed_System` alarm that recovers after two failed one-minute checks. Missing metrics remain `missing` instead of triggering recovery.
+- Creates/reuses the `vdw-ec2-health-alerts` SNS topic and subscribes `management_alert_email`. AWS sends a confirmation email on the first run; notifications begin only after that subscription is confirmed. Both alarms also email when health returns to OK.
 - The chosen profile name is saved to `config/provisioning.json` so future provisioned instances inherit the same management profile and bootstrap path.
 
 ### 19. Reboot EC2 Instance
