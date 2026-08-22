@@ -431,6 +431,59 @@ class PageAdminSuggestedTagsTests(TestCase):
 
         self.assertEqual(suggested_slugs, [])
 
+    def test_suggested_tags_match_multi_word_tags_across_inflected_title_words(self):
+        Tag.objects.create(name="Virus-Envelope", slug="virus-envelope")
+        page = Page.objects.create(
+            title="Hantaviruses are enveloped. Vitamin D fights most enveloped viruses",
+            slug="enveloped-viruses",
+            content_md="Body",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["virus-envelope"])
+
+    def test_suggested_tags_match_title_words_regardless_of_order(self):
+        Tag.objects.create(name="Dark Skin", slug="dark-skin")
+        page = Page.objects.create(
+            title="Vitamin D research for DARKER skins",
+            slug="vitamin-d-darker-skins",
+            content_md="Body",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["dark-skin"])
+
+    def test_suggested_tags_match_childhood_synonyms(self):
+        Tag.objects.create(name="Childhood", slug="childhood")
+        page = Page.objects.create(
+            title="Vitamin D during the infant-child years",
+            slug="vitamin-d-infant-child",
+            content_md="Body",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["childhood"])
+
+    def test_suggested_tags_ignore_non_distinctive_words_in_a_tag(self):
+        Tag.objects.create(name="Magnesium", slug="magnesium")
+        Tag.objects.create(name="Many Studies", slug="many-studies")
+        page = Page.objects.create(
+            title="Magnesium studies",
+            slug="magnesium-studies",
+            content_md="Body",
+            status="draft",
+        )
+
+        suggested_slugs = [tag.slug for tag in _suggested_tags_for_page(page)]
+
+        self.assertEqual(suggested_slugs, ["magnesium", "many-studies"])
+
     def test_suggested_tags_helper_renders_dynamic_container_and_tag_data(self):
         tag = Tag.objects.create(name="Magnesium", slug="magnesium")
         page = Page.objects.create(

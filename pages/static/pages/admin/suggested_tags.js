@@ -34,14 +34,72 @@
         return headings;
     }
 
-    function suggestionHaystack(title, markdownSource) {
+    const synonymGroups = [
+        new Set(["child", "children", "childhood", "infancy", "infant"]),
+    ];
+    const nonDistinctiveTokens = new Set([
+        "a", "an", "and", "for", "in", "many", "of", "on", "or", "the", "to", "with",
+    ]);
+
+    function suggestionSourceTokens(title, markdownSource) {
         return [title].concat(markdownHeadingTexts(markdownSource))
             .map(slugify)
             .filter(Boolean)
-            .map(function (phraseSlug) {
-                return "-" + phraseSlug + "-";
-            })
-            .join("");
+            .flatMap(function (phraseSlug) {
+                return phraseSlug.split("-");
+            });
+    }
+
+    function tokenVariants(token) {
+        const variants = new Set([token]);
+        for (const synonymGroup of synonymGroups) {
+            if (synonymGroup.has(token)) {
+                for (const synonym of synonymGroup) {
+                    variants.add(synonym);
+                }
+            }
+        }
+
+        if (token.endsWith("ies") && token.length > 4) {
+            variants.add(token.slice(0, -3) + "y");
+        }
+        return variants;
+    }
+
+    function tagTokenMatchesSourceToken(tagToken, sourceToken) {
+        const tagVariants = tokenVariants(tagToken);
+        const sourceVariants = tokenVariants(sourceToken);
+
+        for (const tagVariant of tagVariants) {
+            for (const sourceVariant of sourceVariants) {
+                if (tagVariant.length === 1) {
+                    if (tagVariant === sourceVariant) {
+                        return true;
+                    }
+                } else if (sourceVariant.startsWith(tagVariant)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function tagSlugMatchesSourceTokens(tagSlug, sourceTokens) {
+        const tagTokens = tagSlug.split("-").filter(Boolean);
+        if (tagTokens.length === 0) {
+            return false;
+        }
+
+        const filteredTokens = tagTokens.filter(function (tagToken) {
+            return !nonDistinctiveTokens.has(tagToken);
+        });
+        const distinctiveTagTokens = filteredTokens.length > 0 ? filteredTokens : tagTokens;
+
+        return distinctiveTagTokens.every(function (tagToken) {
+            return sourceTokens.some(function (sourceToken) {
+                return tagTokenMatchesSourceToken(tagToken, sourceToken);
+            });
+        });
     }
 
     function refreshFilterHorizontal(fieldId) {
@@ -89,18 +147,20 @@
         const contentInput = document.getElementById("id_content_md");
         const fieldId = wrapper.dataset.targetSelectId;
         const assignedTagIds = selectedTagIds(fieldId);
-        const haystack = suggestionHaystack(
+        const sourceTokens = suggestionSourceTokens(
             titleInput ? titleInput.value : "",
             contentInput ? contentInput.value : ""
         );
 
-        if (!haystack) {
+        if (sourceTokens.length === 0) {
             return [];
         }
 
         return allTags.filter(function (tag) {
             const tagId = String(tag.id);
-            return !assignedTagIds.has(tagId) && tag.slug && haystack.includes("-" + tag.slug);
+            return !assignedTagIds.has(tagId)
+                && tag.slug
+                && tagSlugMatchesSourceTokens(tag.slug, sourceTokens);
         });
     }
 

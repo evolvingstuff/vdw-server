@@ -168,6 +168,12 @@ BULK_TAG_EXCLUDED_IDS_FIELD = "_bulk_tag_excluded_page_ids"
 MARKDOWN_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(?P<heading>.+?)\s*#*\s*$", re.MULTILINE)
 HTML_HEADING_RE = re.compile(r"<h[1-6][^>]*>(?P<heading>.*?)</h[1-6]>", re.IGNORECASE | re.DOTALL)
 HTML_TAG_RE = re.compile(r"<[^>]+>")
+TAG_SUGGESTION_SYNONYM_GROUPS = (
+    frozenset({"child", "children", "childhood", "infancy", "infant"}),
+)
+TAG_SUGGESTION_NON_DISTINCTIVE_TOKENS = frozenset({
+    "a", "an", "and", "for", "in", "many", "of", "on", "or", "the", "to", "with",
+})
 
 
 def _parse_bulk_action_page_ids(raw_values: list[str]) -> list[int]:
@@ -207,25 +213,76 @@ def _markdown_heading_texts(markdown_source: str) -> list[str]:
     return headings
 
 
-def _tag_suggestion_haystack(*, title: str, content_md: str) -> str:
+def _tag_suggestion_source_tokens(*, title: str, content_md: str) -> tuple[str, ...]:
     assert isinstance(title, str), f"title must be str, got {type(title)}"
     assert isinstance(content_md, str), f"content_md must be str, got {type(content_md)}"
 
     source_phrases = [title, *_markdown_heading_texts(content_md)]
-    slug_parts = []
+    source_tokens = []
     for phrase in source_phrases:
         phrase_slug = slugify(phrase)
         if phrase_slug:
-            slug_parts.append(f"-{phrase_slug}-")
+            source_tokens.extend(phrase_slug.split("-"))
 
-    return "".join(slug_parts)
+    return tuple(source_tokens)
+
+
+def _tag_suggestion_token_variants(token: str) -> frozenset[str]:
+    assert isinstance(token, str), f"token must be str, got {type(token)}"
+    assert token and "-" not in token, f"token must be one non-empty slug token, got {token!r}"
+
+    variants = {token}
+    for synonym_group in TAG_SUGGESTION_SYNONYM_GROUPS:
+        if token in synonym_group:
+            variants.update(synonym_group)
+
+    # Cover common title inflections without broad fuzzy matching. Prefix
+    # comparison below handles plurals/participles such as virus/viruses and
+    # envelope/enveloped; this rule handles pregnancy/pregnancies.
+    if token.endswith("ies") and len(token) > 4:
+        variants.add(f"{token[:-3]}y")
+
+    return frozenset(variants)
+
+
+def _tag_token_matches_source_token(tag_token: str, source_token: str) -> bool:
+    tag_variants = _tag_suggestion_token_variants(tag_token)
+    source_variants = _tag_suggestion_token_variants(source_token)
+
+    for tag_variant in tag_variants:
+        for source_variant in source_variants:
+            if len(tag_variant) == 1:
+                if tag_variant == source_variant:
+                    return True
+            elif source_variant.startswith(tag_variant):
+                return True
+    return False
+
+
+def _tag_slug_matches_source_tokens(tag_slug: str, source_tokens: tuple[str, ...]) -> bool:
+    assert isinstance(tag_slug, str), f"tag_slug must be str, got {type(tag_slug)}"
+    assert isinstance(source_tokens, tuple), f"source_tokens must be tuple, got {type(source_tokens)}"
+
+    tag_tokens = tuple(token for token in tag_slug.split("-") if token)
+    if not tag_tokens:
+        return False
+
+    distinctive_tag_tokens = tuple(
+        token for token in tag_tokens
+        if token not in TAG_SUGGESTION_NON_DISTINCTIVE_TOKENS
+    ) or tag_tokens
+
+    return all(
+        any(_tag_token_matches_source_token(tag_token, source_token) for source_token in source_tokens)
+        for tag_token in distinctive_tag_tokens
+    )
 
 
 def _suggested_tags_for_page(page: Page) -> list[Tag]:
     assert page.pk, "Page must be saved before suggesting tags"
 
-    suggestion_haystack = _tag_suggestion_haystack(title=page.title, content_md=page.content_md)
-    if not suggestion_haystack:
+    source_tokens = _tag_suggestion_source_tokens(title=page.title, content_md=page.content_md)
+    if not source_tokens:
         return []
 
     assigned_tag_ids = set(page.tags.values_list("pk", flat=True))
@@ -235,7 +292,7 @@ def _suggested_tags_for_page(page: Page) -> list[Tag]:
             continue
         if not tag.slug:
             continue
-        if f"-{tag.slug}" in suggestion_haystack:
+        if _tag_slug_matches_source_tokens(tag.slug, source_tokens):
             suggestions.append(tag)
 
     return suggestions
@@ -398,7 +455,7 @@ class PageAdmin(PublicUpdateAdminMixin, admin.ModelAdmin):
             '<div class="vdw-suggested-tags" data-target-select-id="id_tags">'
             '<div class="vdw-suggested-tags__chips"></div>'
             '<div class="vdw-suggested-tags__empty">No suggested tags from the title or headings.</div>'
-            '<p class="help">Suggestions come from existing tags found at the start of words in the page title or Markdown headings.</p>'
+            '<p class="help">Suggestions match the distinctive words of existing tags against words in the page title or Markdown headings, including common word forms.</p>'
             '</div>',
             json_script(tag_payload, "vdw-suggested-tags-data"),
         )
