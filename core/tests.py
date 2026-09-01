@@ -1,6 +1,18 @@
 from django.test import SimpleTestCase
+from django.template.loader import render_to_string
 
 from helper_functions.markdown import render_markdown
+
+
+class PublicTemplateAnalyticsTests(SimpleTestCase):
+    def test_base_template_includes_plausible_once(self) -> None:
+        html = render_to_string('base.html')
+
+        self.assertEqual(
+            html.count('https://plausible.io/js/pa-wNKxJD3dRHf4_0-F_ndhf.js'),
+            1,
+        )
+        self.assertEqual(html.count('plausible.init()'), 1)
 
 
 class MarkdownFootnoteTests(SimpleTestCase):
