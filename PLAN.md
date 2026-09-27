@@ -8,40 +8,48 @@ Before changing anything, record a Search Console baseline so the effect can be 
 
 ## High priority
 
-### 1. Redirect www to the bare domain
+### 1. Redirect www to the bare domain — DONE (branch `seo-fixes`)
 - **Problem:** `https://www.vitamindwiki.com/` serves the whole site with a 200 instead of redirecting,
   so Google can see two copies of every page and split signals between them.
 - **Fix:** 301 `www.vitamindwiki.com` → `https://vitamindwiki.com$request_uri`. The HTTPS server
   block is generated in `deployment-manager.py` (around line 3422, `server_names` covers all domains),
   so add a separate www server block there. The HTTP → HTTPS redirect already works.
+- **Done:** alternate domains get their own HTTPS server block that 301s to the primary; port 80
+  redirects straight to the primary. Goes live on the next code deploy (option 3), which
+  regenerates the nginx config.
 
-### 2. Add canonical tags
+### 2. Add canonical tags — DONE (branch `seo-fixes`)
 - **Problem:** No `<link rel="canonical">` anywhere. Besides www, any query-string variant
   (e.g. `/pages/<slug>/?utm=x`) returns a normal 200 page.
 - **Fix:** Add `<link rel="canonical" href="https://vitamindwiki.com{{ request.path }}">` to the
   `<head>` in `templates/base.html`, using `SITE_BASE_URL` from settings, not the request host.
+- **Done:** `vdw_server.context_processors.seo` builds the URL (keeps `?page=N`, drops other
+  query strings); 404 pages omit it.
 
-### 3. Output meta descriptions
-- **Problem:** `templates/base.html` emits no description tag. The `meta_description` block in
-  `templates/page_detail.html` is dead code (pages actually render
-  `pages/templates/pages/page_detail.html`), and only 1 of 14,773 pages has `meta_description` set.
-  Google makes its own snippet, often starting with the study citation.
-- **Fix:** Add a `meta_description` block to `templates/base.html`. Use `page.meta_description`
-  when set, otherwise generate ~155 characters from `content_text`, skipping leading citation
-  text (journal/doi/author lines). Delete the unused `templates/page_detail.html`.
+### 3. Output meta descriptions — DONE (branch `seo-fixes`)
+- **Problem:** `templates/base.html` emits no description tag, so the `meta_description` block in
+  `templates/page_detail.html` (used by the homepage and site pages) is never output, and article
+  pages had none. Only 1 of 14,773 pages has `meta_description` set. Google makes its own snippet,
+  often starting with the study citation.
+- **Done:** `helper_functions/seo.py` uses `meta_description` when set, otherwise the first prose
+  paragraph (skipping headings, citations, author and affiliation lines, link lists, Tiki leftovers),
+  truncated to 155 characters. ~82% of pages get one; the rest get no tag, so Google picks a snippet.
+- **To do (Dad):** the homepage's hand-set description is "Welcome to VitaminDWiki". Replace it
+  in admin → Site pages → Home → Meta description.
 
 ## Medium priority
 
-### 4. Add robots.txt
+### 4. Add robots.txt — DONE (branch `seo-fixes`)
 - **Problem:** `/robots.txt` returns 404.
 - **Fix:** Serve a robots.txt that points to the sitemap and disallows `/admin/`, `/search/api/`
   and `/pages/*/preview/`.
 
-### 5. Homepage title and speed
+### 5. Homepage title and speed — title DONE (branch `seo-fixes`), speed to do
 - **Problem:** The homepage `<title>` is "Home - VitaminDWiki", which wastes the most important
   title on the site. The homepage is also the slowest page (~1.8s, versus ~0.17s for article pages).
 - **Fix:** Give it a descriptive title and meta description. Profile the homepage view and
   cache it if the time is spent in queries.
+- **Done:** title comes from `HOMEPAGE_TITLE` in `vdw_server/settings.py` (edit the wording there).
 
 ### 6. Image alt text and lazy loading
 - **Problem:** Nearly all images have `alt="image"` (16 of 17 on a sample page), and none use

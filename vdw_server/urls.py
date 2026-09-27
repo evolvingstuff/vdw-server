@@ -23,7 +23,7 @@ from pages.views import preview_markdown, page_list, recent_page_list, page_deta
 from site_pages.views import homepage, site_page_detail
 from search.views import search_api
 from vdw_server.admin_views import code_search, manual_backup, manual_restore, refresh_sitemap
-from vdw_server.views import google_site_verification, page_detail_fallback, sitemap_xml
+from vdw_server.views import google_site_verification, page_detail_fallback, robots_txt, sitemap_xml
 
 handler404 = 'vdw_server.views.custom_page_not_found'
 handler500 = 'vdw_server.views.custom_server_error'
@@ -38,6 +38,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
+    path('robots.txt', robots_txt, name='robots_txt'),
     re_path(r'^google(?P<token>[A-Za-z0-9]+)\.html$', google_site_verification, name='google_site_verification'),
     path('pages/', page_list, name='page_list'),
     path('pages/recent/', recent_page_list, name='recent_page_list'),

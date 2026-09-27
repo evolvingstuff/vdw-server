@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import SitePage
 from pages.views import add_file_icons_to_html
@@ -16,7 +17,8 @@ def homepage(request):
 
     return render(request, 'page_detail.html', {
         'page': page,
-        'is_homepage': True
+        'is_homepage': True,
+        'homepage_title': settings.HOMEPAGE_TITLE,
     })
 
 

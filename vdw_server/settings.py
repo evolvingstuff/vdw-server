@@ -101,6 +101,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'vdw_server.context_processors.search_preferences',
+                'vdw_server.context_processors.seo',
             ],
         },
     },
@@ -166,6 +167,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 SITEMAP_FILE_PATH = BASE_DIR / 'sitemap.xml'
 SITE_BASE_URL = 'https://vitamindwiki.com'
+HOMEPAGE_TITLE = 'VitaminDWiki – Vitamin D research, studies and health effects'
 
 # Media files - Always use S3 for storage
 from .storage_settings import *

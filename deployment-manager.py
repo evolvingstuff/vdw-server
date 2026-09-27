@@ -3420,6 +3420,10 @@ class DockerDeployment:
     def _render_https_nginx(self) -> str:
         domains = self._all_domains()
         server_names = ' '.join(domains) if domains else '_'
+        primary_domain = self._domain_config()['primary']
+        alt_domains = [d for d in domains if d != primary_domain]
+        # Alternate domains (e.g. www) 301 to the primary so search engines see one copy of the site.
+        redirect_target = f"https://{primary_domain}" if primary_domain else "https://$host"
         paths = self._ssl_paths()
         static_block = """
     location /static/ {
@@ -3481,6 +3485,19 @@ class DockerDeployment:
     add_header Strict-Transport-Security "max-age=31536000" always;
 """
 
+        alt_redirect_block = ""
+        if primary_domain and alt_domains:
+            alt_redirect_block = f"""
+server {{
+    listen 443 ssl http2;
+    server_name {' '.join(alt_domains)};
+    ssl_certificate {paths['cert']};
+    ssl_certificate_key {paths['key']};
+{ssl_directives}
+    return 301 https://{primary_domain}$request_uri;
+}}
+"""
+
         return f"""limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
 
 server {{
@@ -3488,13 +3505,13 @@ server {{
     server_name {server_names};
 {acme_block}
     location / {{
-        return 301 https://$host$request_uri;
+        return 301 {redirect_target}$request_uri;
     }}
 }}
-
+{alt_redirect_block}
 server {{
     listen 443 ssl http2;
-    server_name {server_names};
+    server_name {primary_domain or server_names};
     client_max_body_size 100M;
     ssl_certificate {paths['cert']};
     ssl_certificate_key {paths['key']};

@@ -1,6 +1,9 @@
 {% extends 'pages/base.html' %}
+{% load seo_tags %}
 
 {% block title %}{{ page.title }} - VitaminDWiki{% endblock %}
+
+{% block meta_description %}{% with description=page|meta_description %}{% if description %}<meta name="description" content="{{ description }}">{% endif %}{% endwith %}{% endblock %}
 
 {% block content %}
 	<article>

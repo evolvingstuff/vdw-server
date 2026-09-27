@@ -1,14 +1,9 @@
 {% extends 'pages/base.html' %}
+{% load seo_tags %}
 
-{% block title %}{{ page.title }} - VitaminDWiki{% endblock %}
+{% block title %}{% if is_homepage %}{{ homepage_title }}{% else %}{{ page.title }} - VitaminDWiki{% endif %}{% endblock %}
 
-{% block meta_description %}
-    {% if page.meta_description %}
-        {{ page.meta_description }}
-    {% else %}
-        {{ page.title }} - {{ page.content_text|truncatewords:30 }}
-    {% endif %}
-{% endblock %}
+{% block meta_description %}{% with description=page|meta_description %}{% if description %}<meta name="description" content="{{ description }}">{% endif %}{% endwith %}{% endblock %}
 
 {% block content %}
 <article class="page-content">

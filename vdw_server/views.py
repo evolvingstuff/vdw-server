@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404, HttpResponsePermanentRedirect
+from django.http import FileResponse, Http404, HttpResponse, HttpResponsePermanentRedirect
 from django.shortcuts import render
 from vdw_server.not_found_suggestions import (
     get_not_found_redirect_url,
@@ -83,3 +83,19 @@ def google_site_verification(request, token):
     response = FileResponse(verification_path.open('rb'), content_type='text/html')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
+
+
+def robots_txt(request):
+    """Allow crawling of content; keep crawlers out of admin, APIs and previews."""
+    base_url = (settings.SITE_BASE_URL or '').rstrip('/')
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /search/api/",
+        "Disallow: /markdownx/",
+        "Disallow: /pages/*/preview/",
+        "",
+        f"Sitemap: {base_url}/sitemap.xml",
+        "",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
