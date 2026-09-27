@@ -3428,6 +3428,8 @@ class DockerDeployment:
         static_block = """
     location /static/ {
         alias /app/static/;
+        # Filenames are not versioned, so keep this short enough for CSS/JS changes to show up.
+        add_header Cache-Control "public, max-age=86400";
     }
 
     location /media/ {

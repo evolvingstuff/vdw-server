@@ -70,7 +70,7 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **Update:** the homepage responded in 0.15s on a later check, so the 1.8s was probably a cold
   cache. Low priority unless it recurs.
 
-### 6. Image alt text and lazy loading
+### 6. Image alt text and lazy loading — lazy loading DONE (branch `seo-fixes`), alt text to do
 - **Problem:** Nearly all images have `alt="image"` (16 of 17 on a sample page), and none use
   `loading="lazy"`.
 - **Fix:** Add `loading="lazy"` in the markdown renderer (`helper_functions/markdown.py`). For alt
@@ -84,24 +84,27 @@ Before changing anything, record a Search Console baseline so the effect can be 
   and JSON-LD `Article` markup with author, `datePublished` (`created_date`) and `dateModified`
   (`public_modified_date`).
 
-### 13. Out-of-range page numbers return 200
+### 13. Out-of-range page numbers return 200 — DONE (branch `seo-fixes`)
 - **Problem:** `/pages/?page=99999`, `/tags/vitamin-d/?page=999` and `/pages/?page=abc` return a
   normal page (a copy of the last page) instead of 404, giving endless duplicate URLs.
   There are 741 real `/pages/` list pages.
 - **Fix:** return 404 for non-numeric or out-of-range `page` values in the page list, recent and
   tag views (`Paginator.page()` rather than `get_page()`).
 
-### 14. Tag pages missing from the sitemap
+### 14. Tag pages missing from the sitemap — DONE (branch `seo-fixes`)
 - **Problem:** the 480 tag pages (`/tags/<slug>/`) are good topic hubs but aren't in the sitemap
   and have no meta description.
 - **Fix:** add tag pages to the sitemap generation; give them a description such as
   "N VitaminDWiki pages about <tag>: …".
 
-### 15. Second `<h1>` inside page content
+### 15. Second `<h1>` inside page content — DONE (branch `seo-fixes`)
 - **Problem:** 1,810 pages have `<h1>` headings in their content (markdown `# Heading`) as well as
   the page title `<h1>`.
 - **Fix:** shift content headings down one level when rendering markdown (`#` → `<h2>`, and so on),
   then re-render stored HTML.
+- **Done:** `demote_headings()` runs on save (in `render_markdown`) and again at display time for HTML
+  stored earlier, so no mass database update is needed. It only acts on HTML that still has an `<h1>`,
+  and adds an `md-hN` class so headings keep their original size.
 
 ## Worth reviewing
 
@@ -113,7 +116,7 @@ Before changing anything, record a Search Console baseline so the effect can be 
 ### 9. Duplicate titles
 - 11 titles are shared by more than one published page. Make each unique.
 
-### 10. Long titles
+### 10. Long titles — DONE (branch `seo-fixes`)
 - About half of titles run past ~65 characters and get cut off in results.
 - Dropping the " - VitaminDWiki" suffix from article `<title>`s would free 15 characters. Minor.
 
@@ -130,7 +133,7 @@ Before changing anything, record a Search Console baseline so the effect can be 
   to its cause.
 - Expected effect on rankings is modest; the main benefit is accuracy and credibility.
 
-### 16. Caching headers and image weight
+### 16. Caching headers and image weight — `/static/` caching DONE (branch `seo-fixes`)
 - CSS/JS under `/static/` and CloudFront images are sent without `Cache-Control`, so returning
   visitors re-check them. Add long cache lifetimes in nginx for `/static/` and on the CloudFront
   distribution. Some images are large (e.g. a 357 KB diagram); consider resizing or compressing.
@@ -138,6 +141,8 @@ Before changing anything, record a Search Console baseline so the effect can be 
 ### 17. Public "Admin" link
 - Every public page shows an "Admin" link in the header. Harmless, but visitors don't need it;
   show it only to logged-in staff.
+- **Decided to leave it:** it's Dad's login shortcut (its script opens the editor for the current
+  page), and hiding it from logged-out visitors would hide it from him too.
 
 ## Already working well
 - HTTP → HTTPS redirect.

@@ -58,14 +58,53 @@ def render_markdown(markdown_text: str) -> str:
     markdown_text = _escape_literal_ordered_markers(markdown_text)
     html = markdown2.markdown(markdown_text, extras=DEFAULT_MARKDOWN_EXTRAS)
 
-    if '[^' not in markdown_text:
-        # Fast path when no footnotes are present
+    if '[^' in markdown_text:
+        html = _restore_inline_footnote_numbers(html)
+        html = _restore_definition_numbers(html)
+        html = _space_consecutive_references(html)
+    return demote_headings(html)
+
+
+_HEADING_OPEN_RE = re.compile(r'<h([1-6])(\s[^>]*)?>', re.IGNORECASE)
+_HEADING_CLOSE_RE = re.compile(r'</h([1-6])\s*>', re.IGNORECASE)
+_HAS_H1_RE = re.compile(r'<h1[\s>]', re.IGNORECASE)
+_IMG_RE = re.compile(r'<img\b(?![^>]*\bloading=)', re.IGNORECASE)
+
+
+def demote_headings(html: str) -> str:
+    """Shift content headings down one level so the page title is the only <h1>.
+
+    Each shifted heading gets an `md-hN` class (N = original level) so it keeps its
+    original size. Only HTML that still contains an <h1> is changed, which makes this
+    safe to apply both when saving and again when displaying older stored HTML.
+    """
+    if not _HAS_H1_RE.search(html):
         return html
 
-    html = _restore_inline_footnote_numbers(html)
-    html = _restore_definition_numbers(html)
-    html = _space_consecutive_references(html)
-    return html
+    def open_tag(match: re.Match[str]) -> str:
+        level = int(match.group(1))
+        attrs = match.group(2) or ''
+        css_class = f'md-h{level}'
+        if re.search(r'\bclass="', attrs):
+            attrs = re.sub(r'\bclass="', f'class="{css_class} ', attrs, count=1)
+        else:
+            attrs = f' class="{css_class}"{attrs}'
+        return f'<h{min(level + 1, 6)}{attrs}>'
+
+    html = _HEADING_OPEN_RE.sub(open_tag, html)
+    return _HEADING_CLOSE_RE.sub(lambda m: f'</h{min(int(m.group(1)) + 1, 6)}>', html)
+
+
+def add_lazy_loading(html: str) -> str:
+    """Lazy-load every image except the first, which is usually visible on load."""
+    count = 0
+
+    def add(match: re.Match[str]) -> str:
+        nonlocal count
+        count += 1
+        return match.group(0) if count == 1 else '<img loading="lazy"'
+
+    return _IMG_RE.sub(add, html)
 
 
 def _restore_inline_footnote_numbers(html: str) -> str:

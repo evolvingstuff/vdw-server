@@ -7,6 +7,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase, override_settings
 
+from helper_functions.markdown import add_lazy_loading, demote_headings, render_markdown
 from helper_functions.seo import generate_meta_description, meta_description_for
 from pages.models import Page
 
@@ -78,9 +79,35 @@ class SeoHeadTagTests(TestCase):
         )
         self.assertContains(response, '<meta name="description" content="Vitamin D helps the body absorb')
 
+    def _add_pages(self, count):
+        for i in range(count):
+            Page.objects.create(title=f"Filler page {i}", status="published", content_md="Filler.")
+
     def test_canonical_keeps_pagination(self):
+        self._add_pages(20)
         response = self.client.get("/pages/?page=2")
         self.assertContains(response, f'<link rel="canonical" href="{settings.SITE_BASE_URL}/pages/?page=2">')
+
+    def test_invalid_or_out_of_range_page_numbers_404(self):
+        for query in ("?page=2", "?page=99999", "?page=abc", "?page=0"):
+            with self.subTest(query=query):
+                self.assertEqual(self.client.get(f"/pages/{query}").status_code, 404)
+        self.assertEqual(self.client.get("/pages/").status_code, 200)
+
+    def test_article_title_has_no_site_suffix(self):
+        response = self.client.get(f"/pages/{self.page.slug}/")
+        self.assertContains(response, "<title>Vitamin D and bones</title>")
+
+    def test_stored_html_with_h1_is_demoted_when_displayed(self):
+        # Simulate HTML stored before demotion existed.
+        Page.objects.filter(pk=self.page.pk).update(
+            content_html='<h1 id="intro">Intro</h1><p>x</p><img src="a.png"><img src="b.png">'
+        )
+        response = self.client.get(f"/pages/{self.page.slug}/")
+        self.assertContains(response, '<h2 class="md-h1" id="intro">Intro</h2>')
+        self.assertContains(response, '<img src="a.png">')
+        self.assertContains(response, '<img loading="lazy" src="b.png">')
+        self.assertEqual(response.content.decode().count("<h1"), 1)
 
     def test_robots_txt(self):
         response = self.client.get("/robots.txt")
@@ -89,6 +116,26 @@ class SeoHeadTagTests(TestCase):
         body = response.content.decode()
         self.assertIn("Disallow: /admin/", body)
         self.assertIn(f"Sitemap: {settings.SITE_BASE_URL}/sitemap.xml", body)
+
+
+class HeadingAndImageTests(SimpleTestCase):
+    def test_render_markdown_demotes_headings_keeping_size_class(self):
+        html = render_markdown("# Title\n\n## Sub\n\ntext")
+        self.assertNotIn("<h1", html)
+        self.assertIn('class="md-h1"', html)
+        self.assertIn('class="md-h2"', html)
+
+    def test_demote_is_idempotent(self):
+        once = demote_headings("<h1>A</h1><h2>B</h2><h6>C</h6>")
+        self.assertEqual(once, '<h2 class="md-h1">A</h2><h3 class="md-h2">B</h3><h6 class="md-h6">C</h6>')
+        self.assertEqual(demote_headings(once), once)
+
+    def test_html_without_h1_is_untouched(self):
+        self.assertEqual(demote_headings("<h2>B</h2>"), "<h2>B</h2>")
+
+    def test_lazy_loading_skips_first_and_existing(self):
+        html = add_lazy_loading('<img src="1"><img src="2"><img loading="eager" src="3">')
+        self.assertEqual(html, '<img src="1"><img loading="lazy" src="2"><img loading="eager" src="3">')
 
 
 class HttpsNginxConfigTests(SimpleTestCase):

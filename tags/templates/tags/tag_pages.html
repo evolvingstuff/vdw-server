@@ -2,6 +2,8 @@
 
 {% block title %}Pages tagged with "{{ tag.name }}" - VitaminDWiki{% endblock %}
 
+{% block meta_description %}<meta name="description" content="{% filter truncatechars:155 %}{{ pages.paginator.count }} VitaminDWiki page{{ pages.paginator.count|pluralize }} about {{ tag.name }}{% if pages.object_list %}, including: {% for page in pages.object_list|slice:':3' %}{{ page.title }}{% if not forloop.last %}; {% endif %}{% endfor %}{% endif %}{% endfilter %}">{% endblock %}
+
 {% block extra_css %}
 .compact-list { font-size: 12pt; list-style: none; padding-left: 0; }
 .compact-list li { margin: 2px 0; }

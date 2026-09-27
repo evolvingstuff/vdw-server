@@ -3,7 +3,6 @@ import re
 import json
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
@@ -13,17 +12,16 @@ from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from .models import Page
 from .recent_cache import get_recent_pages
+from helper_functions.pagination import paginate_or_404
 
-from helper_functions.markdown import render_markdown
+from helper_functions.markdown import add_lazy_loading, demote_headings, render_markdown
 
 
 def page_list(request):
     pages_list = Page.objects.filter(status='published').order_by('-created_date')
 
     # Add pagination - 20 pages per page
-    paginator = Paginator(pages_list, 20)
-    page_number = request.GET.get('page')
-    pages = paginator.get_page(page_number)
+    pages = paginate_or_404(pages_list, 20, request.GET.get('page'))
 
     return render(request, 'pages/page_list.html', {'pages': pages})
 
@@ -37,7 +35,7 @@ def page_detail(request, slug):
     page = get_object_or_404(Page, slug=slug, status='published')
 
     # Add icons to the HTML content before displaying
-    page.content_html = add_file_icons_to_html(page.content_html)
+    page.content_html = prepare_content_html(page.content_html)
 
     return render(request, 'pages/page_detail.html', {'page': page})
 
@@ -46,9 +44,15 @@ def page_detail(request, slug):
 def page_preview(request, slug):
     page = get_object_or_404(Page, slug=slug)
 
-    page.content_html = add_file_icons_to_html(page.content_html)
+    page.content_html = prepare_content_html(page.content_html)
 
     return render(request, 'pages/page_detail.html', {'page': page, 'is_preview': True})
+
+
+def prepare_content_html(html):
+    """Final touches applied to stored HTML when a page is displayed."""
+    # demote_headings also fixes HTML stored before headings were demoted at save time.
+    return add_lazy_loading(demote_headings(add_file_icons_to_html(html)))
 
 
 def add_file_icons_to_html(html):

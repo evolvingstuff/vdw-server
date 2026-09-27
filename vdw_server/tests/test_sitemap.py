@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from pages.models import Page
 from site_pages.models import SitePage
+from tags.models import Tag
 from vdw_server.sitemap_utils import refresh_sitemap
 from vdw_server import startup
 
@@ -78,6 +79,26 @@ class SitemapGenerationTests(TestCase):
         self.assertNotIn('hidden', xml_payload)
         self.assertIn('2024-01-02T03:04:05+00:00', xml_payload)
         self.assertNotIn('2025-06-07T08:09:10+00:00', xml_payload)
+
+    def test_refresh_sitemap_includes_tags_with_published_pages(self):
+        used = Tag.objects.create(name='Obesity', slug='obesity')
+        draft_only = Tag.objects.create(name='Draft topic', slug='draft-topic')
+        Tag.objects.create(name='Unused', slug='unused')
+        published = Page.objects.create(title='P', slug='p', content_md='c', status='published')
+        draft = Page.objects.create(title='D', slug='d', content_md='c', status='draft')
+        published.tags.add(used)
+        draft.tags.add(draft_only)
+        timestamp = timezone.make_aware(datetime(2024, 5, 6, 7, 8, 9), datetime_timezone.utc)
+        Page.objects.filter(pk=published.pk).update(public_modified_date=timestamp)
+
+        with override_settings(SITEMAP_FILE_PATH=self.sitemap_path):
+            refresh_sitemap('https://example.com')
+        xml_payload = self.sitemap_path.read_text()
+
+        self.assertIn('<loc>https://example.com/tags/obesity/</loc><lastmod>2024-05-06T07:08:09+00:00</lastmod>',
+                      xml_payload)
+        self.assertNotIn('/tags/draft-topic/', xml_payload)
+        self.assertNotIn('/tags/unused/', xml_payload)
 
     def test_sitemap_view_serves_generated_file(self):
         xml_contents = '<?xml version="1.0" encoding="utf-8"?><urlset></urlset>'

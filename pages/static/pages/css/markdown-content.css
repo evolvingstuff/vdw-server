@@ -31,6 +31,14 @@
     font-weight: bold;
 }
 
+/* Content headings are shifted down one level (see demote_headings) so the page
+   title is the only <h1>; md-hN keeps each heading at its original size. */
+.markdown-content .md-h1 { font-size: 2em; margin: 0.67em 0; font-weight: bold; }
+.markdown-content .md-h2 { font-size: 1.5em; margin: 0.75em 0; font-weight: bold; }
+.markdown-content .md-h3 { font-size: 1.17em; margin: 0.83em 0; font-weight: bold; }
+.markdown-content .md-h4 { font-size: 1em; margin: 1.12em 0; font-weight: bold; }
+.markdown-content .md-h5 { font-size: 0.83em; margin: 1.5em 0; font-weight: bold; }
+
 .markdown-content p {
     margin: 1em 0;
 }

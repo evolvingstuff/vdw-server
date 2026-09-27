@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import SitePage
-from pages.views import add_file_icons_to_html
+from pages.views import prepare_content_html
 
 
 def homepage(request):
@@ -13,7 +13,7 @@ def homepage(request):
         return render(request, 'core/homepage.html')
 
     # Add file icons to the HTML content
-    page.content_html = add_file_icons_to_html(page.content_html)
+    page.content_html = prepare_content_html(page.content_html)
 
     return render(request, 'page_detail.html', {
         'page': page,
@@ -31,7 +31,7 @@ def site_page_detail(request, slug):
         return redirect('homepage')
 
     # Add file icons to the HTML content
-    page.content_html = add_file_icons_to_html(page.content_html)
+    page.content_html = prepare_content_html(page.content_html)
 
     return render(request, 'page_detail.html', {
         'page': page,

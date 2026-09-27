@@ -9,11 +9,13 @@ from typing import List, Sequence, Tuple
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from django.conf import settings
+from django.db.models import Max, Q
 from django.urls import reverse
 from django.utils import timezone
 
 from pages.models import Page
 from site_pages.models import SitePage
+from tags.models import Tag
 
 
 UrlEntry = Tuple[str, str | None]
@@ -56,6 +58,20 @@ def _collect_entries(base_url: str) -> List[UrlEntry]:
         entries.append((
             _absolute_url(base_url, path),
             _format_lastmod(page.public_modified_date),
+        ))
+
+    # Tag pages are topic hubs; lastmod is the newest update among their published pages.
+    tags = (
+        Tag.objects
+        .annotate(last_update=Max('pages__public_modified_date', filter=Q(pages__status='published')))
+        .filter(last_update__isnull=False)
+        .order_by('slug')
+    )
+    for tag in tags:
+        path = reverse('tag_pages', args=[tag.slug])
+        entries.append((
+            _absolute_url(base_url, path),
+            _format_lastmod(tag.last_update),
         ))
 
     # Keep output deterministic regardless of query ordering.
