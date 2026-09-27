@@ -37,6 +37,23 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **To do (Dad):** the homepage's hand-set description is "Welcome to VitaminDWiki". Replace it
   in admin → Site pages → Home → Meta description.
 
+### 12. Broken internal links
+- **Problem:** 2,193 links on 1,733 published pages point to `/pages/<slug>/` URLs that don't exist
+  (all 404 on the live site). They waste crawl budget, dead-end readers, and are a low-quality signal.
+  - 708 are Tiki search links, `[PTSD](/pages/search-results/)`: the link text is the search term.
+  - 335 are Tiki file downloads, `/pages/tiki-download-filephp/`, plus ~53 other Tiki URLs
+    (`tiki-view-blog-postphp`, `tiki-indexphp`, `moved58`). The migration lost the original target.
+  - ~1,100 links go to 466 slugs of renamed or never-migrated pages, e.g.
+    `overview-evidence-for-vitamin-d` (27 links). ~100 have an obvious match (typos such as
+    `vitamin-d-is-only-of-only-2-ways…` → `…is-one-of-only-2-ways…`); the rest need judgement.
+- **Fix:** a deployment-manager option with a preview → review CSV → apply flow, like the title work:
+  - Search links → the matching tag page if one exists, else site search.
+  - Download links → match against CloudFront attachments by link text/filename where possible,
+    otherwise unlink (keep the text).
+  - Missing pages → suggest the closest existing slug (checking aliases too); apply only approved rows.
+  - Where a missing slug has a clear replacement, also add it to that page's `aliases`, so outside
+    links and bookmarks redirect as well.
+
 ## Medium priority
 
 ### 4. Add robots.txt — DONE (branch `seo-fixes`)
@@ -50,6 +67,8 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **Fix:** Give it a descriptive title and meta description. Profile the homepage view and
   cache it if the time is spent in queries.
 - **Done:** title comes from `HOMEPAGE_TITLE` in `vdw_server/settings.py` (edit the wording there).
+- **Update:** the homepage responded in 0.15s on a later check, so the 1.8s was probably a cold
+  cache. Low priority unless it recurs.
 
 ### 6. Image alt text and lazy loading
 - **Problem:** Nearly all images have `alt="image"` (16 of 17 on a sample page), and none use
@@ -64,6 +83,25 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **Fix:** Needs input from Dad on what to show. Then add an About page, author info on pages,
   and JSON-LD `Article` markup with author, `datePublished` (`created_date`) and `dateModified`
   (`public_modified_date`).
+
+### 13. Out-of-range page numbers return 200
+- **Problem:** `/pages/?page=99999`, `/tags/vitamin-d/?page=999` and `/pages/?page=abc` return a
+  normal page (a copy of the last page) instead of 404, giving endless duplicate URLs.
+  There are 741 real `/pages/` list pages.
+- **Fix:** return 404 for non-numeric or out-of-range `page` values in the page list, recent and
+  tag views (`Paginator.page()` rather than `get_page()`).
+
+### 14. Tag pages missing from the sitemap
+- **Problem:** the 480 tag pages (`/tags/<slug>/`) are good topic hubs but aren't in the sitemap
+  and have no meta description.
+- **Fix:** add tag pages to the sitemap generation; give them a description such as
+  "N VitaminDWiki pages about <tag>: …".
+
+### 15. Second `<h1>` inside page content
+- **Problem:** 1,810 pages have `<h1>` headings in their content (markdown `# Heading`) as well as
+  the page title `<h1>`.
+- **Fix:** shift content headings down one level when rendering markdown (`#` → `<h2>`, and so on),
+  then re-render stored HTML.
 
 ## Worth reviewing
 
@@ -92,6 +130,15 @@ Before changing anything, record a Search Console baseline so the effect can be 
   to its cause.
 - Expected effect on rankings is modest; the main benefit is accuracy and credibility.
 
+### 16. Caching headers and image weight
+- CSS/JS under `/static/` and CloudFront images are sent without `Cache-Control`, so returning
+  visitors re-check them. Add long cache lifetimes in nginx for `/static/` and on the CloudFront
+  distribution. Some images are large (e.g. a 357 KB diagram); consider resizing or compressing.
+
+### 17. Public "Admin" link
+- Every public page shows an "Admin" link in the header. Harmless, but visitors don't need it;
+  show it only to logged-in staff.
+
 ## Already working well
 - HTTP → HTTPS redirect.
 - Compressed responses (a 107 KB page is sent as 33 KB).
@@ -100,3 +147,6 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - Missing pages return a real 404.
 - The sitemap lists all 14,812 URLs with `lastmod`.
 - Article pages respond in ~0.17s.
+- All 14,812 sitemap URLs are unique and on the canonical host; a random sample of 25 all return 200.
+- Missing pages and tags return a real 404; page previews require an admin login.
+- Security headers (HSTS, `X-Frame-Options`) are in place.
