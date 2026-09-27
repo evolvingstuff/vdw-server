@@ -32,6 +32,22 @@ class MetaDescriptionTests(SimpleTestCase):
         self.assertLessEqual(len(description), 155)
         self.assertTrue(description.endswith("…"))
 
+    def test_prefers_findings_over_methods_paragraph(self):
+        content = (
+            "Methods: A systematic search was performed in PubMed and Scopus up to December 2020 "
+            "for studies of vitamin D and COVID-19 severity.\n\n"
+            "Results: Low vitamin D was associated with a five-fold higher risk of severe COVID-19 "
+            "across the included studies."
+        )
+        self.assertTrue(generate_meta_description(content).startswith("Low vitamin D was associated"))
+
+    def test_uses_methods_paragraph_when_nothing_else(self):
+        content = (
+            "Methods: A systematic search was performed in PubMed and Scopus up to December 2020 "
+            "for studies of vitamin D and COVID-19 severity."
+        )
+        self.assertTrue(generate_meta_description(content).startswith("A systematic search"))
+
     def test_returns_empty_when_no_prose(self):
         content = "#### A heading\n\n* list item\n\n<img src='x.png' alt='image'>"
         self.assertEqual(generate_meta_description(content), "")

@@ -27,8 +27,16 @@ _CITATION_RE = re.compile(
     re.IGNORECASE,
 )
 _SECTION_LABEL_RE = re.compile(
-    r"^(background|introduction|objectives?|aims?|purpose|context|summary|abstract)"
-    r"(\s*/\s*(objectives?|aims?|purpose))?\s*[:.]\s*",
+    r"^(background|introduction|objectives?|aims?|purpose|context|summary|abstract|"
+    r"results?|findings|conclusions?|interpretation|methods?)"
+    r"(\s*/\s*(objectives?|aims?|purpose|methods?))?\s*[:.]\s*",
+    re.IGNORECASE,
+)
+# Methods-style abstract sections describe how a study was done, not what it found;
+# they only make a weak summary, so they are used only if nothing better exists.
+_METHODS_LABEL_RE = re.compile(
+    r"^(methods?|materials and methods|design|setting|participants|patients and methods|"
+    r"study design|data sources?|search strategy)\s*[:.]",
     re.IGNORECASE,
 )
 _TIKI_MARKUP_RE = re.compile(r"\{[A-Za-z]+(\([^}]*\))?\}")
@@ -99,11 +107,16 @@ def generate_meta_description(content_md: str) -> str:
     lets the search engine pick its own snippet.
     """
     assert isinstance(content_md, str), f"content_md must be str, got {type(content_md)}"
+    methods_fallback = ""
     for raw in re.split(r"\n\s*\n", content_md):
         paragraph = _plain_text(raw)
-        if _is_prose(paragraph, raw):
-            return _truncate(_SECTION_LABEL_RE.sub("", paragraph), META_DESCRIPTION_MAX_CHARS)
-    return ""
+        if not _is_prose(paragraph, raw):
+            continue
+        if _METHODS_LABEL_RE.match(paragraph):
+            methods_fallback = methods_fallback or paragraph
+            continue
+        return _truncate(_SECTION_LABEL_RE.sub("", paragraph), META_DESCRIPTION_MAX_CHARS)
+    return _truncate(_SECTION_LABEL_RE.sub("", methods_fallback), META_DESCRIPTION_MAX_CHARS)
 
 
 def meta_description_for(page) -> str:
