@@ -22,7 +22,7 @@ import io
 import boto3
 import paramiko
 from botocore.exceptions import ClientError
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from scp import SCPClient
 
 # Load environment variables
@@ -3778,6 +3778,84 @@ sudo chown %s:%s "$TARGET"
                 print(f"🗑️ Termination requested for {current_instance}")
         return True
 
+def preview_title_rewrites(local_db: str):
+    """Ask an LLM to suggest less overclaiming titles; writes a CSV, never touches the DB."""
+    from getpass import getpass
+    from helper_functions.title_review import TitleReviewAbort, run_title_review
+
+    print("\n" + "=" * 50)
+    print("PREVIEW TITLE REWRITES (read-only)")
+    print("=" * 50)
+    print("This will:")
+    print("  • Pick a random sample of published pages (or all of them)")
+    print("  • Pass 1: send titles only (batched) and flag ones that may overclaim")
+    print("  • Pass 2: send flagged titles with page content (batched) for keep/rewrite")
+    print("  • Write a CSV (original -> suggested title) under tmp/title_review/")
+    print("  • NOT modify the database")
+
+    db_path = Path(local_db)
+    if not db_path.exists():
+        print(f"❌ Local database not found: {db_path}")
+        return
+
+    output_dir = Path(__file__).resolve().parent / "tmp" / "title_review"
+    previous_csvs = sorted(output_dir.glob("title_review_*.csv"), reverse=True)[:10]
+    previous_csv = None
+    if previous_csvs:
+        print("\nRe-run on the same pages as an earlier review? (to compare prompt changes)")
+        for idx, path in enumerate(previous_csvs, start=1):
+            print(f"  [{idx}] {path.name}")
+        choices = "1" if len(previous_csvs) == 1 else f"1-{len(previous_csvs)}"
+        raw = input(f"Type {choices} to re-run those pages, or press Enter for a new sample: ").strip()
+        if raw:
+            if not raw.isdigit() or not 1 <= int(raw) <= len(previous_csvs):
+                print("❌ Invalid selection")
+                return
+            previous_csv = previous_csvs[int(raw) - 1]
+
+    limit = None
+    if previous_csv is None:
+        limit_raw = input("\nNumber of random pages, or 'all' [100]: ").strip().lower() or "100"
+        if limit_raw != "all":
+            if not limit_raw.isdigit() or int(limit_raw) < 1:
+                print("❌ Please enter a positive number or 'all'")
+                return
+            limit = int(limit_raw)
+
+    # Model and key come from .env.local (gitignored, never uploaded) or are typed here.
+    # Do not put them in .env: that file is uploaded to the server.
+    local_env = dotenv_values(Path(__file__).resolve().parent / ".env.local")
+    default_model = (local_env.get("TITLE_REVIEW_MODEL") or "").strip()
+    model_prompt = f"OpenAI model ID [{default_model}]: " if default_model else "OpenAI model ID: "
+    model = input(model_prompt).strip() or default_model
+    if not model:
+        print("❌ A model ID is required")
+        return
+
+    api_key = (local_env.get("OPENAI_API_KEY") or "").strip()
+    if api_key:
+        print("Using OPENAI_API_KEY from .env.local")
+    else:
+        api_key = getpass("OpenAI API key (hidden): ").strip()
+    if not api_key:
+        print("❌ No API key entered")
+        return
+
+    try:
+        out_path = run_title_review(
+            db_path=db_path,
+            output_dir=output_dir,
+            api_key=api_key,
+            model=model,
+            limit=limit,
+            previous_csv=previous_csv,
+        )
+    except TitleReviewAbort as exc:
+        print(f"\n❌ OpenAI rejected the request (check key / model ID): {exc}")
+        return
+    print(f"\n✅ Review written to {out_path}")
+
+
 def print_header():
     """Print script header"""
     print("\n" + "=" * 50)
@@ -3810,7 +3888,8 @@ def print_menu(active_host: str, label: str):
     print("17. Run SSM diagnostics (full disk/memory/services dump)")
     print("18. Enable AWS management (SSM/CloudWatch + health alarms + email)")
     print("19. Reboot EC2 instance")
-    print("20. Exit")
+    print("20. Preview title rewrites (LLM suggestions -> CSV, no DB changes)")
+    print("21. Exit")
     print()
 
 def main():
@@ -3820,7 +3899,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-8,10-20]: ").strip()
+        choice = input("Enter choice [0-8,10-21]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -3931,6 +4010,8 @@ def main():
             if input(f"\nRequest AWS reboot for the instance behind {host}? (y/n): ").lower() == 'y':
                 deployer.reboot_instance(host)
         elif choice == '20':
+            preview_title_rewrites(deployer.config['local_db'])
+        elif choice == '21':
             print("\n👋 Goodbye!")
             break
         

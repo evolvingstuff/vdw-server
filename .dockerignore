@@ -20,6 +20,7 @@ data/
 
 # Environment files
 .env
+.env.local
 
 # Development files
 .DS_Store
