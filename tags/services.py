@@ -73,7 +73,9 @@ class TopicIndex:
         self.tag_id_by_slug: Dict[str, int] = {t.slug: t.id for t in self.tags.values()}
 
         page_rows = list(
-            Page.objects.filter(status='published').values_list('id', 'title', 'slug', 'public_modified_date')
+            # order_by() drops the default ordering so SQLite answers from the covering index
+            # (page_status_recent_cover) without reading the ~1 GB table.
+            Page.objects.filter(status='published').order_by().values_list('id', 'title', 'slug', 'public_modified_date')
         )
         published_ids = {row[0] for row in page_rows}
 

@@ -101,3 +101,12 @@ class Page(ContentBase):
         db_table = 'posts_post'
         verbose_name = 'Page'
         verbose_name_plural = 'Pages'
+        indexes = [
+            # Covering index for "Most Recent" and the topic index build: lets SQLite read
+            # these small columns from the index instead of scanning the ~1 GB table
+            # (rows hold the full page text).
+            models.Index(
+                fields=['status', 'public_modified_date', 'created_date', 'id', 'title', 'slug'],
+                name='page_status_recent_cover',
+            ),
+        ]
