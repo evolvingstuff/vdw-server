@@ -4,13 +4,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 
 from .models import Tag
-from .services import (
-    TAG_PAGE_LIST_LIMIT,
-    pages_in_search_order,
-    published_pages_with_all_tags,
-    tag_counts,
-    tags_by_slug,
-)
+from .services import TAG_PAGE_LIST_LIMIT, get_topic_index
 
 INITIAL_TOPIC_ROWS = 100
 
@@ -23,29 +17,28 @@ def tag_pages(request, tag_slug):
         query = f"?{urlencode([('and', slug) for slug in extra_slugs])}" if extra_slugs else ''
         return HttpResponsePermanentRedirect(reverse('tag_pages', args=[tag_slug]) + query)
 
+    index = get_topic_index()
     try:
-        tags = tags_by_slug([tag_slug, *extra_slugs])
+        tags = index.tags_for_slugs([tag_slug, *extra_slugs])
     except Tag.DoesNotExist as exc:
         raise Http404(str(exc)) from exc
 
-    ordered = pages_in_search_order(published_pages_with_all_tags(tags))
+    pages, total = index.pages_for(tags)
     return render(request, 'tags/tag_pages.html', {
         'tag': tags[0],
         'tags': tags,
         'is_combination': len(tags) > 1,
-        'pages': ordered[:TAG_PAGE_LIST_LIMIT],
-        'total_count': len(ordered),
-        'is_truncated': len(ordered) > TAG_PAGE_LIST_LIMIT,
+        'pages': pages,
+        'total_count': total,
+        'is_truncated': total > TAG_PAGE_LIST_LIMIT,
         'list_limit': TAG_PAGE_LIST_LIMIT,
+        'selected_slugs': ','.join(t.slug for t in tags),
     })
 
 
 def tag_list(request):
     """Topic browser: filter topics by word start, select several to combine."""
-    topics = [
-        {'name': t.name, 'slug': t.slug, 'count': t.count}
-        for t in tag_counts()
-    ]
+    topics = [{'name': c.name, 'slug': c.slug, 'count': c.count} for c in get_topic_index().topic_counts]
     return render(request, 'tags/tag_list.html', {
         'topics': topics,
         'initial_rows': INITIAL_TOPIC_ROWS,
@@ -58,12 +51,10 @@ def tag_counts_api(request):
     slugs = [slug for slug in request.GET.get('tags', '').split(',') if slug]
     if not slugs:
         return JsonResponse({'error': 'tags parameter required'}, status=400)
+    index = get_topic_index()
     try:
-        selected = tags_by_slug(slugs)
+        selected = index.tags_for_slugs(slugs)
     except Tag.DoesNotExist as exc:
         return JsonResponse({'error': str(exc)}, status=404)
-    total = published_pages_with_all_tags(selected).count()
-    return JsonResponse({
-        'total': total,
-        'counts': {t.slug: t.count for t in tag_counts(selected)},
-    })
+    total, counts = index.combined_counts(selected)
+    return JsonResponse({'total': total, 'counts': counts})

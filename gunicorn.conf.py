@@ -10,3 +10,12 @@ worker_tmp_dir = "/dev/shm"
 accesslog = "-"
 errorlog = "-"
 loglevel = "info"
+
+
+def post_worker_init(worker):
+    """Build the topic index in the background as soon as a worker starts."""
+    import threading
+
+    from tags.services import warm_topic_index
+
+    threading.Thread(target=warm_topic_index, name="topic-index-warmup", daemon=True).start()

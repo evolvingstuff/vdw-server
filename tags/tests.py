@@ -6,12 +6,14 @@ from django.utils import timezone
 
 from pages.models import Page
 from tags.models import Tag
-from tags.services import pages_in_search_order, published_pages_with_all_tags, tag_counts
+from tags.services import get_topic_index, reset_topic_index
 
 
-@override_settings(ALLOWED_HOSTS=['*'])
+@override_settings(ALLOWED_HOSTS=['*'], TOPIC_INDEX_BACKGROUND_REFRESH=False)
 class TopicBrowserTests(TestCase):
     def setUp(self):
+        reset_topic_index()
+        self.addCleanup(reset_topic_index)
         for target in ('pages.signals.index_page', 'pages.signals.remove_page_from_search'):
             patcher = patch(target)
             patcher.start()
@@ -37,19 +39,23 @@ class TopicBrowserTests(TestCase):
         return page
 
     def test_counts_include_title_matches_and_skip_drafts(self):
-        counts = {t.slug: t.count for t in tag_counts()}
+        counts = {t.slug: t.count for t in get_topic_index().topic_counts}
         self.assertEqual(counts['bone'], 4)
         self.assertEqual(counts['infant-child'], 2)
 
     def test_combined_counts(self):
-        counts = {t.slug: t.count for t in tag_counts([self.bone, self.infant])}
+        index = get_topic_index()
+        total, counts = index.combined_counts(index.tags_for_slugs(['bone', 'infant-child']))
+        self.assertEqual(total, 2)
         # 'RCT' is in one title, so that page also counts under RCT.
         self.assertEqual(counts, {'bone': 2, 'infant-child': 2, 'rct': 1})
 
     def test_search_order_overview_then_rct_then_newest(self):
-        rows = pages_in_search_order(published_pages_with_all_tags([self.bone]))
+        index = get_topic_index()
+        pages, total = index.pages_for(index.tags_for_slugs(['bone']))
+        self.assertEqual(total, 4)
         self.assertEqual(
-            [r['title'] for r in rows],
+            [p.title for p in pages],
             [self.overview.title, self.old_rct.title, self.new_plain.title, self.title_only.title],
         )
 
@@ -88,3 +94,11 @@ class TopicBrowserTests(TestCase):
         self.assertContains(response, '<h1>Topics/Subjects</h1>')
         self.assertContains(response, 'id="topics-data"')
         self.assertContains(response, '"slug": "bone"')
+
+    def test_index_rebuilds_after_a_page_is_saved(self):
+        index = get_topic_index()
+        page = self._page('Bone news', [self.bone], 2026)
+        with patch('tags.services.SIGNATURE_CHECK_SECONDS', 0):
+            new_index = get_topic_index()
+        self.assertIsNot(new_index, index)
+        self.assertIn(page.id, new_index.pages)

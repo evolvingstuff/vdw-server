@@ -24,19 +24,19 @@
 <p class="topic-summary">
     {{ total_count }} page{{ total_count|pluralize }}{% if is_combination %} with all of these topics{% endif %},
     most important first (overviews, then meta-analyses, then RCTs, then newest).
-    <a href="{% url 'tag_list' %}?selected={% for t in tags %}{{ t.slug }}{% if not forloop.last %},{% endif %}{% endfor %}">Combine with another topic</a>
+    <a href="{% url 'tag_list' %}?selected={{ selected_slugs }}">Combine with another topic</a>
 </p>
 
 {% if is_truncated %}
 <p class="topic-note">
     Showing the first {{ list_limit }} of {{ total_count }} pages.
-    <a href="{% url 'tag_list' %}?selected={% for t in tags %}{{ t.slug }}{% if not forloop.last %},{% endif %}{% endfor %}">Add another topic</a> to narrow the list.
+    <a href="{% url 'tag_list' %}?selected={{ selected_slugs }}">Add another topic</a> to narrow the list.
 </p>
 {% endif %}
 
 <ul class="compact-list">
     {% for page in pages %}
-        <li><a href="{% url 'page_detail' page.slug %}">{{ page.title }}</a></li>
+        <li><a href="{{ page.url }}">{{ page.title }}</a></li>
     {% empty %}
         <li>No published pages {% if is_combination %}have all of these topics{% else %}with this tag yet{% endif %}.</li>
     {% endfor %}
