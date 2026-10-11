@@ -102,3 +102,15 @@ class TopicBrowserTests(TestCase):
             new_index = get_topic_index()
         self.assertIsNot(new_index, index)
         self.assertIn(page.id, new_index.pages)
+
+    def test_article_footer_shows_tags_with_counts_once_index_is_ready(self):
+        url = f'/pages/{self.old_rct.slug}/'
+        before = self.client.get(url)  # index not built yet: no waiting, no counts
+        self.assertContains(before, 'Click on a tag to see studies:')
+        self.assertContains(before, '>Bone</a>')
+
+        get_topic_index()
+        after = self.client.get(url)
+        self.assertContains(after, '>Bone (4)</a>')
+        self.assertContains(after, '>Infant-Child (2)</a>')
+        self.assertNotContains(after, 'Tags:</strong>')

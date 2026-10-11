@@ -12,6 +12,7 @@ from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from .models import Page
 from .recent_cache import get_recent_pages
+from tags.services import topic_counts_if_ready
 from helper_functions.pagination import paginate_or_404
 
 from helper_functions.markdown import add_lazy_loading, demote_headings, render_markdown
@@ -37,7 +38,7 @@ def page_detail(request, slug):
     # Add icons to the HTML content before displaying
     page.content_html = prepare_content_html(page.content_html)
 
-    return render(request, 'pages/page_detail.html', {'page': page})
+    return render(request, 'pages/page_detail.html', {'page': page, 'tag_links': tag_links_for(page)})
 
 
 @staff_member_required
@@ -46,7 +47,17 @@ def page_preview(request, slug):
 
     page.content_html = prepare_content_html(page.content_html)
 
-    return render(request, 'pages/page_detail.html', {'page': page, 'is_preview': True})
+    return render(request, 'pages/page_detail.html', {
+        'page': page,
+        'is_preview': True,
+        'tag_links': tag_links_for(page),
+    })
+
+
+def tag_links_for(page):
+    """The page's tags with how many pages each tag has (count is None until the topic index is ready)."""
+    counts = topic_counts_if_ready() or {}
+    return [{'tag': tag, 'count': counts.get(tag.slug)} for tag in page.tags.all()]
 
 
 def prepare_content_html(html):

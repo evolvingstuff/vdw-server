@@ -28,11 +28,11 @@
 	            {% endwith %}
 	        </div>
 
-	        {% if page.tags.all %}
+	        {% if tag_links %}
 	        <div class="tags">
-	            <strong>Tags:</strong>
-	            {% for tag in page.tags.all %}
-	            <a href="{% url 'tag_pages' tag.slug %}" class="tag">{{ tag.name }}</a>
+	            <strong class="tags-label">Click on a tag to see studies:</strong>
+	            {% for link in tag_links %}
+	            <a href="{% url 'tag_pages' link.tag.slug %}" class="tag">{{ link.tag.name }}{% if link.count %} ({{ link.count }}){% endif %}</a>
 	            {% endfor %}
 	        </div>
 	        {% endif %}

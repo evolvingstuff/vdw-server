@@ -101,18 +101,29 @@
             margin: 0;
         }
         
-        .tag {
-            background: #ecf0f1;
-            color: #3498db;
-            padding: 0.2em 0.5em;
-            border-radius: 3px;
-            text-decoration: none;
-            font-size: 0.8em;
-            margin-right: 0.5em;
+        .tags {
+            line-height: 2.2;
         }
-        
+
+        .tags-label {
+            margin-right: 0.6em;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e3ecf4;
+            color: #1a5a8c;
+            padding: 0.15em 0.6em;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-right: 1.1em; /* roughly two spaces between entries */
+            white-space: nowrap;
+        }
+
         .tag:hover {
-            background: #bdc3c7;
+            background: #c9dbea;
         }
 
         /* Prettier Pagination Styles */

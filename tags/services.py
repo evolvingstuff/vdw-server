@@ -110,6 +110,7 @@ class TopicIndex:
             (TopicCount(self.tags[tid].name, self.tags[tid].slug, len(pids)) for tid, pids in self.tag_pages.items()),
             key=lambda c: (-c.count, c.name),
         )
+        self.count_by_slug: Dict[str, int] = {c.slug: c.count for c in self.topic_counts}
         self._ordered_cache: Dict[Tuple[int, ...], List[int]] = {}
         self._cache_lock = threading.Lock()
 
@@ -242,6 +243,18 @@ def get_topic_index() -> TopicIndex:
         else:
             return _build(signature)
     return index
+
+
+def topic_counts_if_ready() -> Optional[Dict[str, int]]:
+    """{slug: page count} without ever waiting for a build (for article pages).
+
+    Returns None if this worker's index isn't built yet (it is warmed at worker start);
+    callers then simply show tags without counts.
+    """
+    if _index is None:
+        return None
+    index = get_topic_index()  # index exists, so this never blocks; may start a background refresh
+    return index.count_by_slug
 
 
 def warm_topic_index() -> None:
