@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Topics/Subjects - VitaminDWiki{% endblock %}
 
@@ -15,13 +16,18 @@
 .topic-chip { display: inline-block; background: #3498db; color: #fff; border-radius: 14px; padding: 2px 10px; margin: 2px 4px 2px 0; font-size: 0.9em; }
 .topic-chip button { background: none; border: none; color: #fff; cursor: pointer; margin-left: 4px; font-size: 1em; padding: 0; }
 .topic-selection .show-selected { display: inline-block; margin-top: 0.5em; font-weight: 600; color: #1d6fa5; }
-.topic-table { width: 100%; border-collapse: collapse; }
+.topic-table { width: 100%; max-width: 620px; border-collapse: collapse; }
 .topic-table th { text-align: left; font-size: 0.85em; color: #666; border-bottom: 1px solid #ddd; padding: 6px 8px; }
 .topic-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; }
+.topic-table tbody tr { background: #fff; }
+.topic-table tbody tr:nth-child(even) { background: #eaeff4; }
 .topic-table tr.topic-row { cursor: pointer; }
-.topic-table tr.topic-row:hover { background: #f7fbff; }
-.topic-table tr.selected { background: #eef6fd; }
-.topic-table td.count { text-align: right; color: #555; width: 5em; font-variant-numeric: tabular-nums; }
+.topic-table tr.topic-row:hover { background: #dcecfa; }
+.topic-table tr.selected, .topic-table tr.selected:hover { background: #cfe4f7; }
+.topic-table tr.no-overlap { color: #aaa; cursor: default; }
+.topic-table tr.no-overlap:hover { background: inherit; }
+.topic-table tr.no-overlap td.count { color: #bbb; }
+.topic-table td.count { text-align: right; color: #555; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .topic-table th.count { text-align: right; }
 .topic-table td.check { width: 1.5em; }
 .topic-table td.view { width: 4em; text-align: right; }
@@ -36,7 +42,7 @@
 <p class="topics-intro">
     Type to find topics. Tick several topics to see only the pages that have <strong>all</strong> of them,
     for example <em>Bone</em> and <em>Infant-Child</em>. Each topic opens as a single list
-    (up to {{ list_limit }} pages), so Ctrl+F can find words on the whole list at once.
+    (up to {{ list_limit|intcomma }} pages), so Ctrl+F can find words on the whole list at once.
 </p>
 
 <input type="search" id="topic-search" class="topic-search" placeholder="Find topics, e.g. bone, magnesium, tuberculosis receptor"
@@ -56,7 +62,7 @@
 
 <table class="topic-table">
     <thead>
-        <tr><th></th><th>Topic</th><th class="count">Pages</th><th></th></tr>
+        <tr><th></th><th>Topic</th><th class="count" id="count-header">Pages</th><th></th></tr>
     </thead>
     <tbody id="topic-rows"></tbody>
 </table>
@@ -92,6 +98,7 @@
     const chipsEl = document.getElementById('topic-chips');
     const showSelectedEl = document.getElementById('show-selected');
     const bySlug = new Map(TOPICS.map(t => [t.slug, t]));
+    const countHeader = document.getElementById('count-header');
 
     let sortMode = 'count';
     let showAll = false;
@@ -119,6 +126,8 @@
         return TAG_URL.replace('TAG_SLUG', encodeURIComponent(first)) + (query ? '?' + query : '');
     }
 
+    const fmt = n => n.toLocaleString('en-US');  // 11465 -> "11,465"
+
     function countFor(topic) {
         if (!comboCounts) return topic.count;
         return comboCounts[topic.slug] || 0;
@@ -127,29 +136,30 @@
     function render() {
         const tokens = words(searchInput.value);
         let list = TOPICS.filter(t => matches(t, tokens));
-        if (comboCounts) {
-            // Only topics that share pages with the current selection (plus the selection itself).
-            list = list.filter(t => selected.includes(t.slug) || countFor(t) > 0);
-        }
         list.sort(sortMode === 'name'
             ? (a, b) => a.name.localeCompare(b.name)
             : (a, b) => countFor(b) - countFor(a) || a.name.localeCompare(b.name));
         // Keep selected topics at the top.
         list.sort((a, b) => selected.includes(b.slug) - selected.includes(a.slug));
 
-        const limited = !tokens.length && !showAll && list.length > INITIAL_ROWS;
+        // Before anything is ticked, show the largest topics first; once a topic is ticked,
+        // show every topic so the next one can be chosen from the full list.
+        const limited = !tokens.length && !showAll && !selected.length && list.length > INITIAL_ROWS;
         const visible = limited ? list.slice(0, INITIAL_ROWS) : list;
 
         rowsEl.replaceChildren(...visible.map(topic => {
             const isSelected = selected.includes(topic.slug);
+            const shared = countFor(topic);
+            const noOverlap = Boolean(comboCounts) && !isSelected && shared === 0;
             const tr = document.createElement('tr');
-            tr.className = 'topic-row' + (isSelected ? ' selected' : '');
+            tr.className = 'topic-row' + (isSelected ? ' selected' : '') + (noOverlap ? ' no-overlap' : '');
 
             const check = document.createElement('td');
             check.className = 'check';
             const box = document.createElement('input');
             box.type = 'checkbox';
             box.checked = isSelected;
+            box.disabled = noOverlap;
             box.setAttribute('aria-label', 'Select ' + topic.name);
             check.appendChild(box);
 
@@ -158,7 +168,13 @@
 
             const count = document.createElement('td');
             count.className = 'count';
-            count.textContent = (isSelected && comboCounts ? comboTotal : countFor(topic)).toLocaleString();
+            if (comboCounts && isSelected) {
+                count.textContent = fmt(comboTotal);
+            } else if (comboCounts) {
+                count.textContent = `${fmt(shared)} of ${fmt(topic.count)}`;  // relative importance
+            } else {
+                count.textContent = fmt(topic.count);
+            }
 
             const view = document.createElement('td');
             view.className = 'view';
@@ -168,19 +184,27 @@
             link.textContent = 'View →';
             link.title = slugs.length > 1 ? 'Pages with all of: ' + slugs.map(s => bySlug.get(s).name).join(' + ') : 'Pages about ' + topic.name;
             link.addEventListener('click', e => e.stopPropagation());
-            view.appendChild(link);
+            if (!noOverlap) view.appendChild(link);
 
             tr.append(check, name, count, view);
-            tr.addEventListener('click', () => toggle(topic.slug));
+            if (noOverlap) {
+                tr.title = 'No pages have all of these topics';
+            } else {
+                tr.addEventListener('click', () => toggle(topic.slug));
+            }
             return tr;
         }));
 
         emptyEl.hidden = visible.length > 0;
         moreEl.hidden = !limited;
         moreButton.textContent = `Show all ${list.length} topics`;
-        statusEl.textContent = tokens.length
-            ? `${list.length} matching topic${list.length === 1 ? '' : 's'}`
-            : `${list.length} topics`;
+        countHeader.textContent = comboCounts ? 'Pages shared' : 'Pages';
+        const sharing = comboCounts ? list.filter(t => !selected.includes(t.slug) && countFor(t) > 0).length : 0;
+        statusEl.textContent = comboCounts
+            ? `${sharing} of ${list.length} ${tokens.length ? 'matching ' : ''}topics share pages with the selection`
+            : tokens.length
+                ? `${list.length} matching topic${list.length === 1 ? '' : 's'}`
+                : `${list.length} topics`;
         renderSelection();
     }
 
@@ -202,7 +226,7 @@
             const names = selected.map(s => bySlug.get(s).name).join(' + ');
             const total = comboCounts ? comboTotal : bySlug.get(selected[0]).count;
             showSelectedEl.href = topicUrl(selected);
-            showSelectedEl.textContent = `Show the ${total.toLocaleString()} page${total === 1 ? '' : 's'} with ${selected.length > 1 ? 'all of: ' : ''}${names} →`;
+            showSelectedEl.textContent = `Show the ${fmt(total)} page${total === 1 ? '' : 's'} with ${selected.length > 1 ? 'all of: ' : ''}${names} →`;
         }
     }
 

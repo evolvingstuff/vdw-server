@@ -1,5 +1,5 @@
 {% extends 'pages/base.html' %}
-{% load seo_tags %}
+{% load seo_tags humanize %}
 
 {% block title %}{{ page.title }}{% endblock %}
 
@@ -32,7 +32,7 @@
 	        <div class="tags">
 	            <strong class="tags-label">Click on a tag to see studies:</strong>
 	            {% for link in tag_links %}
-	            <a href="{% url 'tag_pages' link.tag.slug %}" class="tag">{{ link.tag.name }}{% if link.count %} ({{ link.count }}){% endif %}</a>
+	            <a href="{% url 'tag_pages' link.tag.slug %}" class="tag">{{ link.tag.name }}{% if link.count %} ({{ link.count|intcomma }}){% endif %}</a>
 	            {% endfor %}
 	        </div>
 	        {% endif %}

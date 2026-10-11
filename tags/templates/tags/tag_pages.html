@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}{% if is_combination %}{% for t in tags %}{{ t.name }}{% if not forloop.last %} + {% endif %}{% endfor %}{% else %}Pages tagged with "{{ tag.name }}"{% endif %} - VitaminDWiki{% endblock %}
 
-{% block meta_description %}{% if not is_combination %}<meta name="description" content="{% filter truncatechars:155 %}{{ total_count }} VitaminDWiki page{{ total_count|pluralize }} about {{ tag.name }}{% if pages %}, including: {% for page in pages|slice:':3' %}{{ page.title }}{% if not forloop.last %}; {% endif %}{% endfor %}{% endif %}{% endfilter %}">{% endif %}{% endblock %}
+{% block meta_description %}{% if not is_combination %}<meta name="description" content="{% filter truncatechars:155 %}{{ total_count|intcomma }} VitaminDWiki page{{ total_count|pluralize }} about {{ tag.name }}{% if pages %}, including: {% for page in pages|slice:':3' %}{{ page.title }}{% if not forloop.last %}; {% endif %}{% endfor %}{% endif %}{% endfilter %}">{% endif %}{% endblock %}
 
 {% block canonical %}{% if not is_combination %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}{% endblock %}
 {# Topic combinations are endless; keep them out of search engines. #}
@@ -22,14 +23,14 @@
 <h1>{% if is_combination %}{% for t in tags %}{{ t.name }}{% if not forloop.last %} + {% endif %}{% endfor %}{% else %}Pages tagged with "{{ tag.name }}"{% endif %}</h1>
 
 <p class="topic-summary">
-    {{ total_count }} page{{ total_count|pluralize }}{% if is_combination %} with all of these topics{% endif %},
+    {{ total_count|intcomma }} page{{ total_count|pluralize }}{% if is_combination %} with all of these topics{% endif %},
     most important first (overviews, then meta-analyses, then RCTs, then newest).
     <a href="{% url 'tag_list' %}?selected={{ selected_slugs }}">Combine with another topic</a>
 </p>
 
 {% if is_truncated %}
 <p class="topic-note">
-    Showing the first {{ list_limit }} of {{ total_count }} pages.
+    Showing the first {{ list_limit|intcomma }} of {{ total_count|intcomma }} pages.
     <a href="{% url 'tag_list' %}?selected={{ selected_slugs }}">Add another topic</a> to narrow the list.
 </p>
 {% endif %}
