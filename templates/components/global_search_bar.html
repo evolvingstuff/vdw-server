@@ -14,6 +14,7 @@
         <!-- <a href="{% url 'page_list' %}" class="nav-link">All Pages</a> -->
         <!-- <a href="{% url 'tag_list' %}" class="nav-link">All Tags</a> -->
         <a href="{% url 'recent_page_list' %}" class="nav-link">Most Recent</a>
+        <a href="{% url 'tag_list' %}" class="nav-link">Topics/Subjects</a>
     </div>
     
     <!-- Center Search -->
@@ -62,7 +63,9 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: grid;
     align-items: center;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 600px) minmax(0, 1fr);
+    /* Side columns never shrink below their links, so the search box can't cover them;
+       on wide screens both side columns are equal and the search stays centred. */
+    grid-template-columns: minmax(max-content, 1fr) minmax(240px, 600px) minmax(max-content, 1fr);
     gap: 20px;
 }
 
@@ -93,6 +96,7 @@
     color: #3498db;
     text-decoration: none;
     font-size: 14px;
+    white-space: nowrap;
     transition: color 0.2s;
 }
 
@@ -280,6 +284,8 @@ body {
     .nav-left {
         gap: 15px;
         flex: 1;
+        flex-wrap: wrap;  /* logo + two links may not fit on one line on phones */
+        row-gap: 4px;
     }
     
     .nav-brand {

@@ -299,6 +299,9 @@ def _suggested_tags_for_page(page: Page) -> list[Tag]:
 
 
 class BulkTagPagesActionForm(forms.Form):
+    class Media:
+        js = ('pages/admin/word_start_tag_filter.js',)
+
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         required=False,
@@ -690,4 +693,5 @@ class PageAdmin(PublicUpdateAdminMixin, admin.ModelAdmin):
             'pages/admin/copy_page_link.js',
             'pages/admin/title_length_warning.js',
             'pages/admin/suggested_tags.js',
+            'pages/admin/word_start_tag_filter.js',
         )

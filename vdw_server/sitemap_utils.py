@@ -63,7 +63,7 @@ def _collect_entries(base_url: str) -> List[UrlEntry]:
     # Tag pages are topic hubs; lastmod is the newest update among their published pages.
     tags = (
         Tag.objects
-        .annotate(last_update=Max('pages__public_modified_date', filter=Q(pages__status='published')))
+        .annotate(last_update=Max('derived_pages__public_modified_date', filter=Q(derived_pages__status='published')))
         .filter(last_update__isnull=False)
         .order_by('slug')
     )
