@@ -9,7 +9,6 @@ from typing import List, Sequence, Tuple
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from django.conf import settings
-from django.db.models import Max, Q
 from django.urls import reverse
 from django.utils import timezone
 
@@ -52,26 +51,32 @@ def _collect_entries(base_url: str) -> List[UrlEntry]:
             _format_lastmod(site_page.public_modified_date),
         ))
 
-    pages = Page.objects.filter(status='published').order_by('slug')
-    for page in pages:
-        path = reverse('page_detail', args=[page.slug])
+    # Only slug/date/id are read, all from the page_status_recent_cover index: loading whole
+    # Page rows (with full article text) meant reading the ~1 GB database and made the
+    # admin "Refresh Sitemap" request time out on the server.
+    published = list(
+        Page.objects.filter(status='published').order_by().values_list('id', 'slug', 'public_modified_date')
+    )
+    page_url = reverse('page_detail', args=['SLUG'])
+    modified_by_id = {}
+    for page_id, slug, modified in published:
+        modified_by_id[page_id] = modified
         entries.append((
-            _absolute_url(base_url, path),
-            _format_lastmod(page.public_modified_date),
+            _absolute_url(base_url, page_url.replace('SLUG', slug)),
+            _format_lastmod(modified),
         ))
 
     # Tag pages are topic hubs; lastmod is the newest update among their published pages.
-    tags = (
-        Tag.objects
-        .annotate(last_update=Max('derived_pages__public_modified_date', filter=Q(derived_pages__status='published')))
-        .filter(last_update__isnull=False)
-        .order_by('slug')
-    )
-    for tag in tags:
-        path = reverse('tag_pages', args=[tag.slug])
+    tag_last_update = {}
+    for page_id, tag_id in Page.derived_tags.through.objects.values_list('page_id', 'tag_id'):
+        modified = modified_by_id.get(page_id)
+        if modified is not None and (tag_id not in tag_last_update or modified > tag_last_update[tag_id]):
+            tag_last_update[tag_id] = modified
+    tag_url = reverse('tag_pages', args=['SLUG'])
+    for tag_id, slug in Tag.objects.filter(id__in=tag_last_update).values_list('id', 'slug'):
         entries.append((
-            _absolute_url(base_url, path),
-            _format_lastmod(tag.last_update),
+            _absolute_url(base_url, tag_url.replace('SLUG', slug)),
+            _format_lastmod(tag_last_update[tag_id]),
         ))
 
     # Keep output deterministic regardless of query ordering.
