@@ -144,6 +144,10 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **Decided to leave it:** it's Dad's login shortcut (its script opens the editor for the current
   page), and hiding it from logged-out visitors would hide it from him too.
 
+### 18. Hundreds of tables not rendered (investigated, not started)
+- ~400 pages: tables inside HTML boxes, unconverted Tiki tables, half-converted tables.
+- Full findings, plan and open questions: [docs/TABLES-FIX.md](docs/TABLES-FIX.md).
+
 ## Already working well
 - HTTP → HTTPS redirect.
 - Compressed responses (a 107 KB page is sent as 33 KB).
