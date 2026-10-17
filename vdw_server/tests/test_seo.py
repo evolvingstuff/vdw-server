@@ -217,7 +217,7 @@ class FileIconTests(SimpleTestCase):
         self.assertEqual(
             html,
             '<a href="https://cdn.example/attachments/pdf/study.pdf">'
-            '<span class="file-icon" aria-hidden="true">📄</span> Download the PDF</a>',
+            '<span class="file-icon" aria-hidden="true">📄</span>Download the PDF</a>',
         )
 
     def test_other_links_untouched(self):

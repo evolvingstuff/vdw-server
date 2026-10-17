@@ -49,7 +49,7 @@
     font-size: 1.6em;
     line-height: 1;
     vertical-align: -0.2em;
-    margin-right: 0.1em;
+    margin-right: 0.25em; /* gap without an underlined space before the link text */
 }
 
 /* Lists with proper bullets/numbers */

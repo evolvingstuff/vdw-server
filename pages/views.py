@@ -139,7 +139,7 @@ def add_file_icons_to_html(html):
             icon = icon_map['default']
         if not icon:
             return match.group(0)
-        return f'<a href="{url}"><span class="file-icon" aria-hidden="true">{icon}</span> {text}</a>'
+        return f'<a href="{url}"><span class="file-icon" aria-hidden="true">{icon}</span>{text}</a>'
     
     return re.sub(pattern, add_icon, html)
 
