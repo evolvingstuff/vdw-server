@@ -15,7 +15,13 @@ from .recent_cache import get_recent_pages
 from tags.services import topic_counts_if_ready
 from helper_functions.pagination import paginate_or_404
 
-from helper_functions.markdown import add_lazy_loading, demote_headings, render_markdown
+from helper_functions.markdown import (
+    add_lazy_loading,
+    demote_headings,
+    fix_doi_link_periods,
+    linkify_bare_doi_urls,
+    render_markdown,
+)
 
 
 def page_list(request):
@@ -63,7 +69,8 @@ def tag_links_for(page):
 def prepare_content_html(html):
     """Final touches applied to stored HTML when a page is displayed."""
     # demote_headings also fixes HTML stored before headings were demoted at save time.
-    return add_lazy_loading(demote_headings(add_file_icons_to_html(html)))
+    html = fix_doi_link_periods(demote_headings(add_file_icons_to_html(html)))
+    return add_lazy_loading(linkify_bare_doi_urls(html))
 
 
 def add_file_icons_to_html(html):

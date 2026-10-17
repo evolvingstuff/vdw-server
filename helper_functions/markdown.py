@@ -62,7 +62,7 @@ def render_markdown(markdown_text: str) -> str:
         html = _restore_inline_footnote_numbers(html)
         html = _restore_definition_numbers(html)
         html = _space_consecutive_references(html)
-    return demote_headings(html)
+    return linkify_bare_doi_urls(fix_doi_link_periods(demote_headings(html)))
 
 
 _HEADING_OPEN_RE = re.compile(r'<h([1-6])(\s[^>]*)?>', re.IGNORECASE)
@@ -93,6 +93,86 @@ def demote_headings(html: str) -> str:
 
     html = _HEADING_OPEN_RE.sub(open_tag, html)
     return _HEADING_CLOSE_RE.sub(lambda m: f'</h{min(int(m.group(1)) + 1, 6)}>', html)
+
+
+_DOI_LINK_TRAILING_PERIOD_RE = re.compile(
+    r'(?P<open><a\b[^>]*?\bhref=")(?P<url>https?://(?:dx\.)?doi\.org/[^"]*?)\.+(?P<rest>"[^>]*>)'
+    r'(?P<text>(?:(?!<a\b).)*?)(?P<close></a>)',  # text stops at nested <a> (malformed content)
+    re.IGNORECASE | re.DOTALL,
+)
+_DOI_HREF_TRAILING_PERIOD_RE = re.compile(
+    r'(\bhref="https?://(?:dx\.)?doi\.org/[^"]*?)\.+"', re.IGNORECASE
+)
+
+
+def fix_doi_link_periods(html: str) -> str:
+    """Drop the sentence period that got pulled into DOI links ("…/MD.0000000000010702.").
+
+    Real DOIs don't end in "."; with it, doi.org can't resolve the link. The period is
+    removed from the URL and moved outside the link text, so the sentence still ends with
+    one. Applied when saving and again when displaying older stored HTML (idempotent).
+    """
+    def fix(match: re.Match[str]) -> str:
+        text = match.group('text')
+        trailing = ''
+        if text.endswith('.'):
+            text, trailing = text[:-1], '.'
+        return f"{match.group('open')}{match.group('url')}{match.group('rest')}{text}{match.group('close')}{trailing}"
+
+    html = _DOI_LINK_TRAILING_PERIOD_RE.sub(fix, html)
+    # Any remaining DOI hrefs (e.g. links nested inside other links) just lose the period.
+    return _DOI_HREF_TRAILING_PERIOD_RE.sub(r'\1"', html)
+
+
+_HTML_TAG_SPLIT_RE = re.compile(r'(<[^>]+>)')
+_TAG_NAME_RE = re.compile(r'<\s*(/?)\s*([a-zA-Z0-9]+)')
+_BARE_DOI_URL_RE = re.compile(r'https?://(?:dx\.)?doi\.org/[^\s<>"\']+', re.IGNORECASE)
+_NO_LINKIFY_TAGS = {'a', 'code', 'pre', 'script', 'style', 'textarea'}
+
+
+def _split_doi_url(url: str) -> tuple[str, str]:
+    """Split trailing sentence punctuation off a DOI URL; keep parentheses that belong to it."""
+    trailing = ''
+    while url:
+        last = url[-1]
+        if last in '.,;:!?\'"]':
+            pass
+        elif last == ')' and url.count('(') < url.count(')'):
+            pass
+        else:
+            break
+        trailing = last + trailing
+        url = url[:-1]
+    return url, trailing
+
+
+def linkify_bare_doi_urls(html: str) -> str:
+    """Turn plain-text https://doi.org/... addresses into links (markdown doesn't auto-link).
+
+    Text already inside a link, code block or script is left alone, so this is safe to run
+    on stored HTML at display time and again when saving (idempotent).
+    """
+    if 'doi.org/' not in html.lower():
+        return html
+    parts = _HTML_TAG_SPLIT_RE.split(html)
+    skip_depth = 0
+    for i, part in enumerate(parts):
+        if part.startswith('<'):
+            tag = _TAG_NAME_RE.match(part)
+            if tag and tag.group(2).lower() in _NO_LINKIFY_TAGS and not part.endswith('/>'):
+                skip_depth = max(0, skip_depth + (-1 if tag.group(1) else 1))
+            continue
+        if skip_depth or 'doi.org/' not in part.lower():
+            continue
+
+        def link(match: re.Match[str]) -> str:
+            url, trailing = _split_doi_url(match.group(0))
+            if len(url) <= len('https://doi.org/'):
+                return match.group(0)
+            return f'<a href="{url}">{url}</a>{trailing}'
+
+        parts[i] = _BARE_DOI_URL_RE.sub(link, part)
+    return ''.join(parts)
 
 
 def add_lazy_loading(html: str) -> str:

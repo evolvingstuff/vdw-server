@@ -7,7 +7,13 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase, override_settings
 
-from helper_functions.markdown import add_lazy_loading, demote_headings, render_markdown
+from helper_functions.markdown import (
+    add_lazy_loading,
+    demote_headings,
+    fix_doi_link_periods,
+    linkify_bare_doi_urls,
+    render_markdown,
+)
 from helper_functions.seo import generate_meta_description, meta_description_for
 from pages.models import Page
 
@@ -136,6 +142,54 @@ class HeadingAndImageTests(SimpleTestCase):
     def test_lazy_loading_skips_first_and_existing(self):
         html = add_lazy_loading('<img src="1"><img src="2"><img loading="eager" src="3">')
         self.assertEqual(html, '<img src="1"><img loading="lazy" src="2"><img loading="eager" src="3">')
+
+
+class DoiLinkTests(SimpleTestCase):
+    def test_trailing_period_moves_out_of_doi_link(self):
+        html = '<a href="https://doi.org/10.1097/MD.0000000000010702.">doi: 10.1097/MD.0000000000010702.</a> Next.'
+        self.assertEqual(
+            fix_doi_link_periods(html),
+            '<a href="https://doi.org/10.1097/MD.0000000000010702">doi: 10.1097/MD.0000000000010702</a>. Next.',
+        )
+
+    def test_render_markdown_fixes_new_content(self):
+        html = render_markdown("[doi: 10.1/abc.](https://doi.org/10.1/abc.)")
+        self.assertIn('href="https://doi.org/10.1/abc"', html)
+        self.assertIn('doi: 10.1/abc</a>.', html)
+
+    def test_idempotent_nested_and_non_doi_links(self):
+        nested = '<a href="https://dx.doi.org/10.1/x."><a href="https://doi.org/10.1/x.">doi: 10.1/x.</a>'
+        once = fix_doi_link_periods(nested)
+        self.assertNotIn('x."', once)
+        self.assertEqual(fix_doi_link_periods(once), once)
+        other = '<a href="https://example.com/a.">Example.</a>'
+        self.assertEqual(fix_doi_link_periods(other), other)
+
+
+class BareDoiLinkTests(SimpleTestCase):
+    def test_bare_doi_url_becomes_link_without_trailing_period(self):
+        html = '<p>See https://doi.org/10.1016/j.clnu.2017.08.009. Next sentence.</p>'
+        self.assertEqual(
+            linkify_bare_doi_urls(html),
+            '<p>See <a href="https://doi.org/10.1016/j.clnu.2017.08.009">'
+            'https://doi.org/10.1016/j.clnu.2017.08.009</a>. Next sentence.</p>',
+        )
+
+    def test_keeps_parentheses_that_belong_to_the_doi(self):
+        html = '<p>(https://doi.org/10.1016/S0140-6736(13)61647-5)</p>'
+        self.assertIn('href="https://doi.org/10.1016/S0140-6736(13)61647-5"', linkify_bare_doi_urls(html))
+        self.assertTrue(linkify_bare_doi_urls(html).endswith('</a>)</p>'))
+
+    def test_skips_existing_links_and_code_and_is_idempotent(self):
+        html = ('<a href="https://doi.org/10.1/a">https://doi.org/10.1/a</a> '
+                '<code>https://doi.org/10.1/b</code> https://dx.doi.org/10.1/c')
+        once = linkify_bare_doi_urls(html)
+        self.assertEqual(once.count('<a '), 2)
+        self.assertIn('<code>https://doi.org/10.1/b</code>', once)
+        self.assertEqual(linkify_bare_doi_urls(once), once)
+
+    def test_render_markdown_links_bare_doi(self):
+        self.assertIn('<a href="https://doi.org/10.1/abc">', render_markdown("doi https://doi.org/10.1/abc."))
 
 
 class HttpsNginxConfigTests(SimpleTestCase):
