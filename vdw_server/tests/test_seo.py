@@ -225,3 +225,35 @@ class FileIconTests(SimpleTestCase):
         for link in ('<a href="https://example.com/page">Page</a>',
                      '<a href="https://cdn.example/attachments/x.unknownext">File</a>'):
             self.assertEqual(add_file_icons_to_html(link), link)
+
+
+@override_settings(ALLOWED_HOSTS=['*'], TOPIC_INDEX_BACKGROUND_REFRESH=False)
+class LlmsTxtTests(TestCase):
+    def setUp(self):
+        from tags.models import Tag
+        from tags.services import reset_topic_index
+        import vdw_server.llms_txt as llms
+        reset_topic_index()
+        llms._cache = None
+        self.addCleanup(reset_topic_index)
+        for target in ('pages.signals.index_page', 'pages.signals.remove_page_from_search'):
+            patcher = patch(target)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        bone = Tag.objects.create(name='Bone', slug='bone')
+        for i in range(5):
+            Page.objects.create(title=f'Bone study {i}', status='published', content_md='Text.').tags.add(bone)
+        Page.objects.create(title='Overview Bone and Vitamin D', status='published', content_md='Text.')
+        Page.objects.create(title='Overview Draft', status='draft', content_md='Text.')
+
+    def test_llms_txt_structure(self):
+        response = self.client.get('/llms.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/plain; charset=utf-8')
+        body = response.content.decode()
+        self.assertTrue(body.startswith('# VitaminDWiki\n\n> VitaminDWiki is a comprehensive website'))
+        for heading in ('## Start here', '## Overviews', '## Topics', '## Optional'):
+            self.assertIn(heading, body)
+        self.assertIn(f'- [Overview Bone and Vitamin D]({settings.SITE_BASE_URL}/pages/overview-bone-and-vitamin-d/)', body)
+        self.assertNotIn('Overview Draft', body)
+        self.assertIn(f'- [Bone]({settings.SITE_BASE_URL}/tags/bone/): 6 pages', body)
