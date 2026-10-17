@@ -208,3 +208,20 @@ class HttpsNginxConfigTests(SimpleTestCase):
         self.assertIn("server_name www.example.com;", config)
         self.assertIn("server_name example.com;", config)
         self.assertNotIn("https://$host", config)
+
+
+class FileIconTests(SimpleTestCase):
+    def test_attachment_links_get_sized_icon(self):
+        from pages.views import add_file_icons_to_html
+        html = add_file_icons_to_html('<a href="https://cdn.example/attachments/pdf/study.pdf">Download the PDF</a>')
+        self.assertEqual(
+            html,
+            '<a href="https://cdn.example/attachments/pdf/study.pdf">'
+            '<span class="file-icon" aria-hidden="true">📄</span> Download the PDF</a>',
+        )
+
+    def test_other_links_untouched(self):
+        from pages.views import add_file_icons_to_html
+        for link in ('<a href="https://example.com/page">Page</a>',
+                     '<a href="https://cdn.example/attachments/x.unknownext">File</a>'):
+            self.assertEqual(add_file_icons_to_html(link), link)

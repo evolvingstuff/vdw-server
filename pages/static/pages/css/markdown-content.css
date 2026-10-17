@@ -43,6 +43,15 @@
     margin: 1em 0;
 }
 
+/* File-type icon in front of attachment links (📄 PDF etc.), large enough to spot easily. */
+.markdown-content .file-icon {
+    display: inline-block; /* keeps the link underline from running under the icon */
+    font-size: 1.6em;
+    line-height: 1;
+    vertical-align: -0.2em;
+    margin-right: 0.1em;
+}
+
 /* Lists with proper bullets/numbers */
 .markdown-content ul {
     list-style: disc outside !important;
