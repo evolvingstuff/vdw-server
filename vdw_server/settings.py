@@ -204,9 +204,10 @@ if SEARCH_RESULTS_DISPLAY_MODE not in _valid_display_modes:
     )
 del _valid_display_modes
 
+# 404 page: redirect to a very close page or suggest matches (search-based, cheap).
 _enable_404_suggestions_value = os.getenv('ENABLE_404_SUGGESTIONS')
 if _enable_404_suggestions_value is None:
-    ENABLE_404_SUGGESTIONS = False
+    ENABLE_404_SUGGESTIONS = True
 else:
     ENABLE_404_SUGGESTIONS = _parse_bool_env(_enable_404_suggestions_value)
 del _enable_404_suggestions_value

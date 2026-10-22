@@ -5,6 +5,9 @@ from django.test import SimpleTestCase, override_settings
 
 
 class GoogleVerificationViewTests(SimpleTestCase):
+    # The alias-redirect middleware reads the database when the test client first builds it.
+    databases = {'default'}
+
     def setUp(self):
         super().setUp()
         self.tempdir = tempfile.TemporaryDirectory()

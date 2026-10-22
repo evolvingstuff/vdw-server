@@ -12,7 +12,6 @@ from django.utils.deprecation import MiddlewareMixin
 from pages.alias_cache import load_alias_redirects, lookup_path, lookup_plain
 from pages.models import Page
 from site_pages.models import SitePage
-from vdw_server.not_found_suggestions import load_not_found_suggestions
 from vdw_server.restore_state import maintenance_lock_path
 
 request_logger = logging.getLogger("vdw_server.request")
@@ -52,8 +51,6 @@ class LegacyAliasRedirectMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         load_alias_redirects()
-        if settings.ENABLE_404_SUGGESTIONS:
-            load_not_found_suggestions()
 
     def __call__(self, request):
         if self._should_skip(request):

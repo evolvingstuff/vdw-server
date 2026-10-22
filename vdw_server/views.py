@@ -1,13 +1,9 @@
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404, HttpResponse, HttpResponsePermanentRedirect
+from django.http import FileResponse, Http404, HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.shortcuts import render
-from vdw_server.not_found_suggestions import (
-    get_not_found_redirect_url,
-    get_not_found_requested_phrase,
-    get_not_found_suggestions,
-)
+from vdw_server.not_found_suggestions import get_not_found_requested_phrase, resolve_not_found
 
 
 def page_detail_fallback(request, raw_slug):
@@ -15,20 +11,19 @@ def page_detail_fallback(request, raw_slug):
 
     assert isinstance(raw_slug, str), f"raw_slug must be str, got {type(raw_slug)}"
 
-    redirect_url = get_not_found_redirect_url(request)
-    if redirect_url:
-        return HttpResponsePermanentRedirect(redirect_url)
-
     return custom_page_not_found(request, Http404(f"Page not found for raw slug {raw_slug!r}"))
 
 
 def custom_page_not_found(request, exception, template_name="404.html"):
     """Render a friendly 404 page with the correct status code."""
     if settings.ENABLE_404_SUGGESTIONS:
-        redirect_url = get_not_found_redirect_url(request)
-        if redirect_url:
-            return HttpResponsePermanentRedirect(redirect_url)
-        requested_phrase, suggestions = get_not_found_suggestions(request)
+        result = resolve_not_found(request)
+        if result.redirect_url:
+            # Exact address matches are permanent; fuzzy "very close" matches are temporary,
+            # so a wrong guess is never cached by browsers or search engines.
+            redirect_class = HttpResponsePermanentRedirect if result.permanent else HttpResponseRedirect
+            return redirect_class(result.redirect_url)
+        requested_phrase, suggestions = result.requested_phrase, result.suggestions
     else:
         requested_phrase = get_not_found_requested_phrase(request)
         suggestions = tuple()

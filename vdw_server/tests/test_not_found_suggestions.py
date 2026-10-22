@@ -1,170 +1,80 @@
 from unittest.mock import patch
 
-from django.http import HttpResponsePermanentRedirect
-from django.http import Http404
 from django.test import RequestFactory, TestCase, override_settings
 
 from pages.models import Page
-from site_pages.models import SitePage
-from vdw_server.not_found_suggestions import (
-    clear_not_found_suggestions_cache,
-    get_not_found_requested_phrase,
-    get_not_found_redirect_url,
-    get_not_found_suggestions,
-    reload_not_found_suggestions,
-)
-from vdw_server.views import custom_page_not_found
+from vdw_server.not_found_suggestions import _is_very_close, resolve_not_found
+
+LONG_TITLE = 'Top 10 chronic health problems of children, women, pregnancies, seniors, and darker skins are fought by Vitamin D'
 
 
-class NotFoundSuggestionTests(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        clear_not_found_suggestions_cache()
-        self.index_patch = patch('pages.signals.index_page')
-        self.remove_patch = patch('pages.signals.remove_page_from_search')
-        self.index_patch.start()
-        self.remove_patch.start()
+def _hits(*titles_and_slugs):
+    return {'hits': [{'id': i, 'title': t, 'slug': s} for i, (t, s) in enumerate(titles_and_slugs)], 'totalHits': 0}
 
-    def tearDown(self):
-        clear_not_found_suggestions_cache()
-        self.index_patch.stop()
-        self.remove_patch.stop()
 
-    def test_lookup_uses_warm_cache_without_queries(self):
-        page = Page.objects.create(
-            title='Top 10 chronic health problems of children, women, pregnancies, seniors, and darker skins are fought by Vitamin D - VitaminDWiki',
-            content_md='Body text',
-            status='published',
-        )
-        reload_not_found_suggestions()
-        request = self.factory.get(
-            '/The+top+10+chronic+health+problems+of+children%2C+women%2C+pregnancies%2C+seniors%2C+and+darker+skins/'
-        )
-
-        with self.assertNumQueries(0):
-            requested_phrase, suggestions = get_not_found_suggestions(request)
-
-        self.assertEqual(
-            requested_phrase,
+class VeryCloseTests(TestCase):
+    def test_rules(self):
+        self.assertTrue(_is_very_close('Vitamin D and bones', 'Vitamin D and bones – June 2011', None))  # date only
+        self.assertTrue(_is_very_close(  # leading "The" + title a few words longer
             'The top 10 chronic health problems of children, women, pregnancies, seniors, and darker skins',
-        )
-        self.assertEqual(suggestions[0].title, page.title)
-        self.assertEqual(suggestions[0].url, f'/pages/{page.slug}/')
+            LONG_TITLE, None))
+        self.assertTrue(_is_very_close('vitamin d is only of only 2 ways to prevent nafld',
+                                       'Vitamin D is one of only 2 ways to prevent NAFLD', None))  # typo
+        self.assertFalse(_is_very_close('Breast cancer stuff', 'Breast Cancer survival 2X more likely', None))
+        self.assertFalse(_is_very_close('magnesium', 'Magnesium and vitamin D', None))  # prefix too short
+        # Very similar to two pages: not clearly the intended one
+        self.assertFalse(_is_very_close('vitamin d and bone health in women',
+                                        'Vitamin D and bone health in men', 'Vitamin D and bone health in men 2'))
 
-    def test_page_signal_updates_loaded_cache_without_reload(self):
-        reload_not_found_suggestions()
-        page = Page.objects.create(
-            title='Magnesium and Vitamin D Guide',
-            content_md='Body text',
-            status='published',
-        )
-        request = self.factory.get('/pages/magnesium-vitamin-d-guides/')
 
-        with self.assertNumQueries(0):
-            _, suggestions = get_not_found_suggestions(request)
+@override_settings(ALLOWED_HOSTS=['*'], DEBUG=False, ENABLE_404_SUGGESTIONS=True)
+class NotFoundViewTests(TestCase):
+    def setUp(self):
+        for target in ('pages.signals.index_page', 'pages.signals.remove_page_from_search'):
+            patcher = patch(target)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        Page.objects.create(title='Overview Asthma and Vitamin D', status='published', content_md='x')
+        self.rf = RequestFactory()
 
-        self.assertEqual(suggestions[0].title, page.title)
+    def test_exact_old_address_redirects_permanently(self):
+        response = self.client.get('/tiki-index.php?page=Overview+Asthma+and+Vitamin+D')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['Location'], '/pages/overview-asthma-and-vitamin-d/')
 
-    def test_site_page_signal_updates_loaded_cache_without_reload(self):
-        reload_not_found_suggestions()
-        site_page = SitePage.objects.create(
-            title='About Vitamin D Research',
-            slug='about-vitamin-d-research',
-            page_type='custom',
-            is_published=True,
-            content_md='Body text',
-        )
-        request = self.factory.get('/about-vitamin-d-research-library/')
-
-        with self.assertNumQueries(0):
-            _, suggestions = get_not_found_suggestions(request)
-
-        self.assertEqual(suggestions[0].title, site_page.title)
-        self.assertEqual(suggestions[0].url, '/about-vitamin-d-research/')
-
-    def test_get_not_found_requested_phrase_skips_scoring_work(self):
-        request = self.factory.get(
-            '/tiki-index.php/styles/vitamindwiki/magiczoom-trial/magiczoom/Stronger+rowers+have+higher+levels+of+Vitamin+D+-+Jan+2024'
-        )
-
-        requested_phrase = get_not_found_requested_phrase(request)
-
-        self.assertEqual(
-            requested_phrase,
-            'tiki index.php styles vitamindwiki magiczoom trial magiczoom Stronger rowers have higher levels of Vitamin D Jan 2024',
-        )
-
-    def test_get_not_found_redirect_url_returns_exact_normalized_match(self):
-        page = Page.objects.create(
-            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
-            content_md='Body text',
-            status='published',
-        )
-        reload_not_found_suggestions()
-        request = self.factory.get('/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/')
-
-        redirect_url = get_not_found_redirect_url(request)
-
-        self.assertEqual(redirect_url, f'/pages/{page.slug}/')
-
-    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=True)
-    def test_custom_404_renders_requested_phrase_and_matches(self):
-        page = Page.objects.create(
-            title='Vitamin D for Asthma Support',
-            content_md='Body text',
-            status='published',
-        )
-        reload_not_found_suggestions()
-
-        response = self.client.get('/pages/Vitamin+D+for+Asthma+Supports/')
-
-        self.assertEqual(response.status_code, 404)
-        self.assertContains(response, 'Cannot find', status_code=404)
-        self.assertContains(response, 'Vitamin D for Asthma Supports', status_code=404)
-        self.assertContains(response, page.title, status_code=404)
-        self.assertContains(response, f'/pages/{page.slug}/', status_code=404)
-
-    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=True)
-    def test_custom_404_redirects_exact_normalized_match(self):
-        page = Page.objects.create(
-            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
-            content_md='Body text',
-            status='published',
-        )
-        reload_not_found_suggestions()
-
+    @patch('search.search.search_pages')
+    def test_very_close_title_redirects_temporarily(self, search):
+        search.return_value = _hits((LONG_TITLE, 'top-10-chronic'), ('All of the top 10 chronic health problems of blacks', 'blacks'))
         response = self.client.get(
-            '/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/'
-        )
+            '/The+top+10+chronic+health+problems+of+children%2C+women%2C+pregnancies%2C+seniors%2C+and+darker+skins')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/pages/top-10-chronic/')
+        self.assertTrue(search.call_args.args[0].startswith('top 10 chronic'))  # leading "The" dropped
+        self.assertEqual(search.call_args.kwargs['matching_strategy'], 'last')
 
-        self.assertEqual(response.status_code, HttpResponsePermanentRedirect.status_code)
-        self.assertEqual(response['Location'], f'/pages/{page.slug}/')
-
-    @override_settings(DEBUG=True, ENABLE_404_SUGGESTIONS=True)
-    def test_page_detail_fallback_redirects_exact_normalized_match_in_debug(self):
-        page = Page.objects.create(
-            title='17 Autism risk factors: low Vitamin D, virus, vaccine, mercury etc. - many studies',
-            content_md='Body text',
-            status='published',
-        )
-        reload_not_found_suggestions()
-
-        response = self.client.get(
-            '/pages/17+Autism+risk+factors:+low+Vitamin+D,+virus,+vaccine,+mercury+etc.+many+studies/'
-        )
-
-        self.assertEqual(response.status_code, HttpResponsePermanentRedirect.status_code)
-        self.assertEqual(response['Location'], f'/pages/{page.slug}/')
-
-    @override_settings(DEBUG=False, ENABLE_404_SUGGESTIONS=False)
-    def test_custom_404_cheap_mode_skips_suggestion_scoring(self):
-        request = self.factory.get('/pages/Vitamin+D+for+Asthma+Supports/')
-
-        with patch('vdw_server.views.get_not_found_suggestions') as suggestions_mock:
-            response = custom_page_not_found(request, Http404('missing'))
-
-        suggestions_mock.assert_not_called()
+    @patch('search.search.search_pages')
+    def test_not_close_shows_suggestions(self, search):
+        search.return_value = _hits(('Breast Cancer survival 2X more likely if vitamin D', 'bc'), ('Breast cancer and D', 'bc2'))
+        response = self.client.get('/Breast+cancer+stuff')
         self.assertEqual(response.status_code, 404)
-        response_html = response.content.decode()
-        self.assertIn('Cannot find "Vitamin D for Asthma Supports"', response_html)
-        self.assertNotIn('Possible matches', response_html)
+        self.assertContains(response, 'Possible matches', status_code=404)
+        self.assertContains(response, 'href="/pages/bc/"', status_code=404)
+
+    @patch('search.search.search_pages')
+    def test_junk_probe_skips_search(self, search):
+        response = self.client.get('/wp-login.php')
+        self.assertEqual(response.status_code, 404)
+        search.assert_not_called()
+
+    @patch('search.search.search_pages', side_effect=RuntimeError('meilisearch down'))
+    def test_search_failure_shows_plain_404(self, search):
+        response = self.client.get('/Some+missing+page+title')
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, 'Some missing page title', status_code=404)
+
+    @override_settings(ENABLE_404_SUGGESTIONS=False)
+    @patch('search.search.search_pages')
+    def test_disabled_mode_does_no_lookups(self, search):
+        response = self.client.get('/Some+missing+page+title')
+        self.assertEqual(response.status_code, 404)
+        search.assert_not_called()

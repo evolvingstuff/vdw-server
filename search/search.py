@@ -529,7 +529,7 @@ def extract_total_hits(search_response: dict) -> int | None:
     return None
 
 
-def search_pages(query: str, limit: int = 20, offset: int = 0):
+def search_pages(query: str, limit: int = 20, offset: int = 0, matching_strategy: str | None = None):
     """Search pages and return MeiliSearch results."""
     if not query.strip():
         return {'hits': [], 'query': query, 'totalHits': 0, 'limit': limit, 'offset': offset}
@@ -579,7 +579,10 @@ def search_pages(query: str, limit: int = 20, offset: int = 0):
         search_payload['attributesToCrop'] = attributes_to_crop
 
     query_terms = extract_query_tokens(query)
-    if len(query_terms) >= 2:
+    if matching_strategy:
+        # e.g. 'last' for 404 lookups: long requested titles may contain words a page lacks
+        search_payload['matchingStrategy'] = matching_strategy
+    elif len(query_terms) >= 2:
         search_payload['matchingStrategy'] = 'all'
 
     meili_started_at = time.perf_counter()
