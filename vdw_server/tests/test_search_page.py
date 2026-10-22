@@ -58,3 +58,26 @@ class SearchPageTests(TestCase):
 
     def test_robots_blocks_search(self):
         self.assertContains(self.client.get('/robots.txt'), 'Disallow: /search/')
+
+
+@override_settings(ALLOWED_HOSTS=['*'])
+class SearchResultDetailsTests(TestCase):
+    def setUp(self):
+        from pages.models import Page
+        for target in ('pages.signals.index_page', 'pages.signals.remove_page_from_search'):
+            patcher = patch(target)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.page = Page.objects.create(
+            title='Telomeres and vitamin D', status='published',
+            content_md='Higher vitamin D levels were associated with longer telomeres in a large cohort of adults.',
+        )
+
+    def test_results_show_description_and_date_not_address(self):
+        hit = {'id': self.page.id, 'title': self.page.title, 'slug': self.page.slug}
+        with patch('search.views.search_pages', return_value={'hits': [hit], 'totalHits': 1}):
+            response = self.client.get('/search/', {'q': 'telomere'})
+        self.assertContains(response, 'Higher vitamin D levels were associated with longer telomeres')
+        self.assertContains(response, 'Updated ')
+        self.assertNotContains(response, f'<div class="result-url">')
+        self.assertContains(response, '<h1>Search results for: telomere</h1>')

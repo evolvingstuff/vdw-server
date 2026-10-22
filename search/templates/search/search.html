@@ -9,7 +9,7 @@
 {% block content %}
 <div class="search-page-content">
     {% if query %}
-        <h1>Search Results for "{{ query }}"</h1>
+        <h1>Search results for: {{ query }}</h1>
         {% if alternatives %}
             <p class="search-info">Pages matching any of:
                 {% for alt in alternatives %}<a href="?q={{ alt|urlencode }}" class="search-alt">{{ alt }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}
@@ -22,16 +22,14 @@
                 {% for result in results %}
                     <div class="search-result-item">
                         <h3><a href="/pages/{{ result.slug }}/">{{ result.title }}</a></h3>
-                        <div class="result-snippet">
-                            {{ result.content|truncatechars:300 }}
-                        </div>
-                        <div class="result-url">/pages/{{ result.slug }}/</div>
+                        {% if result.description %}<div class="result-snippet">{{ result.description }}</div>{% endif %}
+                        {% if result.updated %}<div class="result-date">Updated {{ result.updated|date:"F Y" }}</div>{% endif %}
                     </div>
                 {% endfor %}
             </div>
         {% else %}
             <div class="no-results">
-                <h2>No results found for "{{ query }}"</h2>
+                <h2>No results found for: {{ query }}</h2>
                 <p>Try searching for something else.</p>
             </div>
         {% endif %}
@@ -57,8 +55,8 @@
 }
 
 .search-result-item {
-    margin-bottom: 2em;
-    padding-bottom: 1.5em;
+    margin-bottom: 1.2em;
+    padding-bottom: 1em;
     border-bottom: 1px solid #eee;
 }
 
@@ -76,14 +74,14 @@
 }
 
 .result-snippet {
-    color: #666;
+    color: #444;
     line-height: 1.5;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.3em;
 }
 
-.result-url {
-    color: #5f6368;
-    font-size: 0.9em;
+.result-date {
+    color: #888;
+    font-size: 0.85em;
 }
 
 .no-results {

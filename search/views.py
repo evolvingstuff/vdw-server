@@ -1,6 +1,11 @@
+from functools import lru_cache
+
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
+
+from helper_functions.seo import meta_description_for
+from pages.models import Page
 
 from .query import split_or_query
 from .search import search_pages
@@ -13,6 +18,25 @@ def _format_total_hits_display(total_hits: int, max_hits: int = 1000) -> str:
 
 
 SEARCH_PAGE_LIMIT = 100
+
+
+@lru_cache(maxsize=20000)
+def _cached_description(page_id: int, modified_key: str) -> str:
+    """Meta description for a page; cached per page version (modified_key changes on save)."""
+    page = Page.objects.filter(pk=page_id).only('id', 'title', 'meta_description', 'content_md').first()
+    return meta_description_for(page) if page else ''
+
+
+def _add_descriptions_and_dates(results):
+    """Give each result a one-line description and its last-updated date."""
+    ids = [r['id'] for r in results]
+    rows = Page.objects.filter(id__in=ids).values_list('id', 'modified_date', 'public_modified_date')
+    info = {pid: (modified, public) for pid, modified, public in rows}
+    for result in results:
+        modified, public = info.get(result['id'], (None, None))
+        result['description'] = _cached_description(result['id'], str(modified)) if modified else ''
+        result['updated'] = public
+    return results
 
 
 def _interleave_results(result_lists):
@@ -46,6 +70,8 @@ def search_page(request):
             search_results = search_pages(alternatives[0] if alternatives else query, limit=SEARCH_PAGE_LIMIT, offset=0)
             results = search_results.get('hits', [])
             total_hits = search_results.get('totalHits') or 0
+
+    results = _add_descriptions_and_dates(results)
 
     return render(
         request,
