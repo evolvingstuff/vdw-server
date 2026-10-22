@@ -105,17 +105,27 @@ def initialize_search_index():
 
 
 def clear_search_index():
-    """Delete all documents from search index"""
+    """Delete all documents from search index and wait until Meilisearch has done it."""
     client = get_search_client()
     index = client.index(settings.MEILISEARCH_INDEX_NAME)
-    index.delete_all_documents()
+    wait_for_task(index, index.delete_all_documents(), 'delete all documents')
+
+
+# Meilisearch runs tasks from a queue; clearing ~15k documents can take well over the
+# client's 5-second default, which made "reindex" fail after clearing the index.
+TASK_TIMEOUT_MS = 10 * 60 * 1000
+TASK_POLL_INTERVAL_MS = 500
 
 
 def wait_for_task(index, task_info, task_name: str) -> None:
     assert index is not None, "index is required"
     assert task_info is not None, f"{task_name} task_info is required"
     assert hasattr(task_info, 'task_uid'), f"{task_name} task_info missing task_uid"
-    index.wait_for_task(task_info.task_uid)
+    index.wait_for_task(
+        task_info.task_uid,
+        timeout_in_ms=TASK_TIMEOUT_MS,
+        interval_in_ms=TASK_POLL_INTERVAL_MS,
+    )
 
 
 def normalize_priority_text(value: str) -> str:
