@@ -1,6 +1,18 @@
 # Fix: hundreds of tables not rendered
 
-Status: **investigated, not started**. Reported by Dad as "100's of tables not parsed" (ASAP).
+Status: **implemented (Oct 2026)**. Reported by Dad as "100's of tables not parsed" (ASAP).
+
+- Phase 1 (preview): `deployment-manager.py` option 21 writes an HTML report; the report reviewed
+  before applying is saved at [docs/table-review/table_review_2026-10-21.html](table-review/table_review_2026-10-21.html).
+- Phase 2 (apply): migration `pages/migrations/0012_convert_tiki_tables.py` runs on deploy. It converts
+  Tiki tables in `content_md` (originals saved in `PageContentBackup`) and re-renders affected pages.
+  Reverse with `python manage.py migrate posts 0011`.
+- Renderer: `helper_functions/tables.py` (`prepare_tables_for_rendering`) runs inside `render_markdown`,
+  so pages saved later keep rendering their tables.
+- Tested on the local DB copy: 114 pages converted, 432 re-rendered, tables 54 -> 450 on changed pages,
+  no dates changed; reverse restored all markdown exactly.
+- **Still to do by hand:** the "Needs a manual fix" section of the saved report (3 skipped Tiki
+  tables with 16-21 cells per row, 5 pages with tables that still don't render).
 
 ## Examples from Dad
 
