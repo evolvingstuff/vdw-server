@@ -13,7 +13,7 @@
         window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
         plausible.init()
     </script>
-    {% load static %}
+    {% load static static_version %}
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'pages/favicon/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'pages/favicon/favicon-32x32.png' %}">
@@ -21,8 +21,8 @@
     <link rel="icon" type="image/x-icon" href="{% static 'pages/favicon/favicon.ico' %}">
     <link rel="manifest" href="{% static 'pages/favicon/site.webmanifest' %}">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" type="text/css" href="{% static 'pages/css/markdown-content.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'pages/css/markdown-hacks.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% versioned_static 'pages/css/markdown-content.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% versioned_static 'pages/css/markdown-hacks.css' %}">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -645,7 +645,7 @@
         }
     })();
     </script>
-    <script src="{% static 'pages/js/legacy_box_rendering.js' %}"></script>
+    <script src="{% versioned_static 'pages/js/legacy_box_rendering.js' %}"></script>
     <script>
     (function() {
         const colorMarkerPattern = /#\s*f00\b/i;

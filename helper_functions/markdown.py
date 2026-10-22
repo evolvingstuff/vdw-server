@@ -5,6 +5,7 @@ from typing import Iterable
 
 import markdown2
 
+from helper_functions.html_cleanup import balance_divs, remove_empty_table_headers, unwrap_legacy_code_blocks
 from helper_functions.tables import prepare_tables_for_rendering
 
 
@@ -66,7 +67,8 @@ def render_markdown(markdown_text: str) -> str:
         html = _restore_inline_footnote_numbers(html)
         html = _restore_definition_numbers(html)
         html = _space_consecutive_references(html)
-    return linkify_bare_doi_urls(fix_doi_link_periods(demote_headings(html)))
+    html = linkify_bare_doi_urls(fix_doi_link_periods(demote_headings(html)))
+    return remove_empty_table_headers(balance_divs(unwrap_legacy_code_blocks(html)))
 
 
 _HEADING_OPEN_RE = re.compile(r'<h([1-6])(\s[^>]*)?>', re.IGNORECASE)

@@ -123,20 +123,31 @@
 /* Tables */
 .markdown-content table {
     border-collapse: collapse;
-    width: 100%;
+    /* Size to the content (short tables used to stretch across the page) and scroll
+       sideways instead of overflowing when a table is wider than the column. */
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
     margin: 1em 0;
+    background: #fff;
 }
 
 .markdown-content th,
 .markdown-content td {
-    border: 1px solid #ddd;
-    padding: 0.5em;
+    border: 1px solid #d5dbe1;
+    padding: 0.4em 0.8em;
     text-align: left;
+    vertical-align: top;
 }
 
 .markdown-content th {
-    background: #f4f4f4;
+    background: #e8eef4;
     font-weight: bold;
+}
+
+.markdown-content tbody tr:nth-child(even) td {
+    background: #f6f8fa;
 }
 
 /* Links */

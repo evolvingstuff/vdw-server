@@ -15,6 +15,7 @@ from .recent_cache import get_recent_pages
 from tags.services import topic_counts_if_ready
 from helper_functions.pagination import paginate_or_404
 
+from helper_functions.html_cleanup import balance_divs, remove_empty_table_headers, unwrap_legacy_code_blocks
 from helper_functions.markdown import (
     add_lazy_loading,
     demote_headings,
@@ -70,6 +71,7 @@ def prepare_content_html(html):
     """Final touches applied to stored HTML when a page is displayed."""
     # demote_headings also fixes HTML stored before headings were demoted at save time.
     html = fix_doi_link_periods(demote_headings(add_file_icons_to_html(html)))
+    html = remove_empty_table_headers(balance_divs(unwrap_legacy_code_blocks(html)))
     return add_lazy_loading(linkify_bare_doi_urls(html))
 
 
