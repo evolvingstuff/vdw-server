@@ -3938,128 +3938,127 @@ def main():
     
     deployer = DockerDeployment()
     
-    while True:
-        print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-8,10-22]: ").strip()
+    print_menu(deployer.active_host, deployer.active_host_label)
+    choice = input("Enter choice [0-8,10-22]: ").strip()
+    
+    if choice == '0':
+        deployer.capture_provisioning_config()
+    elif choice == '1':
+        print("\n" + "=" * 50)
+        print("SERVER PROVISIONING (NEW INSTANCE)")
+        print("=" * 50)
+        print("This will:")
+        print("  • Create a brand-new EC2 instance with configured sizes")
+        print("  • Install Docker, docker compose, nginx, and prepare the /app/data volume")
+        print("  • Configure nginx to reverse proxy to the Django container (code deploy happens separately)")
+        print("  • Leave the Elastic IP unassigned so you can deploy + test via the temporary IP")
         
-        if choice == '0':
-            deployer.capture_provisioning_config()
-        elif choice == '1':
-            print("\n" + "=" * 50)
-            print("SERVER PROVISIONING (NEW INSTANCE)")
-            print("=" * 50)
-            print("This will:")
-            print("  • Create a brand-new EC2 instance with configured sizes")
-            print("  • Install Docker, docker compose, nginx, and prepare the /app/data volume")
-            print("  • Configure nginx to reverse proxy to the Django container (code deploy happens separately)")
-            print("  • Leave the Elastic IP unassigned so you can deploy + test via the temporary IP")
-            
-            if input("\nProceed? (y/n): ").lower() == 'y':
-                deployer.provision_server()
-        elif choice == '2':
-            print("\n" + "=" * 50)
-            print("ASSOCIATE ELASTIC IP")
-            print("=" * 50)
-            print("This will move the configured Elastic IP to a chosen instance.")
-            deployer.associate_elastic_ip()
-        elif choice == '3':
-            print("\n" + "=" * 50)
-            print("CODE DEPLOYMENT")
-            print("=" * 50)
-            print("This will:")
-            print("  • Upload your current local code to the production server")
-            print("  • Rebuild Docker containers")
-            print("  • Restart services")
-            
-            if input("\nProceed? (y/n): ").lower() == 'y':
-                deployer.deploy_code()
-        elif choice == '4':
-            print("\n" + "=" * 50)
-            print("DATABASE DEPLOYMENT")
-            print("=" * 50)
-            deployer.deploy_database()
-        elif choice == '5':
-            print("\n" + "=" * 50)
-            print("FULL DEPLOYMENT")
-            print("=" * 50)
-            print("This will:")
-            print("  • Deploy code (upload local code + rebuild)")
-            print("  • Deploy database (upload + reindex)")
-            
-            if input("\nProceed? (y/n): ").lower() == 'y':
-                deployer.deploy_full()
-        elif choice == '6':
-            deployer.reindex_search()
-        elif choice == '7':
-            print("\n" + "=" * 50)
-            print("FREE DISK CLEANUP")
-            print("=" * 50)
-            print("Choose cleanup mode:")
-            print("  1. Safe cleanup (preserve DB + Meili, prune logs/caches, restart Django)")
-            print("  2. Aggressive cleanup (stop containers, delete DB, remove Meili data)")
-            cleanup_choice = input("\nEnter choice [1-2, Enter to cancel]: ").strip()
-            if cleanup_choice == '1':
-                deployer.safe_free_disk_on_server()
-            elif cleanup_choice == '2':
-                print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
-                if input("\nProceed? (y/n): ").lower() == 'y':
-                    deployer.free_disk_on_server()
-            elif cleanup_choice:
-                print("❌ Invalid cleanup choice")
-        elif choice == '8':
-            deployer.show_status()
-        elif choice == '10':
-            deployer.issue_https_certificate()
-        elif choice == '11':
-            deployer.reset_https_configuration()
-        elif choice == '12':
-            deployer.update_hosts_file()
-        elif choice == '13':
-            deployer.restore_local_db_from_s3()
-        elif choice == '14':
-            try:
-                host = deployer.prompt_host_for_operation('lock security group (HTTPS only)')
-            except RuntimeError:
-                continue
-            prompt = (
-                "\nThis will REMOVE all existing inbound rules except 22/443 "
-                f"on host {host}. Proceed? (y/n): "
-            )
-            if input(prompt).lower() == 'y':
-                deployer.lock_security_group_https_only(host)
-        elif choice == '15':
-            deployer.issue_https_certificate_http01()
-        elif choice == '16':
-            deployer.renew_https_certificate_dry_run()
-        elif choice == '17':
-            try:
-                host = deployer.prompt_host_for_operation('SSM diagnostics')
-            except RuntimeError:
-                continue
-            deployer.run_ssm_diagnostics(host)
-        elif choice == '18':
-            try:
-                host = deployer.prompt_host_for_operation('enable AWS management')
-            except RuntimeError:
-                continue
-            deployer.enable_aws_management(host)
-        elif choice == '19':
-            try:
-                host = deployer.prompt_host_for_operation('reboot EC2 instance')
-            except RuntimeError:
-                continue
-            if input(f"\nRequest AWS reboot for the instance behind {host}? (y/n): ").lower() == 'y':
-                deployer.reboot_instance(host)
-        elif choice == '20':
-            preview_title_rewrites(deployer.config['local_db'])
-        elif choice == '21':
-            preview_table_fixes(deployer.config['local_db'])
-        elif choice == '22':
-            print("\n👋 Goodbye!")
-            break
+        if input("\nProceed? (y/n): ").lower() == 'y':
+            deployer.provision_server()
+    elif choice == '2':
+        print("\n" + "=" * 50)
+        print("ASSOCIATE ELASTIC IP")
+        print("=" * 50)
+        print("This will move the configured Elastic IP to a chosen instance.")
+        deployer.associate_elastic_ip()
+    elif choice == '3':
+        print("\n" + "=" * 50)
+        print("CODE DEPLOYMENT")
+        print("=" * 50)
+        print("This will:")
+        print("  • Upload your current local code to the production server")
+        print("  • Rebuild Docker containers")
+        print("  • Restart services")
         
-        else:
-            print("❌ Invalid choice. Please try again.")
+        if input("\nProceed? (y/n): ").lower() == 'y':
+            deployer.deploy_code()
+    elif choice == '4':
+        print("\n" + "=" * 50)
+        print("DATABASE DEPLOYMENT")
+        print("=" * 50)
+        deployer.deploy_database()
+    elif choice == '5':
+        print("\n" + "=" * 50)
+        print("FULL DEPLOYMENT")
+        print("=" * 50)
+        print("This will:")
+        print("  • Deploy code (upload local code + rebuild)")
+        print("  • Deploy database (upload + reindex)")
+        
+        if input("\nProceed? (y/n): ").lower() == 'y':
+            deployer.deploy_full()
+    elif choice == '6':
+        deployer.reindex_search()
+    elif choice == '7':
+        print("\n" + "=" * 50)
+        print("FREE DISK CLEANUP")
+        print("=" * 50)
+        print("Choose cleanup mode:")
+        print("  1. Safe cleanup (preserve DB + Meili, prune logs/caches, restart Django)")
+        print("  2. Aggressive cleanup (stop containers, delete DB, remove Meili data)")
+        cleanup_choice = input("\nEnter choice [1-2, Enter to cancel]: ").strip()
+        if cleanup_choice == '1':
+            deployer.safe_free_disk_on_server()
+        elif cleanup_choice == '2':
+            print("This will:\n  • Stop Docker containers\n  • DELETE the remote SQLite database file\n  • Remove the MeiliSearch data\n  • Prune Docker builder cache and unused images\n  • Vacuum system logs")
+            if input("\nProceed? (y/n): ").lower() == 'y':
+                deployer.free_disk_on_server()
+        elif cleanup_choice:
+            print("❌ Invalid cleanup choice")
+    elif choice == '8':
+        deployer.show_status()
+    elif choice == '10':
+        deployer.issue_https_certificate()
+    elif choice == '11':
+        deployer.reset_https_configuration()
+    elif choice == '12':
+        deployer.update_hosts_file()
+    elif choice == '13':
+        deployer.restore_local_db_from_s3()
+    elif choice == '14':
+        try:
+            host = deployer.prompt_host_for_operation('lock security group (HTTPS only)')
+        except RuntimeError:
+            return
+        prompt = (
+            "\nThis will REMOVE all existing inbound rules except 22/443 "
+            f"on host {host}. Proceed? (y/n): "
+        )
+        if input(prompt).lower() == 'y':
+            deployer.lock_security_group_https_only(host)
+    elif choice == '15':
+        deployer.issue_https_certificate_http01()
+    elif choice == '16':
+        deployer.renew_https_certificate_dry_run()
+    elif choice == '17':
+        try:
+            host = deployer.prompt_host_for_operation('SSM diagnostics')
+        except RuntimeError:
+            return
+        deployer.run_ssm_diagnostics(host)
+    elif choice == '18':
+        try:
+            host = deployer.prompt_host_for_operation('enable AWS management')
+        except RuntimeError:
+            return
+        deployer.enable_aws_management(host)
+    elif choice == '19':
+        try:
+            host = deployer.prompt_host_for_operation('reboot EC2 instance')
+        except RuntimeError:
+            return
+        if input(f"\nRequest AWS reboot for the instance behind {host}? (y/n): ").lower() == 'y':
+            deployer.reboot_instance(host)
+    elif choice == '20':
+        preview_title_rewrites(deployer.config['local_db'])
+    elif choice == '21':
+        preview_table_fixes(deployer.config['local_db'])
+    elif choice == '22':
+        print("\n👋 Goodbye!")
+        return
+    
+    else:
+        print("❌ Invalid choice.")
 
 if __name__ == "__main__":
     main()
