@@ -1,0 +1,4311 @@
+{
+ "generated": "2026-10-21T21:22:50",
+ "description": "High/likely-confidence fixes for broken internal links, applied by migration 0013_fix_broken_links. Keyed by source page slug.",
+ "fixes": {
+  "10-of-the-top-15-covid-treatments-increase-cellular-vitamin-d": [
+   {
+    "target": "probiotics-augments-vitamin-d-review-of-rct",
+    "text": "VitaminDWiki",
+    "new_url": "/pages/vitamindwiki/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "100-million-americans-have-chronic-pain-iom": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "100000-iu-vitamin-d-monthly-helps-copd-patients-3-rct": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "14x-more-likely-to-die-after-first-cardiovascular-event-if-vitamin-d-deficient": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardiovascular - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis",
+    "text": "Cardiovascular disease 50 % more likely if low vitamin D – meta-analysis Nov 2012",
+    "new_url": "/pages/cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis-2/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "15-minutes-of-education-improved-vitamin-d-compliance": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Poor knowledge by office workers of vitamin D and sunscreen - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/poor-knowledge-by-office-workers-of-vitamin-d-and-sunscreen---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "1600-iu-daily-vitamin-d-raised-adult-blood-levels-above-20-ng-rct": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "1700-iu-vitamin-d-50000-monthly-helped-antarctic-explorers-rct": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Dosing and loading- Pizzorno ND Feb 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-dosing-and-loading--pizzorno-nd-feb-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "vit-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors",
+    "text": "65+ years old need 5,000 IU",
+    "new_url": "/pages/vitamin-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   }
+  ],
+  "18x-increased-destruction-of-skin-cancers-if-active-vitamin-d-added-to-photodynamic-therapy-mice": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TOPICAL",
+    "new_url": "/tags/topical/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "19-percent-in-orange-county-had-less-than-30-ng-of-vitamin-d": [
+   {
+    "target": "moved4",
+    "text": "Magnesium",
+    "new_url": "/tags/magnesium/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "200-to-500-iu-vitamin-d-does-not-benefit-bones-nor-prostate-cancer": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "2000-iu-of-vitamin-d-is-a-step-in-the-right-direction-for-canada": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "2000-iu-vitamin-d-was-safe-and-helped-elderly": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "2000 IU barely raised vitamin D levels after hip fracture - May 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/2000-iu-barely-raised-vitamin-d-levels-after-hip-fracture---may-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "23-covid-mitigation-strategies-at-least-6-of-which-increase-vitamin-d-in-cells": [
+   {
+    "target": "ivermectin-and-covid-19",
+    "text": "Ivermectin raises levels of vitamin D (by decreasing CYP3A4) - 6 studies",
+    "new_url": "/pages/ivermectin-and-covid-19-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "2x-increased-chance-of-anemia-low-iron-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANEMIA",
+    "new_url": "/tags/anemia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "30-percent-of-vitamin-d-sold-now-has-more-than-2000-iu": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU  vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "30-to-40-ng-of-vitamin-d-associated-with-the-least-peanut-allergy": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Kids with more vitamin D less likely to get some allergies",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/kids-with-more-vitamin-d-less-likely-to-get-some-allergies-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "33-percent-more-likely-to-die-of-chronic-kidney-disease-if-less-than-15-ng-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D expanding spectrum - Kidney June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-expanding-spectrum---kidney-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Review of vitamin D and kidney - June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/review-of-vitamin-d-and-kidney---june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "400000-iu-of-vitamin-d-reduced-adult-pain-and-improved-quality-of-life": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "43-reasons-for-vitamin-d-deficiency": [
+   {
+    "target": "extra-vitamin-d-needed-for-crohns",
+    "text": "Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "4x-more-suburban-uv-than-urban-uv": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"air pollution\"",
+    "new_url": "/tags/air-pollution/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "5000-iu-vitamin-d-daily-resulted-in-lower-health-care-costs-rct": [
+   {
+    "target": "intervention-vitamin-d-by-date",
+    "text": "Intervention - Vitamin D by date",
+    "new_url": "/pages/intervention-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "6500-iu-vitamin-d-and-1000-mg-calcium-daily-did-not-improve-bone-density": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "6x-as-many-people-with-allergic-rhinitis-were-severely-vitamin-d-deficient": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Kids with more vitamin D less likely to get some allergies",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/kids-with-more-vitamin-d-less-likely-to-get-some-allergies-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "73-percent-of-australians-had-too-little-vitamin-d": [
+   {
+    "target": "vitamin-d-deficiency-and-testing-in-australia-are-epidemics",
+    "text": "Vitamin D deficiency and testing in  Australia  are epidemics - Aug 2011",
+    "new_url": "/pages/vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "744-iu-vitamin-d-needed-by-northern-white-teens-to-prevent-rickets": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "80-percent-of-teens-in-europe-had-less-than-30-ng-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Save 160 lives annually if Netherlands have  42 ng  vitamin D",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/save-160-lives-annually-if-netherlands-have-42-ng-vitamin-d.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "US Mortality and vitamin D Grant 2009",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/us-mortality-and-vit-d-grant-2009-sunarc.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "80-percent-of-young-adults-had-low-vitamin-d-tests-in-mumbai-india-2011": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INDIA",
+    "new_url": "/tags/india/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "8000-iu-supplementation-to-people-with-various-cancers": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "90-percent-of-canadian-youth-less-than-30-ng-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Save 160 lives annually if Netherlands have  42 ng  vitamin D",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/save-160-lives-annually-if-netherlands-have-42-ng-vitamin-d.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "US Mortality and vitamin D Grant 2009",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/us-mortality-and-vit-d-grant-2009-sunarc.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "91-percent-of-psychiatric-hospital-admissions-had-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "bipolar",
+    "text": "8",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "active-form-of-vitamin-d-appears-to-help-prevent-and-treat-some-cancers": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Genetic disorders and defects in vitamin d action - PDF June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/genetic-disorders-and-defects-in-vitamin-d-action-june-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "acute-ischemic-stroke-19-percent-more-likely-if-even-lower-vitamin-d": [
+   {
+    "target": "chinese-have-very-low-vitamin",
+    "text": "Chinese have very low vitamin - July 2013",
+    "new_url": "/pages/chinese-have-very-low-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "after-back-surgery-failure-vitamin-d-greatly-reduced-the-pain-of-every-person": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "air-pollution-2000-2012": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"air pollution\"",
+    "new_url": "/tags/air-pollution/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "air-pollution-while-pregnant-reduced-vitamin-d-level-in-infant": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"air pollution\"",
+    "new_url": "/tags/air-pollution/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "all-hypertension-patients-should-have-vitamin-d-levels-measured-2010": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Less than 15ng were 3X more likely to be hypertensive - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/less-than-15ng-were-3x-more-likely-to-be-hypertensive---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "CLICK HERE",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/all-hypertension-patients-should-have-vitamin-d-levels-measured---2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "aluminum-increases-autism-etc-silica-decreases-aluminum-dr-coimbra-video": [
+   {
+    "target": "Problems with Vaccines containing Aluminum adjuvants - Malone Nov 2025",
+    "text": "Problems with Vaccines containing Aluminum adjuvants - Malone Nov 2025",
+    "new_url": "/pages/problems-with-vaccines-containing-aluminum-adjuvants-malone-nov-2025/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "alzheimers-disease-is-associated-with-genes-which-restrict-vitamin-d": [
+   {
+    "target": "alzheimers-patients-3x-more-likely-to-have-a-malfunctioning-vitamin-d-gene-2012",
+    "text": "Alzheimer’s patients 3X more likely to have a malfunctioning vitamin D gene – 2012",
+    "new_url": "/pages/alzheimers-patients-3x-more-likely-to-have-a-malfunctioning-vitamin-d-receptor-gene-2012/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "alzheimers-disease-less-risk-if-smarter-higher-vitamin-d-better-genes-or-less-coffee": [
+   {
+    "target": "vitamin-d-deficiency-50-pcnt-more-likely-if-drink-lots-of-caffine",
+    "text": "VitaminDWiki pages containing COFFEE or CAFFINE in title",
+    "new_url": "/pages/vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "alzheimers-is-associated-with-all-7-of-the-genes-which-restrict-vitamin-d-from-getting-to-tissues": [
+   {
+    "target": "search-results",
+    "text": "CYP2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "CYP27B1",
+    "new_url": "/tags/cyp27b1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "CYP27A1",
+    "new_url": "/tags/cyp27a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "alzheimers-may-be-treated-by-vitamin-d3-and-curcumin": [
+   {
+    "target": "curcumin-helps-many-health-problems-2",
+    "text": "Curcumin helps many  health problems",
+    "new_url": "/pages/curcumin-helps-many-health-problems/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "asthma-at-age-20-increased-if-vitamin-d-during-pregnancy-was-higher-than-50-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for EPIGENETICS",
+    "new_url": "/tags/epigenetics/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "athletes-national-level-with-less-than-10-ng-of-vitamin-d-had-smaller-hearts": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Virtually all basketball players and dancers had less than 30 ng - Sept 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/virtually-all-basketball-players-and-dancers-has-less-than-30-ng---sept-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "autism-has-different-causes-but-same-inflammation-in-brain-in-half-of-autistics": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D essential for burn injury - 2008.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-essential-for-burn-injury---2008.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "baby-aspirin-reduces-heart-problems-vitamin-d-much-better": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardiovascular - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "back-pain-associated-with-less-than-40-ng-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "back-pain-extremely-associated-with-low-level-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 % of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "being-told-you-have-allergies-is-associated-with-less-than-10-ng-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Kids with more vitamin D less likely to get some allergies",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/kids-with-more-vitamin-d-less-likely-to-get-some-allergies-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "beneficial-effects-of-uv-radiation-other-than-via-vitamin-d-production": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "best-of-vitamindwiki": [
+   {
+    "target": "3-x-to-25-x-more-likely-to-have-a-health-problem-if-low-vitamin-d",
+    "text": "3 X to 25 X more likely to have a health problem if low Vitamin D",
+    "new_url": "/pages/3-to-55-x-more-likely-to-have-63-health-problems-if-low-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   }
+  ],
+  "bipolar-disorder-may-be-related-to-cellular-not-blood-vitamin-d": [
+   {
+    "target": "bipolar",
+    "text": "Bipolar",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "bipolar-spectrum-disorder-decreased-with-2000-iu-of-vitamin-d": [
+   {
+    "target": "bipolar",
+    "text": "Bipolar",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "black-obese-children-had-low-vitamin-d-and-more-fat-under-skin-than-whites": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Body fat and vitamin D for black and white women - 2005",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/body-fat-and-vitamin-d-for-black-and-white-women---2005.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "blacks-have-low-vitamin-d-and-have-50-percent-more-kidney-failure": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D expanding spectrum - Kidney June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-expanding-spectrum---kidney-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Review of vitamin D and kidney - June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/review-of-vitamin-d-and-kidney---june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "blaming-some-child-deaths-on-covid-shots-fda-vows-stricter-vaccine-rules-nov-2025": [
+   {
+    "target": "18,951 VAERS US vaccination deaths reported by medical professionals, 12% occurred within 48 hours of injection",
+    "text": "18,951 VAERS US vaccination deaths reported by medical professionals, 12% occurred within 48 hours of injection",
+    "new_url": "/pages/18951-vaers-us-vaccination-deaths-reported-by-medical-professionals-12-percent-o-rs-of-injection/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "bmd-improved-with-800-mg-calcium-400-iu-of-vitamin-d-and-100-ug-of-vitamin-k": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "boron-increases-vitamin-d-in-the-blood": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "boron helped chickens.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/boron-helped-chickens.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "physiological effects of boron.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/physiological-effects-of-boron.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BORON",
+    "new_url": "/tags/boron/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "breast-cancer-more-deadly-for-blacks-than-whites": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Breast Cancer in African-American Women",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/breast-cancer-in-african-american-women.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "breast-cancer-rate-reduced-72-percent-by-vitamin-d-gene-polymorphism-cyp24a1": [
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "breast-cancer-reduced-by-10-percent-when-vitamin-d-levels-exceeded-27-ng": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "breast-cancer-severity-strongly-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "breast-cancer-vs-vitamin-d-chart-2010": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Breast Cancer and Vitamin D - July 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/breast-cancer-and-vitamin-d---july-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "breast-cancer-worse-for-black-women": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Breast Cancer in African-American Women",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/breast-cancer-in-african-american-women.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "bursitis-and-vitamin-d": [
+   {
+    "target": "proven-again-400-iu-vitamin-d-does-not-reduce-joint-paint",
+    "text": "Proven again, 400 IU vitamin D does not reduce joint paint - Aug 2013",
+    "new_url": "/pages/proven-again-400-iu-vitamin-d-does-not-reduce-joint-pain/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "calcium-alone-does-not-reduce-risk-of-bone-fracture": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "single high dose vitamin D not help bone loss - Feb 2012.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/single-high-dose-vitamin-d-not-help-bone-loss---feb-2012.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "can-vitamin-d-replace-flu-shots-wsj": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sunlight used to treat influenza - 1918",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sunlight-used-to-trreat-influenza---1918.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "canadian-vitamin-d-recommendations-not-updated-in-13-years": [
+   {
+    "target": "intervention-vitamin-d-by-date",
+    "text": "Intervention - Vitamin D by date",
+    "new_url": "/pages/intervention-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "cardiovascular-problems-for-teens-if-low-levels-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardiovascular - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Global  Metabolic   risks, BMI, etc. - slides 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/global-metabolic-risks-bmi-etc.---slides-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "children-in-india-vitamin-d-guidelines-similar-to-iom": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INDIA",
+    "new_url": "/tags/india/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "children-with-epilepsy-advised-to-take-vitamin-d": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "children-with-severe-caries-were-2x-more-likely-to-have-inadequate-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "peridontal disease and latitude - Grant 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/peridontal-disease-and-latitude---grant-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "clinical-trials-for-vitamin-d-2011": [
+   {
+    "target": "moved91",
+    "text": "WHO Clinical Trials with Vitamin D intervention – July 2011",
+    "new_url": "/pages/over-1000-clinical-trials-with-vitamin-d-intervention/",
+    "confidence": "likely",
+    "method": "link text is very close to this page title"
+   }
+  ],
+  "cognitive-impairment-and-dementia-often-associated-with-low-vitamin-d": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "Vitamin D pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "common-cause-of-dizziness-bppv-reduced-5-x-by-several-doses-of-50000-iu-of-vitamin-d-2015-2016": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VERTIGO",
+    "new_url": "/tags/vertigo/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "conference-on-vitamin-d-in-poland": [
+   {
+    "target": "moved71",
+    "text": "Poland Vitamin D recommendations 2009",
+    "new_url": "/pages/poland-vitamin-d-recommendations-2009/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "copd-2x-as-likely-if-low-vitamin-d-review-of-3-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-almost-all-women-in-bulgaria-hospitalized-with-copd-had-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-and-osteoporosis-are-related-vitamin-d-is-one-possible-connection-2013": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "copd-and-vitamin-d-in-a-vicious-circle": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-becoming-suddenly-worse-is-30x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-bone-metabolism-osteoporosis-vitamin-d-appear-related": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "copd-getting-worse-is-associated-with-very-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-patients-4x-more-likely-to-have-low-vitamin-d-2-articles-in-2012": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "copd-reduced-by-40-percent-with-monthly-100000-iu-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-reduced-by-vitamin-d-taken-once-every-60-days-rct": [
+   {
+    "target": "search-results",
+    "text": "Search COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "copd-treated-by-vitamin-d-meta-analysis": [
+   {
+    "target": "the-lungs-can-activate-vitamin-d-locally-a-vitamin-d-inhaler-may-help-lungs",
+    "text": "COPD reduced by 40 percent with monthly 100,000 IU of vitamin D – RCT Jan 2015",
+    "new_url": "/pages/copd-reduced-by-40-percent-with-monthly-100000-iu-of-vitamin-d-rct/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "covid-19-appears-reduced-by-resveratrol-plus-100k-iu-of-vitamin-d-small-rct": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "covid-19-cytokine-storms-attenuated-by-vitamin-d-omega-3-mg-resveratrol-etc": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "covid-19-cytokine-storms-perhaps-better-stopped-by-the-cyp11a1-vitamin-d-pathway": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "covid-19-risks-reduced-by-vitamin-d-magnesium-zinc-resveratrol-omega-3-etc-auto-updated": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "criteria-to-associate-a-health-problem-with-low-vitamin-d": [
+   {
+    "target": "smoking-reduces-vitamin-d",
+    "text": "Smoking - ties up vitamin D",
+    "new_url": "/pages/smoking-reduces-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "crohns-disease-associated-with-76x-deactivation-of-vitamin-d-receptor": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "crohns-disease-helped-when-vitamin-d-level-raised-above-30-ng-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "crohns-disease-risk-increased-3-x-if-inadequate-vitamin-d-level-another-form-is-needed": [
+   {
+    "target": "intestinal-absorption-of-vitamin-d-systematic-review",
+    "text": "Intestinal absorption of vitamin D – systematic review Aug 2017",
+    "new_url": "/pages/intestinal-absorption-of-vitamin-d-a-systematic-review/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "crohns-disease-strange-things-such-as-no-change-of-vitamin-d-levels-with-season": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "crohns-disease-treated-by-2000-iu-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "cyp2r1-gene-probably-responsible-for-low-vitamin-d-response-rct": [
+   {
+    "target": "search-results",
+    "text": "Cyp2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "cytokine-storms-covid-19-etc-eliminated-by-vitamin-d-magnesium-helps": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "dark-skinned-caribbean-seniors-have-enough-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Dark skin need more vitamin D - Mar 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/dark-skin-need-more-vitamin-d---mar-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "deep-wounds-diabetic-healed-slowly-if-low-vitamin-d": [
+   {
+    "target": "burn-patients-have-little-vitamin-d-and-benefit-when-it-is-restored",
+    "text": "Diabetic foot ulcers healed 2X faster with 6,400 IU daily - RCT June 2021",
+    "new_url": "/pages/diabetic-foot-ulcers-healed-2x-faster-with-6400-iu-daily-rct/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "dementia-less-likely-with-increased-levels-of-magnesium-etc": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "Vitamin D pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "dementia-risk-reduced-29-percent-by-just-10-hours-of-computer-brain-plasticity-training-rct": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "Vitamin D pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "depression": [
+   {
+    "target": "bipolar",
+    "text": "Bipolar",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "diabetics-with-high-vitamin-d-have-40-percent-less-all-cause-mortality": [
+   {
+    "target": "diabetes-5x-less-likely-if-more-than-50-ng-of-vitamin-d",
+    "text": "Diabetes 5X less likely if more than 50 ng of Vitamin D – April 2018",
+    "new_url": "/pages/diabetes-35x-less-likely-if-more-than-25-ng-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   }
+  ],
+  "diarrhea-more-common-in-children-having-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DIARRHEA",
+    "new_url": "/tags/diarrhea/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "difficult-to-get-1000-iu-of-vitamin-d-in-30-minutes-if-uvi-less-than-3": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "UV Index guide by US Weather Bureau - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/uv-index-guide-by-us-weather-bureau---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "do-uva-and-uvb-affect-the-body-in-different-ways": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "tanning beds bone and vitamin D – 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/tanningbeds-bone-and-vitamind---2009.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Hypothesis uva cause melanoma – 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/hypothesis-uva-cause-melanoma---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "doctor-survey-64-pct-feel-10-minutes-of-sun-is-enough-33-pct-say-use-sunscreen-winter": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "McKenzie - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/mckenzie---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "dr-oz-recommends-50-ng-vitamin-d-blood-level": [
+   {
+    "target": "dr-oz-50ng-of-vit-d",
+    "text": "Click here to see Dr. Oz recommending it Nov 2009",
+    "new_url": "/pages/dr-oz-50ng-of-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 90% similar"
+   }
+  ],
+  "ebola-tents-probably-faster-and-better-than-buildings-like-in-spanish-flu": [
+   {
+    "target": "vitamin-d-may-protect-against-ebola-more-information",
+    "text": "Vitamin D may protect against Ebola - more information",
+    "new_url": "/pages/vitamin-d-may-protect-against-ebola/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "effects-of-resveratrol-against-lung-cancer-in-mice": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "elderly-lower-limb-muscle-strength-improved-with-vitamin-d-supplementation-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for muscle",
+    "new_url": "/tags/muscle/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "elderly-surgical-rehab-in-germany-67-pct-have-less-than-10-ng-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Rehab patients vitamin D deficient - with chart Nov 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/rehab-patients-vitamin-d-deficient---chart-nov-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "emergency-use-of-vaccine-only-if-no-adequate-approved-and-available-alternative-such-as-vitamin-d": [
+   {
+    "target": "ivermectin-and-covid-19",
+    "text": "Weekly Ivermectin prevents COVID-19 - Feb 2021",
+    "new_url": "/pages/ivermectin-and-covid-19-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "epigenetics-meets-endocrinology-2011-2": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for EPIGENETICS",
+    "new_url": "/tags/epigenetics/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "epilepsy-and-deficiency-of-vitamin-d-and-or-magnesium": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "epilepsy-associated-with-low-vitamin-d-37-years-ago-but-still-fewer-than-1-in-1000-take-vitamin-d": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "epilepsy-seizures-reduced-by-40-percent-after-vitamin-d-levels-normalized": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "epileptics-have-problems-with-conception": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "european-call-to-action-for-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Save 160 lives annually if Netherlands have  42 ng  vitamin D",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/save-160-lives-annually-if-netherlands-have-42-ng-vitamin-d.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "excerpt-of-vitamin-d-solution-lef": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "PDF",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/excerpt-of-vitamin-d-solution---lef-sept-2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "excessive-sun-increases-cancer-all-around-the-body": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Indoor tanning and melanoma - Feb 2011.PDF",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/indoor-tanning-and-melanoma-june-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Survey of sunbed parlors in Ireland - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/survey-of-sunbed-parlors-in-ireland---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D from sunbeds - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-from-sunbeds---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "fertility-improvement-vitamin-d-is-the-best-supplement-meta-analysis": [
+   {
+    "target": "More fertility associated with higher vitamin D",
+    "text": "More fertility associated with higher vitamin D",
+    "new_url": "/pages/more-fertility-associated-with-higher-vitamin-d/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "fewer-than-15-percent-of-5-year-olds-getting-vitamin-d-prescriptions-in-france": [
+   {
+    "target": "moved109",
+    "text": "Unsupplemented infants were 19X more likely to be vitamin D deficient - May 2012",
+    "new_url": "/pages/unsupplemented-infants-were-19x-more-likely-to-be-vitamin-d-deficient/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "fight-covid-19-with-vitamin-d-vitamin-c-zinc-selenium-resveratrol-etc-sardi": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "first-trimester-problems-5x-more-likely-if-only-start-supplemention-with-4000-of-vitamin-d-after-becoming-pregnant": [
+   {
+    "target": "40 ng response to 4,000 IU daily Vitamin D for 2 months (and 60 ng for 8,000 IU)",
+    "text": "40 ng response to 4,000 IU daily Vitamin D for 2 months (and 60 ng for 8,000 IU)",
+    "new_url": "/pages/40-ng-response-to-4000-iu-daily-vitamin-d-for-2-months-and-60-ng-for-8000-iu/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "frailty-and-vitamin-d-u-shaped-curve": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "CLICK HERE for PDF",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/fraility-and-vitamin-d-is-a-u-shaped-curve---dec-2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "frequently-observed-diseases-25-x-more-often-if-vitamin-d-levels-less-than-8-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFECTION",
+    "new_url": "/tags/infection/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "fructose-reduces-blood-levels-of-active-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "gene-differences-can-result-in-14-ng-difference-in-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Cyp2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "gene-makes-copd-26x-more-likely-unless-get-more-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "genes-cyp2r1-and-gc-which-restrict-the-amount-of-vitamin-d-which-gets-into-bloodstream": [
+   {
+    "target": "search-results",
+    "text": "Cyp2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "glyphosate-and-vitamin-d-many-studies": [
+   {
+    "target": "search-results",
+    "text": "CYP27A1",
+    "new_url": "/tags/cyp27a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "google-translate-of-vitamindwiki": [
+   {
+    "target": "googletranslatepdf",
+    "text": "CLICK HERE",
+    "new_url": "/pages/googletranslate/",
+    "confidence": "likely",
+    "method": "address is 91% similar"
+   }
+  ],
+  "graphic-warnings-on-cigarette-packages-in-118-countries-us-fda-trying-again": [
+   {
+    "target": "new-fda-head-chosed-because-he-had-the-fewest-ties-to-big-pharma",
+    "text": "FDA in VitaminDWiki title (35 as of Nov 2021)",
+    "new_url": "/pages/new-fda-head-chosen-because-he-had-the-fewest-ties-to-big-pharma/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "guide-for-patients-on-high-doses-of-vitamin-d-coimbra-2017": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COIMBRA",
+    "new_url": "/tags/coimbra/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "half-as-many-heart-deaths-for-those-with-high-levels-of-vitamin-d-meta-analysis": [
+   {
+    "target": "cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis",
+    "text": "Cardiovascular disease 50 percent more likely if low vitamin D – meta-analysis Nov 2012",
+    "new_url": "/pages/cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis-2/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "half-life-of-vitamin-d-varies": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "half-of-the-seniors-needed-more-than-1700-iu-vitamin-d3-50000-monthly": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Dosing and loading- Pizzorno ND Feb 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-dosing-and-loading--pizzorno-nd-feb-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "vit-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors",
+    "text": "65+ years old need 5,000 IU",
+    "new_url": "/pages/vitamin-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   }
+  ],
+  "health-care-costs-in-us-are-increasing-infographics-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DIARRHEA",
+    "new_url": "/tags/diarrhea/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "health-problems-and-d": [
+   {
+    "target": "hypertension-pregnancy-and-vitamin-d-many-studies",
+    "text": "Pregnancy",
+    "new_url": "/tags/pregnancy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "overview",
+    "text": "Rickets - Overview",
+    "new_url": "/tags/overview/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "Tuberculosis",
+    "text": "Tuberculosis - Overview",
+    "new_url": "/tags/tuberculosis/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "Tuberculosis",
+    "text": "Women - Overview",
+    "new_url": "/tags/tuberculosis/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "heart-attack-risk-halved-in-adults-with-heart-disease-if-40-ng-level-of-vitamin-d-rct": [
+   {
+    "target": "overview-cardiovascular-and-vitamin-d](",
+    "text": "Vitamin D improves Cardiovascular Health in 8 ways",
+    "new_url": "/pages/vitamin-d-improves-cardiovascular-health-in-8-ways/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "high-level-of-maternal-vitamin-d-and-infant-food-allergy-controversy": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Kids with more vitamin D less likely to get some allergies",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/kids-with-more-vitamin-d-less-likely-to-get-some-allergies-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "hip-fracture-50-percent-more-likely-if-low-in-both-vitamin-d-and-vitamin-k1": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"HIP FRACTURE\"",
+    "new_url": "/tags/hip-fracture/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hip-fracture-58-percent-more-likely-if-low-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"HIP FRACTURE\"",
+    "new_url": "/tags/hip-fracture/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hmos-will-save-millions-of-dollars-with-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Rehab patients vitamin D deficient - with chart Nov 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/rehab-patients-vitamin-d-deficient---chart-nov-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "holick-interview-by-mercola-on-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HOLICK",
+    "new_url": "/tags/holick/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "home-page": [
+   {
+    "target": "overview-evidence-for-vitamin-d",
+    "text": "Overview",
+    "new_url": "/tags/overview/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hospital-icu-added-high-dose-vitamin-d-malpractice-lawsuit-costs-dropped-from-26-dollars-to-zero": [
+   {
+    "target": "intervention-vitamin-d-by-date",
+    "text": "Intervention - Vitamin D by date",
+    "new_url": "/pages/intervention-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "how-the-baggerlys-got-interested-in-vitamin-d-and-then-started-grassrootshealth": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for GrassrootsHealth",
+    "new_url": "/tags/grassroothealth/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "how-to-get-lots-of-magnesium-especially-needed-for-coimbra-ms-and-autoimmune-protocol": [
+   {
+    "target": "vitamin-d-supplementation-often-needs-magnesium-publisher-wants-53-dollars",
+    "text": "Vitamin D supplementation often needs Magnesium (publisher wants 53 dollars) – May 2017",
+    "new_url": "/pages/vitamin-d-supplementation-often-needs-magnesium/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Magnesium and Vitamin D – recent deficiencies, needed, synergistic - good overview 2017",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "huge-gap-between-vitamin-d-advice-and-actual-prescriptions": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Loading dose of 500,000 IU for elderly - Whiting 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/loading-dose-of-5000-iu-for-elderly---whiting-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "hypercalcemia-can-result-from-excess-vitamin-d-if-not-reduce-ca-or-increase-water": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HYPERCALCEMIA",
+    "new_url": "/tags/hypercalcemia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hypertension-31-x-more-likely-in-males-with-poor-cpy24a1-gene-but-25-x-less-likely-for-females": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hypertension-associated-with-genes-which-reduce-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hypertension-associated-with-low-calcium-levels": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Hypertension and vitamin D review -2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/hypertension-and-vitamin-d-review--2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "hypothesis-40-ng-is-enough-vitamin-d-if-high-latitude-or-dark-skin": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Dark skin need more vitamin D - Mar 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/dark-skin-need-more-vitamin-d---mar-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "hypothesis-stem-cells-need-vitamin-d-too": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Diffuse hair loss - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/diffuse-hair-loss---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "hypothesis-uv-treat-epilepsy": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "hypothesis-worldwide-increase-in-melanoma-due-to-uva": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "UVA thru windows may cause melanoma - hypothesis 2008",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/uva-thru-windows-may-cause-melanoma---hypothesis-2008.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "if-youre-low-in-this-nutrient-it-doubles-your-odds-of-many-cancers-interview-dr-holick": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Holick",
+    "new_url": "/tags/holick/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "immunity": [
+   {
+    "target": "infections-and-low-vitamin-d",
+    "text": "228 VitaminDWiki pages contained \"infection\" in title (June 2024)",
+    "new_url": "/pages/infections-and-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "improved-blood-flow-in-blacks-with-just-2000-iu-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D race and cardiovascular - Jan 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-cardiovascular---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "increased-d-levels-responsible-for-dead-sea-therapy": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "increased-heart-attacks-in-the-winter-may-be-due-to-lack-of-sunshine": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardiovascular - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "increased-mortality-associated-with-low-vitamin-d-genes": [
+   {
+    "target": "search-results",
+    "text": "Cyp2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "infant-hiv-malaria-and-high-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MALARIA",
+    "new_url": "/tags/malaria/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "infants-who-have-iron-deficiency-anemia-are-4x-more-likely-to-be-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANEMIA",
+    "new_url": "/tags/anemia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "inflammation": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "inflammation-or-surgery-or-heart-attack-decreases-measured-vitamin-d-levels": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D essential for burn injury - 2008.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-essential-for-burn-injury---2008.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "influenza-reduced-by-17-with-1200-iu-d3-also-reduced-related-asthma-by-6x-rct": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sunlight used to treat influenza - 1918",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sunlight-used-to-trreat-influenza---1918.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "insulin-problems-reduced-by-curcumin-if-not-also-take-omega-3-rct": [
+   {
+    "target": "curcumin-helps-many-health-problems-2",
+    "text": "Curcumin helps many  health problems",
+    "new_url": "/pages/curcumin-helps-many-health-problems/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "intensive-ergocalciferol-supplementation-may-be-indicated-for-patients-with-ra": [
+   {
+    "target": "3-rheumatic-studies-found-vitamin-d-deficiencies",
+    "text": "CLICK HERE for abstract and more papers from same conference",
+    "new_url": "/pages/3-more-rheumatic-studies-found-vitamin-d-deficiencies/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "interactions-with-vitamin-d": [
+   {
+    "target": "probiotics-augments-vitamin-d-review-of-rct",
+    "text": "Probiotics",
+    "new_url": "/tags/probiotics/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "intervention-vitamin-d": [
+   {
+    "target": "intervention-vitamin-d-by-date",
+    "text": "Intervention - Vitamin D by date",
+    "new_url": "/pages/intervention-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "interview-of-pioneer-in-vitamin-d-research-holick-lef": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "PDF",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/interview-of-pioneer-in-vitamin-d-research---holick-lef-sept-2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "joint-replacement-infection-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFECTION",
+    "new_url": "/tags/infection/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "learning-disabilities-anti-epileptic-drugs-and-subsequent-vitamin-d-deficiency": [
+   {
+    "target": "epilepsy",
+    "text": "Epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "less-copd-if-vitamin-d-more-than-30-ng": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "less-pneumonia-in-those-having-more-activated-vitamin-d-kidneys-working": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFLUENZA",
+    "new_url": "/tags/influenza/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for pneumonia",
+    "new_url": "/tags/pneumonia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "liver": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "liver-inflammation-nafld-is-prevented-by-vitamin-d-review": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "longevity-expert-sinclair-supplements-include-vitamin-d-vitamin-k-and-resveratrol": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "low-calcium-associated-with-severe-covid-19-several-studies": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "low-cost-cofactors-for-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Vitamin K for bones and heart - LEF Sept 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-vitamin-k-for-bones-and-heart---lef-sept-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Nutrients for Bone Health - 2006",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/nutrients-for-bone-health---2006.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "low-iron-in-teenage-girls-is-2x-more-likely-if-low-vitamin-d-2014": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Anemia",
+    "new_url": "/tags/anemia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "low-levels-of-vitamin-d-in-japanese-office-workers": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image, text which can be translated, and other details",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "low-vitamin-d-associated-with-all-cause-mortality-and-frailty": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "All cause mortality and vitamin D - Feb 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/all-cause-mortality-and-vitamin-d---feb-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "low-vitamin-d-associated-with-chronic-widespread-pain-for-women": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "low-vitamin-d-associated-with-dense-breasts-which-are-associated-with-breast-cancer": [
+   {
+    "target": "breast-density-and-risk-not-reduced-by-vitamin-d-only-used-3000-iu",
+    "text": "Breast Density and risk not reduced by Vitamin D (only used 3,000 IU) - July 2017",
+    "new_url": "/pages/breast-density-and-cancer-not-reduced-by-vitamin-d-only-used-3000-iu-rct/",
+    "confidence": "likely",
+    "method": "address is 91% similar"
+   }
+  ],
+  "lung-and-vitamin-d-special-issue": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and lung Cancer - Expert Review 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-lung-cancer---expert-review-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "lung-lung-cancer-asthma-copd-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "magnesium-and-vitamin-d": [
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Magnesium and Vitamin D – recent deficiencies, needed, synergistic - good overview 2017",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "major-heart-attacks-occur-40-percent-more-often-if-vitamin-d-lower-than-7-ng": [
+   {
+    "target": "cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis",
+    "text": "Cardiovascular disease 50 % more likely if low vitamin D – meta-analysis Nov 2012",
+    "new_url": "/pages/cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis-2/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "make-america-health-again-white-house-report-and-how-vitamin-d-can-help": [
+   {
+    "target": "glysophate",
+    "text": "Glysophate reduces vitamin D in 8 ways",
+    "new_url": "/pages/glyphosate-reduces-vitamin-d-in-9-ways/",
+    "confidence": "likely",
+    "method": "link text is very close to this page title"
+   }
+  ],
+  "malabsorption-syndromes-and-low-vitamin-d-interesting-behind-6-dollar-paywall": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Crohn's",
+    "new_url": "/tags/crohns-2/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "malaria-in-mice-brains-and-associated-inflammation-prevented-by-vitamin-d-intervention": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MALARIA",
+    "new_url": "/tags/malaria/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "manic-depressives-bipolar-i-have-low-vitamin-d-levels": [
+   {
+    "target": "bipolar",
+    "text": "Bipolar",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "many-vitamin-d-metabolites-some-help-skin-aging-reduce-cytokine-storms-but-are-not-tested": [
+   {
+    "target": "covid-19-theraputics-and-cytokine-storms-vitamin-d-occurs-51-times",
+    "text": "CYTOKINE in VitaminDWiki",
+    "new_url": "/pages/covid-19-therapeutics-and-cytokine-storms-vitamin-d-occurs-51-times/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "masterjohn-on-relationships-between-vitamin-a-d-and-k": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Vitamin K for bones and heart - LEF Sept 2010 PDF",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-vitamin-k-for-bones-and-heart---lef-sept-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "mechanisms-of-vitamin-d-action-in-skeletal-muscle": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MUSCLE",
+    "new_url": "/tags/muscle/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "megadose-injection-of-up-to-600000-iu-vitamin-d3-every-three-months-for-adolescents": [
+   {
+    "target": "rickets-cured-in-children-for-3-months-with-10000-iu-per-kg-vitamin-d-600000-iu-max",
+    "text": "Rickets cured in children for 3 months with 10,000 IU per kg vitamin D (600,000 IU max) – Sept 2012",
+    "new_url": "/pages/rickets-cured-for-3-months-with-10000-iu-per-kg-vitamin-d-600000-iu-max/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "melanoma-less-likely-when-far-from-equator": [
+   {
+    "target": "overview-suntans-melanoma-and-vitamin-d",
+    "text": "Overview Skin Cancer and Vitamin D",
+    "new_url": "/pages/overview-suntan-melanoma-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "menieres-disease-inner-ear-treated-by-vitamin-d-50k-weekly-for-3-months": [
+   {
+    "target": "common-cause-of-dizziness-bppv-treated-by-several-doses-of-50000-iu-of-vitamin-d-2015-2016",
+    "text": "Common cause of dizziness (BPPV) treated by several doses of 50,000 IU of vitamin D – 2015, 2016",
+    "new_url": "/pages/common-cause-of-dizziness-bppv-reduced-5-x-by-several-doses-of-50000-iu-of-vitamin-d-2015-2016/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "metabolic-syndrome-reduced-2x-after-one-year-of-more-sunlight": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Global metabolic risks, BMI, etc. - slides 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/global-metabolic-risks-bmi-etc.---slides-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "mice-lacking-cyp2r1-enzyme-activate-about-half-of-much-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "military-in-hot-climates-and-vitamin-d-deficiency-2010": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "mood-disorders-11x-worse-for-older-adults-with-low-vitamin-d-2006": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Is there evidence for vitamin D and Cognition - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/is-there-evidence-for-vit-d-and-cognition-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "more-hypertension-in-obese-children-with-low-vitamin-d-especially-at-night": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "more-than-40-ng-vitamin-d-for-athletes": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "CLICK HERE",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/more-than-40-ng-vitamin-d-for-athletes---july-2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "more-than-700-intervention-trials-in-vitamindwiki-since-the-iom-decision": [
+   {
+    "target": "intervention-vitamin-d-by-date",
+    "text": "Interventons sorted by date",
+    "new_url": "/pages/intervention-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "more-than-800-mg-of-calcium-increases-cardiovascular-events-by-85-percent": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Calcium and vitamin D for Men 2011",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/calcium-and-vitamin-d-for-men-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "most-people-with-bone-fractures-still-not-getting-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "most-visited-pages-on-vitamindwiki": [
+   {
+    "target": "statins-and-vitamin-d",
+    "text": "Statins and vitamin D",
+    "new_url": "/pages/statins-and-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "smoking-reduces-vitamin-d",
+    "text": "Smoking reduces vitamin D",
+    "new_url": "/pages/smoking-reduces-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "air-pollution-reduces-vitamin-d",
+    "text": "Air Pollution reduces Vitamin D",
+    "new_url": "/pages/air-pollution-reduces-vitamin-d-production-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "overview-muscles-and-vitamin-d",
+    "text": "Overview Muscles and Vitamin D",
+    "new_url": "/pages/overview-ms-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 91% similar"
+   },
+   {
+    "target": "quick-free-self-test-of-vitamin-d-deficiency",
+    "text": "Quick, free, self test of vitamin D deficiency",
+    "new_url": "/pages/quick-free-self-test-for-vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   },
+   {
+    "target": "fertility-problem-pcos-reduced-by-vitamin-d-many-studies",
+    "text": "Fertility problem (PCOS) reduced by vitamin D: many studies",
+    "new_url": "/pages/fertility-problem-pcos-reduced-by-vitamin-d-etc-many-studies/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   },
+   {
+    "target": "vitamin-d-reduces-hair-loss",
+    "text": "Vitamin D reduces hair loss",
+    "new_url": "/pages/vitamin-d-reduces-hair-loss-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "sepsis-is-both-prevented-and-treated-by-vitamin-d",
+    "text": "Sepsis is both prevented and treated by Vitamin D",
+    "new_url": "/pages/sepsis-is-both-prevented-and-treated-by-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "military-and-vitamin-d",
+    "text": "Military and Vitamin D",
+    "new_url": "/pages/military-and-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "mental-stress-physical-stress-associations-with-low-vitamin-d",
+    "text": "Mental stress, physical stress associations with low vitamin D",
+    "new_url": "/pages/mental-stress-physical-stress-associations-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "sarcoidosis-rare-problems-when-taking-vitamin-d",
+    "text": "Sarcoidosis (rare) problems when taking vitamin D",
+    "new_url": "/pages/sarcoidosis-rare-problems-when-taking-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "mri-of-elderly-skeletal-muscle-lacking-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MUSCLE",
+    "new_url": "/tags/muscle/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "muscle-pain-low-magnesium-plus-low-vitamin-d-associated-with-10x-more-cancer-etc-san-francisco": [
+   {
+    "target": "vitamin-d-supplementation-often-needs-magnesium-publisher-wants-53-dollars",
+    "text": "Vitamin D supplementation often needs Magnesium (publisher wants 53 dollars) – May 2017",
+    "new_url": "/pages/vitamin-d-supplementation-often-needs-magnesium/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Magnesium and Vitamin D – recent deficiencies, needed, synergistic - good overview 2017",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "muscle-problems-are-both-treated-and-avoided-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MUSCLE",
+    "new_url": "/tags/muscle/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "nafld-associated-with-low-vitamin-d-in-children-too-meta-analysis": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "nafld-in-children-nicely-treated-by-combination-of-vitamin-d-and-omega-3-rct": [
+   {
+    "target": "non-alcoholic-fatty-liver-disease-treated-by-omega-3-meta-analysis",
+    "text": "Non-Alcoholic Fatty Liver Disease treated by Omega-3 – meta-analysis Oct 2016",
+    "new_url": "/pages/non-alcoholic-fatty-liver-disease-treated-by-omega-3-three-meta-analysis-2016-2017/",
+    "confidence": "likely",
+    "method": "link text is very close to this page title"
+   }
+  ],
+  "nafld-was-no-longer-associated-with-low-vitamin-d-after-adjusting-for-obesity": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "neural-tube-defects-strongly-associated-with-low-vitamin-d-2016": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"neural tube\"",
+    "new_url": "/tags/neural-tube/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "new-zealand-consensus-at-risk-should-take-more-vitamin-d": [
+   {
+    "target": "vitamin-d-deficiency-and-testing-in-australia-are-epidemics",
+    "text": "Vitamin D deficiency and testing in  Australia  are epidemics - Aug 2011",
+    "new_url": "/pages/vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "no-10-minutes-per-day-of-sun-uvb-is-not-enough": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases but tanning bed decreases longevity - April 2011",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "McKenzie - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/mckenzie---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Poor knowledge by office workers of vitamin D and sunscreen - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/poor-knowledge-by-office-workers-of-vitamin-d-and-sunscreen---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "no-region-on-earth-have-average-vitamin-d-levels-of-even-30-ng-dec-2025": [
+   {
+    "target": "](",
+    "text": "Vitamin D levels around the world - DSM review - 2013",
+    "new_url": "/pages/vitamin-d-levels-around-the-world-dsm-review/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "non-alcoholic-fatty-liver-disease-and-the-vitamin-d-receptor-editorial": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "non-alcoholic-fatty-liver-disease-nafld-treated-by-vitamin-d-20000-iu-weekly-after-loading-dose-rct": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "non-alcoholic-fatty-liver-disease-nafld-treated-by-vitamin-d-in-rats-this-time": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "non-alcoholic-fatty-liver-disease-treated-by-omega-3-three-meta-analysis-2016-2017": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "nonalcoholic-fatty-liver-disease-perhaps-due-to-gut-microbiota": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "nov-2012-vitamin-d-news-email": [
+   {
+    "target": "hypothesis-of-cause-and-effect-of-vitamin-d-deficiency",
+    "text": "Click here for details",
+    "new_url": "/tags/details/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "obese-have-50-percent-less-of-two-enzymes-in-fatty-tissue-to-process-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP27B1",
+    "new_url": "/tags/cyp27b1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "obese-men-were-40-percent-more-likely-to-be-vitamin-d-deficient-than-women": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "DAIRY vitamin D and weight loss - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/dairy-vitamin-d-and-weight-loss---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "obese-need-more-vitamin-d-volume-dilution-iu-per-pound-or-bmi-rct": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Obese have decreased bioavalability of vitamin D - 2000",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/obese-have-decreased-bioavalability-of-vitamin-d---2000.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "obesity-cut-semi-activation-of-vitamin-d-in-half-mice": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   CYP2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "obesity-in-american-indians-and-african-american-teens": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Obesity in children of American Indians - 1999",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/obesity-in-children-of-american-indians---1999.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Obesity increasing in American Indians for past 30 years - 2007 167 pages",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/obesity-increasing-in-amerian-indians-for-past-30-years---2007.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "obesity-pandemic-since-1975-is-it-due-to-vitamin-d-magnesium-iodine-adenovirus-or-what": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Iodine Global Scorecard 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/iodine-global-scorecard-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "off-topic-ebola-fast-tests-being-developed": [
+   {
+    "target": "vitamin-d-may-protect-against-ebola-more-information",
+    "text": "Vitamin D may protect against Ebola - more information",
+    "new_url": "/pages/vitamin-d-may-protect-against-ebola/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "off-topic-fda-advisors-have-many-conflicts-of-interest": [
+   {
+    "target": "new-fda-head-chosed-because-he-had-the-fewest-ties-to-big-pharma",
+    "text": "FDA in VitaminDWiki title (35 as of Nov 2021)",
+    "new_url": "/pages/new-fda-head-chosen-because-he-had-the-fewest-ties-to-big-pharma/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "off-topic-hyperbaric-oxygen-wide-spectrum-of-benefits": [
+   {
+    "target": "chart-of-vitamin-d-levels-vs-disease-grassrootshealth",
+    "text": "Chart of Vitamin D levels vs disease - GrassrootsHealth June 2013",
+    "new_url": "/pages/chart-of-vitamin-d-levels-vs-disease-grassroots-health/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "off-topic-pharma-funded-2400-state-lawmakers-campaigns-in-2020": [
+   {
+    "target": "extremely-big-pharma",
+    "text": "760X return on investment for lobbying congress Propublica Dec 2014",
+    "new_url": "/pages/extremely-big-pharma-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "omega-3-and-vitamin-d-each-treat-many-mental-health-problems": [
+   {
+    "target": "bipolar",
+    "text": "8",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "osteomalacia-soft-bones-ricket-in-children-vitamin-d-occurs-87-times-in-pdf-but--in-the-abstract": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for OSTEOPENIA",
+    "new_url": "/tags/osteopenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "osteopenia-in-25-percent-of-40-year-olds-in-uae-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Osteopenia",
+    "new_url": "/tags/osteopenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "osteoporosis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for OSTEOPENIA",
+    "new_url": "/tags/osteopenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "osteoporosis-4x-more-likely-if-poor-gut-probably-poor-vitamin-d-absorption": [
+   {
+    "target": "intestinal-absorption-of-vitamin-d-systematic-review",
+    "text": "Intestinal absorption of vitamin D – systematic review Aug 2017",
+    "new_url": "/pages/intestinal-absorption-of-vitamin-d-a-systematic-review/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "osteoporosis-due-to-antiepileptic-drugs-placebo-including-vitamin-d-helped-69-pe-lped-70-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for epilepsy",
+    "new_url": "/tags/epilepsy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "osteoporosis-increasing-and-vitamin-d-decreasing-in-middle-east": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-cancer-colon-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D prevents colon Cancer - Kallay May 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-prevents-colon-cancer---kallay-may-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-diabetes-and-vitamin-d": [
+   {
+    "target": "curcumin-helps-many-health-problems-2",
+    "text": "Curcumin helps many  health problems",
+    "new_url": "/pages/curcumin-helps-many-health-problems/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   },
+   {
+    "target": "diabetes-5x-less-likely-if-more-than-50-ng-of-vitamin-d",
+    "text": "Diabetes 5X less likely if more than 50 ng of Vitamin D – April 2018",
+    "new_url": "/pages/diabetes-35x-less-likely-if-more-than-25-ng-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   }
+  ],
+  "overview-fractures-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"HIP FRACTURE\"",
+    "new_url": "/tags/hip-fracture/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "overview-influenza-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sunlight used to treat influenza - 1918",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sunlight-used-to-trreat-influenza---1918.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "overview-liver-and-vitamin-d": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "overview-loading-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Loading dose of 500,000 IU for elderly - Whiting 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/loading-dose-of-5000-iu-for-elderly---whiting-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "overview-obesity-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "DAIRY vitamin D and weight loss - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/dairy-vitamin-d-and-weight-loss---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-of-vitamin-d-wiki-for-fraser-health": [
+   {
+    "target": "vit-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors",
+    "text": "65+ years old need 5,000 IU",
+    "new_url": "/pages/vitamin-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   },
+   {
+    "target": "critical-care-patients-with-low-vitamin-d-were-85-percent-more-likely-to-die",
+    "text": "Critical Care patients with low vitamin D were 85 percent more likely to die- Sept 2011",
+    "new_url": "/pages/critical-care-patients-with-less-than-15-ng-vitamin-d-were-85-percent-more-likely-to-die/",
+    "confidence": "likely",
+    "method": "address is 90% similar"
+   },
+   {
+    "target": "magnesium-and-vitamin-d-similar-and-different",
+    "text": "Magnesium and Vitamin D - similar and different",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "overview-osteoporosis-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-pregnancy-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Profound vitamin D deficiency during pregnancy - Dec 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/profound-vitamin-d-deficiency-during-pregnancy---dec-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "How much vitamin D during pregnancy -  Wagner  April 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/how-much-vitamin-d-during-pregnancy-and-history---poster-april-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "overview-rheumatoid-arthritis-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-seniors-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Dosing and loading- Pizzorno ND Feb 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-dosing-and-loading--pizzorno-nd-feb-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Loading dose of 5000 IU for elderly - Whiting 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/loading-dose-of-5000-iu-for-elderly---whiting-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "vit-d-deficiency-was-the-only-predictor-of-older-patient-death-in-hospital",
+    "text": "Vit D deficiency best prediction of death in hospital",
+    "new_url": "/pages/vitamin-d-deficiency-was-the-best-predictor-of-older-patient-death-in-hospital/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Ways to reduce muscle loss by elderly include increasing vitamin D - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/ways-to-reduce-muscle-loss-by-elderly-include-increasing-vitamin-d---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "To reduce diabetes probably need vitamin D - Review July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/to-reduce-diabetes-probably-need-vitamin-d---review-july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Review Diabetes and vitamin D - Sept 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/review-diabetes-and-vitamin-d---sept-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Single dose 100000 or 20000 IU and diabetes - June 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/single-dose-100000-or-20000-iu-and-diabetes---june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "overview-sports-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Virtually all basketball players and dancers had less than 30 ng - Sept 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/virtually-all-basketball-players-and-dancers-has-less-than-30-ng---sept-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "overview-suntan-melanoma-and-vitamin-d": [
+   {
+    "target": "moved87",
+    "text": "Possible DNA damage of skin if vitamin D levels lower than 20 nanograms – April 2012",
+    "new_url": "/pages/possible-dna-damage-of-skin-if-vitamin-d-levels-less-than-20-nanograms/",
+    "confidence": "likely",
+    "method": "link text is very close to this page title"
+   }
+  ],
+  "overview-toxicity-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Review of Upper Limit for vitamin D - 2007",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/review-of-upper-limit-for-vitamin-d---2007.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Pharmacokinetics of vitamin D toxicity",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/pharmacokinetics-of-vitamin-d-toxicity-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "overview-uv-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases longevity but tanning bed decreases it- April 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "pancreatic-cancer-massively-deregulates-the-local-vitamin-d-receptors-and-cpy24a1": [
+   {
+    "target": "search-results",
+    "text": "CYP24A1",
+    "new_url": "/tags/cyp24a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "parkinson-disease-increased-in-israel-by-50-percent-in-7-years": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "PD vitamin D proposed pilot study - Pederson 2009",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/pd-vitamin-d-proposed-pilot-study---pederson-2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "pcos-treated-by-a-combination-of-vitamin-d-and-omega-3-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PCOS",
+    "new_url": "/tags/pcos/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "people-with-gut-problems-are-low-on-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Childhood IBD epidemiology - 2006.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/childhood-ibd-epidemiology---2006.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "people-with-no-uv-for-6-months-in-the-winter-need-at-least-2000-iu-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Dosing and loading- Pizzorno ND Feb 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/_unknown/vitamin-d-dosing-and-loading--pizzorno-nd-feb-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "vit-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors",
+    "text": "65+ years old need 5,000 IU",
+    "new_url": "/pages/vitamin-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   }
+  ],
+  "people-with-nonalcoholic-fatty-liver-disease-and-low-vitamin-d-have-increased-hi--liver-fibrosis": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "percent-of-population-with-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get  30 to-44 ng  no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "perhaps-stress-fractures-2x-less-frequent-if-4000-iu-of-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Fortification in Finnish Military - stress fracture.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-fortification-in-finnish-military---stress-fracture---2012.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "perhaps-uv-is-addicting": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases but tanning bed decreases longevity - April 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "pneumonia-26x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "poor-absorption-of-vitamin-d-is-strongly-related-to-type-of-gut-bacteria": [
+   {
+    "target": "cat124deepofftype",
+    "text": "Iron",
+    "new_url": "/tags/iron/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "prediabetes-both-prevented-and-treated-by-monthly-vitamin-d-etc": [
+   {
+    "target": "diabetes-5x-less-likely-if-more-than-50-ng-of-vitamin-d",
+    "text": "Diabetes 5X less likely if more than 50 ng of Vitamin D – April 2018",
+    "new_url": "/pages/diabetes-35x-less-likely-if-more-than-25-ng-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   }
+  ],
+  "predicted-cardiac-surgery-death-associated-with-low-vitamin-d-levels": [
+   {
+    "target": "cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis",
+    "text": "Cardiovascular disease 50 percent more likely if low vitamin D – meta-analysis Nov 2012",
+    "new_url": "/pages/cardiovascular-disease-50-percent-more-likely-if-low-vitamin-d-meta-analysis-2/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "prefer-more-than-30-ng-of-vitamin-d-and-700-mg-calcium-to-treat-osteoporosis": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Osteoporosis reduced by 800 or more IU of vitamin D - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/osteoporosis-reduced-by-800-or-more-iu-of-vitamin-d---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "pregnancy-and-vitamin-d-meta-analysis": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Low vitamin D probable cause of descrepancy of black and white birth outcomes - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/low-vitamin-d-probable-cause-of-descrepancy-of-black-births---2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "prehypertension-48-percent-more-likely-with-low-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Hypertension and vitamin D review -2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/hypertension-and-vitamin-d-review--2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "prenatal-multivitamins-should-have-lots-of-vitamin-d": [
+   {
+    "target": "cat124deepofftype",
+    "text": "Iron",
+    "new_url": "/tags/iron/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "preventive-task-force-has-decided-to-not-prevent-osteoporosis-with-vitamin-d-2011": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "previous-vitamindwiki-news": [
+   {
+    "target": "chart-of-vitamin-d-levels-vs-disease-grassrootshealth",
+    "text": "Chart of Vitamin D levels vs disease - GrassrootsHealth June 2013",
+    "new_url": "/pages/chart-of-vitamin-d-levels-vs-disease-grassroots-health/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "problems-with-vaccines-containing-aluminum-adjuvants-malone-nov-2025": [
+   {
+    "target": "Problems after childhood vaccinations - many studies",
+    "text": "Problems after childhood vaccinations - many studies",
+    "new_url": "/pages/problems-after-childhood-vaccinations-many-studies/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "psoriasis-treatment-by-narrowband-uv-b-review": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "pth-reduced-35-pmol-by-vitamin-d-intervention-which-added-22-ng-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "PTH",
+    "new_url": "/tags/pth/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "pulmonary-disease-and-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "rct-confirms-that-australians-need-at-least-2000-iu-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU  vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "reasons-for-low-response-to-vitamin-d": [
+   {
+    "target": "cat124deepofftype",
+    "text": "Iron",
+    "new_url": "/tags/iron/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Low Magnesium",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "recent-vdw-updated-pages": [
+   {
+    "target": "breast-cancer-is-far-less-likely-to-recur-or-metastasize-of-high-levels-of-vitamin-d",
+    "text": "Breast Cancer is far less likely to recur or metastasize if high levels of Vitamin D",
+    "new_url": "/pages/breast-cancer-is-far-less-likely-to-recur-or-metatisize-of-high-levels-of-vitamin-d/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "respiratory-viral-infection-rsv-and-low-vitamin-d-many-studies": [
+   {
+    "target": "respiratory-viral-infection-rsv-and-low-vitamin-d-several-studies",
+    "text": "RSV 11.8 X more likely to be life-threatenings if low Vitamin D – Feb 2022",
+    "new_url": "/pages/respiratory-viral-infection-rsv-and-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 93% similar"
+   }
+  ],
+  "restless-legs-and-growing-pains-may-be-both-due-to-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RESTLESS LEG\"",
+    "new_url": "/tags/restless-leg/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "restless-legs-syndrome-5x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RESTLESS LEG\"",
+    "new_url": "/tags/restless-leg/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "resveratol-helps-vitamin-d-bind-to-cells": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "resveratrol-benefits-health-in-many-ways-dr-patrick": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "review-of-vitamin-d-including-free-frequency-injection-how-much": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INJECTION",
+    "new_url": "/tags/injection/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "risk-of-dementia-and-alzheimers-reduced-by-higher-levels-of-vitamin-d-meta-analysis": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "risks-and-benefits-of-uv-radiation-in-older-people-more-of-a-friend-than-a-foe": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"NITRIC OXIDE\"",
+    "new_url": "/tags/nitric-oxide/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "role-of-the-orthopaedic-surgeon-in-fragility-fractures": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and Fracture Prevention – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-fracture-prevention-june-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "rsv-kills-100000-children-annually-around-the-world-vitamin-d-can-help": [
+   {
+    "target": "respiratory-viral-infection-rsv-and-low-vitamin-d-several-studies",
+    "text": "RSV 11.8 X more likely to be life threatening if low Vitamin D – Feb 2022",
+    "new_url": "/pages/respiratory-viral-infection-rsv-and-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 93% similar"
+   }
+  ],
+  "sad-not-reduced-by-2800-iu-of-vitamin-d-no-surprise-not-sad-to-say": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEASONAL AFFECTIVE DISORDER",
+    "new_url": "/tags/seasonal-affective-disorder/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "sarcopenia-and-non-alcoholic-fatty-liver-disease-vitamin-d-not-mentioned": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Sarcopenia",
+    "new_url": "/tags/sarcopenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "schizophrenia-associated-with-low-vitamin-d-review": [
+   {
+    "target": "search-results",
+    "text": "Schizophrenia",
+    "new_url": "/tags/schizophrenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "schizophrenia-prevention-vitamin-d-is-one-possibility": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Schizophrenia",
+    "new_url": "/tags/schizophrenia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "seasonal-affective-disorder-not-treated-by-2800-iu-of-vitamin-d-no-surprise-rct": [
+   {
+    "target": "search-results",
+    "text": "\"SEASONAL AFFECTIVE DISORDER\"",
+    "new_url": "/tags/seasonal-affective-disorder/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "senior-women-more-physically-able-if-vitamin-d-higher-than-30-ng": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Effect of vitamin D on muscle strength - meta-analysis 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/effect-of-vitamin-d-on-muscle-strength---meta-analysis-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "seniors-with-more-than-20-ng-of-vitamin-d-were-14-percent-stronger": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Effect of vitamin D on muscle strength - meta-analysis 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/effect-of-vitamin-d-on-muscle-strength---meta-analysis-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "severe-non-alcoholic-fatty-liver-disease-treated-by-omega-3-rct": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "should-nz-and-australia-increase-vitamin-d-fortification": [
+   {
+    "target": "vitamin-d-deficiency-and-testing-in-australia-are-epidemics",
+    "text": "Vitamin D deficiency and testing in  Australia  are epidemics - Aug 2011",
+    "new_url": "/pages/vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "sleep-disorders-cured-by-60-80-ng-of-vitamin-d-and-some-b-vitamins": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SLEEP",
+    "new_url": "/tags/sleep/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "smoking-caused-more-breathing-problems-in-those-mice-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "solar-uv-doses-of-adult-americans-and-vitamin-d3-production": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "some-males-conceived-in-the-fall-in-the-north-were-shorter": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Pregnancy vitamin D and bone mass at age 9 - Jan 2006",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/pregnancy-vitamin-d-and-bone-mass-at-age-9---juan-2006.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "some-religious-dietary-practices-may-result-in-low-iron-b12-vitamin-d-zinc-etc": [
+   {
+    "target": "resveratrol",
+    "text": "resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "standard-oral-vitamin-d-is-not-a-good-way-to-supplement-if-have-chronic-kidney-disease": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Cyp2R1",
+    "new_url": "/tags/cyp2r1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "statin-pain-reduces-vitamin-d-levels-by-4-ng-9-studies-meta-analysis": [
+   {
+    "target": "statins-and-vitamin-d",
+    "text": "If you really must take statins and they cause pain, vitamin D will relieve the pain - 2015",
+    "new_url": "/pages/statins-and-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "std-not-decreased-by-metronidazole-plus-increasing-the-vitamin-d-levels-to-30-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFECTION",
+    "new_url": "/tags/infection/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "stop-zika-birth-defects-with-vitamin-d": [
+   {
+    "target": "cat63deepofftype",
+    "text": "far from the equator",
+    "new_url": "/pages/uv-far-from-the-equator/",
+    "confidence": "likely",
+    "method": "link text is very close to this page title"
+   }
+  ],
+  "strong-association-of-non-alcoholic-fatty-liver-disease-and-low-vitamin-d": [
+   {
+    "target": "vitamin-d-is-only-of-only-2-ways-to-easily-prevent-nafld-380000-people",
+    "text": "VitaminDWiki pages with NON-ALCOHOLIC or NAFLD in title",
+    "new_url": "/pages/vitamin-d-is-one-of-only-2-ways-to-easily-prevent-nafld-380000-people/",
+    "confidence": "likely",
+    "method": "address is 98% similar"
+   }
+  ],
+  "summary-of-pregnancy-and-vitamin-d": [
+   {
+    "target": "4000-iu-vitamin-d-safe-and-effective-for-healthy-pregnant-women",
+    "text": "https://VitaminDWiki.com/4000+IU+Vitamin+D+Safe+and+Effective+For+Healthy+Pregnant+Women+%E2%80%93+June+2011",
+    "new_url": "/pages/4000-iu-vitamin-d-safe-and-effective-for-healthy-pregnant-women-rct/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "sun-exposure-reduces-myopia": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Myopic had a little less vitamin D - Thesis 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/myopic-had-a-little-less-vitamin-d---thesis-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "sunlight-vitamin-d-and-skin-cancer": [
+   {
+    "target": "overview-suntans-melanoma-and-vitamin-d",
+    "text": "Overview Skin Cancer and Vitamin D",
+    "new_url": "/pages/overview-suntan-melanoma-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 99% similar"
+   }
+  ],
+  "supplementation-while-pregnant-and-psychotic-20-percent-omega-3-6-percent-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BIPOLAR",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "supplements": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "survey-finds-that-non-caucasians-do-not-feel-that-people-need-sun-exposure": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases but tanning bed decreases longevity - April 2011",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Poor knowledge by office workers of vitamin D and sunscreen - July 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/poor-knowledge-by-office-workers-of-vitamin-d-and-sunscreen---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "survive-surgery-3x-better-if-overweight-hypothesis-due-to-vitamin-d-released-from-fat": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Rehab patients vitamin D deficient - with chart Nov 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/rehab-patients-vitamin-d-deficient---chart-nov-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "take-vitamin-d3-daily-weekly-or-bi-weekly": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "single high dose vitamin D not help bone loss - Feb 2012.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/single-high-dose-vitamin-d-not-help-bone-loss---feb-2012.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "50,000 IU vitamin D every 2 months for infants - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/50000-iu-vitamin-d-every-2-months-for-infants---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "teen-obesity-strongly-associated-with-vitamin-d-deficiency": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Body fat and vitamin D for black and white women - 2005",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/body-fat-and-vitamin-d-for-black-and-white-women---2005.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "teenage-knee-injury-4x-increase-in-last-decade-in-philadelphia": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Effect of vitamin D on muscle strength - meta-analysis 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/effect-of-vitamin-d-on-muscle-strength---meta-analysis-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "telomeres-improved-when-obese-blacks-took-2000-iu-of-vitamin-d-daily": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Higher vitamin D longer teleomere by 5 years - 2007",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/higher-vit-d-longer-teleomere-by-5years.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "the-more-caffeine-while-pregnant-coffee-cola-the-more-bone-pain-in-premature-infants": [
+   {
+    "target": "vitamin-d-deficiency-50-pcnt-more-likely-if-drink-lots-of-caffine",
+    "text": "VitaminDWiki pages containing COFFEE or CAFFINE in title",
+    "new_url": "/pages/vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "the-role-of-vitamin-d-in-brain-health-a-mini-literature-review": [
+   {
+    "target": "bipolar",
+    "text": "Bipolar",
+    "new_url": "/tags/bipolar/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "the-uvbvitamin-d3pigment-hypothesis-is-alive-and-well-behind-short-paywall": [
+   {
+    "target": "response-to-uv-varies-more-with-pigment-genes-and-age-than-skin-color-2",
+    "text": "Response to UV varies more with pigment genes and age than skin color – Feb 2019",
+    "new_url": "/pages/response-to-uv-varies-more-with-pigment-genes-and-age-than-skin-color/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "thyroid-and-parathyroid": [
+   {
+    "target": "search-results",
+    "text": "PTH",
+    "new_url": "/tags/pth/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   },
+   {
+    "target": "search-results",
+    "text": "\"GRAVES DISEASE\"",
+    "new_url": "/tags/graves-disease/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "topical-vitamin-d-might-be-more-bio-available-than-oral": [
+   {
+    "target": "blogpost102-spray-vitamin-d-inside-cheek-in-case-of-emergency",
+    "text": "Spray vitamin D inside cheek in case of emergency",
+    "new_url": "/pages/spray-vitamin-d-inside-cheek-in-case-of-emergency/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TOPICAL",
+    "new_url": "/tags/topical/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "topical-vitamin-d-raised-blood-level-to-38-ng-used-aloe-vera-gel-rct": [
+   {
+    "target": "blogpost102-spray-vitamin-d-inside-cheek-in-case-of-emergency",
+    "text": "Spray vitamin D inside cheek in case of emergency",
+    "new_url": "/pages/spray-vitamin-d-inside-cheek-in-case-of-emergency/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "trauma-and-surgery": [
+   {
+    "target": "search-results",
+    "text": "chemotherapy",
+    "new_url": "/tags/chemotherapy/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "traumatic-brain-injury-treated-by-vitamin-d-progesterone-omega-3-and-glutamine": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"TRAUMATIC BRAIN INJURY\"",
+    "new_url": "/tags/traumatic-brain-injury/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "treat-wounds-stop-inflammation-with-nanoemulsion-textile-of-omega-3-and-resveratrol": [
+   {
+    "target": "resveratrol",
+    "text": "Resveratrol",
+    "new_url": "/tags/resveratrol/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "treating-herpes-reduced-incidence-of-senile-dementia-by-10-x-hsv1-reduces-vdr-by-8x-2018": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "Vitamin D pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "tripledemic-flu-covid-and-rsv-all-fought-by-vitamin-d": [
+   {
+    "target": "respiratory-viral-infection-rsv-and-low-vitamin-d-several-studies",
+    "text": "RSV 11.8 X more likely to be life threatening if low Vitamin D – Feb 2022",
+    "new_url": "/pages/respiratory-viral-infection-rsv-and-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 93% similar"
+   }
+  ],
+  "tuberculosis-treatment-greatly-helped-by-injection-of-200000-iu-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INJECTION",
+    "new_url": "/tags/injection/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "type-i-diabetes-2x-more-likely-if-mother-had-low-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D probably prevent and treat T1 & T2 Diabetes – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-probably-prevent-and-treat-t1-t1-diabetes-june-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "uk-govt-review-of-vitamin-d-10-ng-2007": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "uk-summers-are-not-long-enough-to-re-stock-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases but tanning bed decreases longevity - April 2011",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "us-diabetics-currently-1-in-10-may-increase-to-1-in-5-or-1-in-3-by-2050": [
+   {
+    "target": "vit-d-decreases-incidence-of-disease",
+    "text": "CLICK HERE for larger image and more charts of disease incidence",
+    "new_url": "/pages/vitamin-d-decreases-incidence-of-disease/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "us-vs-italy-ultra-processed-foods-74-14-obesity-40-24-lifespan-78-vs-82": [
+   {
+    "target": "obesity-is-50-percent-more-likely-if-eat-ultra-processed-foods-vitamin-d-can-help",
+    "text": "Obesity is 50% more likely if eat ultra-processed foods - Vitamin D can help",
+    "new_url": "/pages/obesity-is-50-percent-more-likely-if-eat-ultraprocessed-foods-vitamin-d-can-help/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   },
+   {
+    "target": "3lbs-weight-gain-in-just-3-weeks-from-ultra-processed-foods-oct-2025",
+    "text": "3 lbs weight gain in just 3 weeks from Ultra-processed foods  - RCT Oct 2025",
+    "new_url": "/pages/3lbs-weight-gain-in-just-3-weeks-from-ultraprocessed-foods-oct-2025/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "use-of-tanning-beds-would-reduce-associated-deaths-by-10x": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Sun increases but tanning bed decreases longevity - April 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/sun-increases-but-tanning-bed-decreases-longevity---april-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "uva-from-some-tanning-beds-and-most-windows-decrease-vitamin-d-blood-levels": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "tanning beds bone and vitamin D – 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/tanningbeds-bone-and-vitamind---2009.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Hypothesis uva cause melanoma – 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/hypothesis-uva-cause-melanoma---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "uvb-3x-per-week-raise-vitamin-d-levels-more-than-did-1600-iu-daily": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "uvb-and-vitamin-d-decrease-dental-problems": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "peridontal disease and latitude - Grant2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/peridontal-disease-and-latitude---grant-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "uvb-and-vitamin-d-might-decrease-dental-caries-better-than-fluoride": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "peridontal disease and latitude - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/peridontal-disease-and-latitude---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "uvb-better-than-vitamin-d-supplements-for-pet-reptiles": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "uvb better than vitamin D for iguana",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/uvb-better-than-vit-d-for-iguana.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "uvb-increasing-vitamin-d-to-34-ng-did-not-lower-blood-pressure": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Less than 15ng were 3X more likely to be hypertensive - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/less-than-15ng-were-3x-more-likely-to-be-hypertensive---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "uvb-produced-8x-more-vitamin-d-as-solar-uv": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vaccinated-were-42-percent-of-us-covid-deaths-in-jan-feb-2022": [
+   {
+    "target": "influenza-infection-5x-less-likely-if-got-vitamin-d-rct",
+    "text": "VitaminDWiki pages with FLU or INFLUENZA in title (81 as of May 2022)",
+    "new_url": "/pages/influenza-infection-5x-less-likely-if-got-vitamin-d-small-rct/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "vascular-calcification-greatly-reduced-by-3-per-week-1000-ug-of-vitamin-k2-mk-7": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Calcification",
+    "new_url": "/tags/calcification/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "veterans-and-vitamin-d-many-studies": [
+   {
+    "target": "suicide-associated-with-low-vitamin-d",
+    "text": "Vitamin D to veterans likely to suicide, 45% decrease in suicide attempts - Feb 2023",
+    "new_url": "/pages/suicide-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "video-by-dr-coimbra-95-percent-of-auto-immune-cured-with-vitamin-d-in-high-doses": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PTH",
+    "new_url": "/tags/pth/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "viral-pneumonia-in-children-52-x-more-likely-if-very-low-vitamin-d-trend": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for pneumonia",
+    "new_url": "/tags/pneumonia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "virus-mutations-ba-2-4-5-2121-can-be-more-infectious-and-ignore-previous-immunity": [
+   {
+    "target": "influenza-infection-5x-less-likely-if-got-vitamin-d-rct",
+    "text": "VitaminDWiki pages with FLU or INFLUENZA in title (81 as of May 2022)",
+    "new_url": "/pages/influenza-infection-5x-less-likely-if-got-vitamin-d-small-rct/",
+    "confidence": "likely",
+    "method": "address is 95% similar"
+   }
+  ],
+  "vitamin-c-is-important-for-the-common-cold-and-much-else": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"VITAMIN C\"",
+    "new_url": "/tags/vitamin-c/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-and-benign-gynaecological-diseases-short-abstract": [
+   {
+    "target": "search-results",
+    "text": "Search for PCOS",
+    "new_url": "/tags/pcos/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-and-cancer-treatment-and-prevention-presentations": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D & Cancer - Obesity - Lagunova",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-cancer---obesity---lagunova-may-2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-and-hair-disorders": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Diffuse hair loss - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/diffuse-hair-loss---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-and-iodine-are-similar-and-both-are-deficient-and-important-to-health": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for IODINE",
+    "new_url": "/tags/iodine/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-and-obstetrics-improving-pregnancy-and-childbirth-presentations": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D & Obstetrics - Effectiveness & Safety - Hollis",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-obstetrics---effectiveness-safety---hollis-may-2011-.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D & Obstetrics - Indian overview - Jain",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-obstetrics---indian-overview---jain-may-2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D & Obstetrics - Public Health programme - McGee",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-obstetrics---public-health-programme---mcgee-may-2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D & Obstetrics - Safety & Policy - Vieth",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-obstetrics---safety-policy---vieth-may-2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-and-peripheral-arterial-disease": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D role in Peripheral artery disease - Nov 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-role-in-peripheral-artery-disease---nov-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-associated-with-2x-better-health-and-less-stress-both-before-and-after-breast-cancer": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"QUALITY OF LIFE\"",
+    "new_url": "/tags/quality-of-life/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-at-curetogether-fibromyalgia-ms-psoriasis-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Celiac",
+    "new_url": "/tags/celiac/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-binding-protein-and-airflow-in-copd": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D Pneumonia and COPD - thesis 105 pages 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-pneumonia-and-copd---thesis-105-pages-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "COPD related to vitamin D by a gene in China. - Aug 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/copd-related-to-vitamin-d-by-a-gene-in-china.---aug-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-decrease-during-inflammation-is-probably-due-to-interferons": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D essential for burn injury - 2008.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-essential-for-burn-injury---2008.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-deficiency": [
+   {
+    "target": "overview-evidence-for-vitamin-d",
+    "text": "Overview",
+    "new_url": "/tags/overview/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-deficiency-and-diabetes-rheumatoid-arthritis-lupus": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Rheumatoid Arthritis Lupus and vitamin D - Review- Nov 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/rheumatoid-artiritis-lupus-and-vitamin-d---review--nov-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-deficiency-in-hiv-infected-and-un-infected-women-in-the-us": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "AIDS and vitamin D Hypothesis",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/aids-and-vitamin-d-hypothesis.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-deficient-type-1-diabetics-3x-more-likely-to-have-calcification-problems": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D probably prevent and treat T1 & T2 Diabetes – June 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-probably-prevent-and-treat-t1-t1-diabetes-june-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-dr-mccullough-videos-and-transcript": [
+   {
+    "target": "iom-admits-math-mistake-was-made-in-2009-in-estimating-vitamin-d-but-will-not-ch-recommendations",
+    "text": "IoM admits math mistake was made in 2009 in estimating Vitamin D, but will not change their recommendations – Nov 2017",
+    "new_url": "/pages/us-admits-math-mistake-was-made-in-2010-in-estimating-vitamin-d-but-will-not-change-recommendations/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   },
+   {
+    "target": "history-of-vitamin-d-many-studies",
+    "text": "History of Vitamin D - many studies",
+    "new_url": "/pages/history-of-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "vitamin-d-for-planners-architects-etc": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "CLICK HERE",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-for-planners-architects-etc---may-2010.pdf",
+    "confidence": "likely",
+    "method": "page title matches the PDF file name"
+   }
+  ],
+  "vitamin-d-fortification-of-foods-cosmetics-by-mfg-and-at-home-india": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INDIA",
+    "new_url": "/tags/india/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-from-low-cost-uvb-lamps": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-from-phototherapy-lamps-tanning-beds-and-the-sun": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-from-the-sun-3-to-12-months-of-the-year-in-the-us": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "UV Index guide by US Weather Bureau - 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/uv-index-guide-by-us-weather-bureau---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-given-after-low-weight-birth-did-not-decrease-death-rate": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "vitamin D and vaginosis - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-vaginosis---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-helped-cardiovascular-patients-in-many-ways": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardiovascular - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   },
+   {
+    "target": "tiki-download-filephp",
+    "text": "Less than 15ng were 3X more likely to be hypertensive - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/less-than-15ng-were-3x-more-likely-to-be-hypertensive---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-in-haematological-disorders-and-malignancies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANEMIA",
+    "new_url": "/tags/anemia/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-is-needed-while-pregnant-200-iu-to-4000-iu-daily-17-cliical-guidelines": [
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Low Magnesium",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "vitamin-d-is-toxic-to-mice-at-400-ng-level": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Toxic level of vitamin D may be 300 ng - 2008",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/toxic-level-of-vitamin-d-may-be-300-ng---2008.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-its-role-in-disease-prevention": [
+   {
+    "target": "moved80",
+    "text": "Beneficial effects of UV radiation other than via vitamin D production",
+    "new_url": "/pages/beneficial-effects-of-uv-radiation-other-than-via-vitamin-d-production/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "vitamin-d-level-27-ng-if-low-pollution-12-ng-if-high-pollution-delhi-children": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"air pollution\"",
+    "new_url": "/tags/air-pollution/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-levels-massively-changed-by-cyp3a4-gene-drugs-such-as-ivermectin-and-anti-epileptics": [
+   {
+    "target": "ivermectin-and-covid-19",
+    "text": "Ivermectin raises levels of vitamin D (by decreasing CYP3A4)",
+    "new_url": "/pages/ivermectin-and-covid-19-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "vitamin-d-levels-were-lower-in-cities-300-years-ago-too": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"air pollution\"",
+    "new_url": "/tags/air-pollution/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamin-d-needed-after-most-spinal-surgeries-and-before-as-well-2013": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-news-highlights": [
+   {
+    "target": "quick-self-test-of-vitamin-d-deficiency",
+    "text": "Quickself test of vitamin D deficiency",
+    "new_url": "/pages/quick-free-self-test-for-vitamin-d-deficiency/",
+    "confidence": "likely",
+    "method": "address is 90% similar"
+   },
+   {
+    "target": "genetic-differences-explain-some-of-vitamin-d-variation-in-arfican-americans",
+    "text": "Genetic differences explain some of vitamin D variation in African-Americans Dec 2011",
+    "new_url": "/pages/genetic-differences-explain-some-of-vitamin-d-variation-in-african-americans/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   },
+   {
+    "target": "non-cancer-colon-growths-7-percent-less-likely-with-each-10-ng-increase-in-vitamin-d",
+    "text": "Non-cancer colon growths 7 percent less likely with each 10 ng increase invitamin D - Oct 2011",
+    "new_url": "/pages/non-cancer-colon-growths-7-percent-less-likely-per-10-ng-increase-in-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is 94% similar"
+   },
+   {
+    "target": "vitamin-d3-for-vegans",
+    "text": "Vitamin D3 for Vegans",
+    "new_url": "/pages/vitamin-d3-for-vegans-many-studies/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "vitamin-d-omega-3-and-exercise-are-being-used-in-controlled-trial-to-support-healthy-ageing": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "2000 IU barely raised vitamin D levels after hip fracture - May 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/2000-iu-barely-raised-vitamin-d-levels-after-hip-fracture---may-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   },
+   {
+    "target": "vit-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors",
+    "text": "65+ years old need 5,000 IU",
+    "new_url": "/pages/vitamin-d-repletion-2000-iu-daily-for-adults-and-5000-iu-daily-for-seniors/",
+    "confidence": "likely",
+    "method": "address is 97% similar"
+   }
+  ],
+  "vitamin-d-prevents-low-level-radiation-damage-2008": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Aging and vitamin D - Hayes 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/aging-and-vitamin-d---hayes-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-protects-against-lung-cancer-unless-there-is-excess-vitamin-a": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Vitamin D and lung Cancer - Expert Review 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-lung-cancer---expert-review-2011.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-recommendations-around-the-world-iu-and-ng": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU  vitamin D to get 30 to-44 ng no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-reduces-hair-loss-many-studies": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Diffuse hair loss - 2009.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/diffuse-hair-loss---2009.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-relieves-pain-2008-2010": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Back pain reduced for 95 percent of those who took vitamin D - 2003",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/back-pain-reduced-for-95-percent-of-those-who-took-vitamin-d---2003-.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamin-d-replentishment-loading-doses-are-not-toxic": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Loading dose of 500,000 IU for elderly - Whiting 2010",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/loading-dose-of-5000-iu-for-elderly---whiting-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "vitamin-d-some-perspective-please": [
+   {
+    "target": "all-cause-mortality-does-not-relate-to-vitamin-d-tests-years-earlier",
+    "text": "VitaminDWiki",
+    "new_url": "/pages/vitamindwiki/",
+    "confidence": "high",
+    "method": "link text matches this page title"
+   }
+  ],
+  "vitamin-d-treats-copd-thru-many-pathways": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COPD",
+    "new_url": "/tags/copd/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamindwiki-collections-of-studies-in-one-page": [
+   {
+    "target": "history-of-vitamin-d-many-studies",
+    "text": "History of Vitamin D - many studies",
+    "new_url": "/pages/history-of-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "vitamindwiki-interview-and-transcript-lahore": [
+   {
+    "target": "magnesium-and-vitamin-d-recent-deficiencies-needed-synergistic-good-overview-2017",
+    "text": "Low Magnesium",
+    "new_url": "/pages/magnesium-and-vitamin-d/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   },
+   {
+    "target": "search-results",
+    "text": "CYP27A1",
+    "new_url": "/tags/cyp27a1/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "vitamindwiki-news-for-2": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "1800 to 4000 IU vitamin D to get  30 to-44 ng  no risk osteo - July 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/1800-to-4000-iu-vitamin-d-to-get-30-to-44-ng-no-risk-osteo---july-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "vitamindwiki-old-newsletters": [
+   {
+    "target": "proven-again-400-iu-vitamin-d-does-not-reduce-joint-paint",
+    "text": "Proven again, 400 IU vitamin D does not reduce joint paint - Aug 2013",
+    "new_url": "/pages/proven-again-400-iu-vitamin-d-does-not-reduce-joint-pain/",
+    "confidence": "likely",
+    "method": "address is a shortened/lengthened form of this page"
+   }
+  ],
+  "ways-to-block-uva-but-not-the-uvb-which-makes-vitamin-d": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "UVB US via NASA Toms Satellite 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/uvb-us-via-nasa-toms-satellite-2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "weekly-uv-almost-doubled-elderly-vitamin-d-levels": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "Study of Vitamin D3 from UV lamps – Aug 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/study-of-d3-from-uv-lamps---aug-2010.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "why-dementia-gets-more-severe-in-the-winter": [
+   {
+    "target": "dementia-is-associated-with-low-vitamin-d-several-studies",
+    "text": "Vitamin D pages containing \"Dementia\" in title (35 as of June 2021)",
+    "new_url": "/pages/dementia-is-associated-with-low-vitamin-d-many-studies/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "why-higher-levels-of-vitamin-d-reduces-premature-birth": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "vitamin D and vaginosis - 2010.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/vitamin-d-and-vaginosis---2010.pdf",
+    "confidence": "high",
+    "method": "link text matches the PDF file name"
+   }
+  ],
+  "women-very-low-on-vitamin-d-were-56-percent-more-likely-to-die-in-nursing-home": [
+   {
+    "target": "vit-d-deficiency-was-the-only-predictor-of-older-patient-death-in-hospital",
+    "text": "Vit D deficiency best prediction of death in hospital",
+    "new_url": "/pages/vitamin-d-deficiency-was-the-best-predictor-of-older-patient-death-in-hospital/",
+    "confidence": "likely",
+    "method": "address is 92% similar"
+   }
+  ],
+  "women-with-asthma-35x-more-likely-to-be-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Asthma",
+    "new_url": "/tags/asthma/",
+    "confidence": "high",
+    "method": "link text is a topic name"
+   }
+  ],
+  "yup-2500-iu-of-vitamin-d-does-not-help-the-heart-in-the-short-term": [
+   {
+    "target": "tiki-download-filephp",
+    "text": "30 ng perhaps best for cardio - graphs from many countries - 2011.pdf",
+    "new_url": "https://d378j1rmrlek7x.cloudfront.net/attachments/pdf/30-ng-perhaps-best-for-cardio---graphs-from-many-countires---2011.pdf",
+    "confidence": "likely",
+    "method": "link text is very close to the PDF file name"
+   }
+  ],
+  "zinc-and-vitamin-d": [
+   {
+    "target": "hypothesis-fatigue-the-day-after-sex-is-due-to-deficiency-of-vitamin-d-or-magnesium",
+    "text": "Hypothesis – Fatigue the day after sex is due to deficiency of vitamin D or Magnesium",
+    "new_url": "/pages/hypothesis-fatigue-the-day-after-sex-is-due-to-deficiency-of-vitamin-d-magnesium-and-zinc/",
+    "confidence": "likely",
+    "method": "address is 93% similar"
+   }
+  ]
+ }
+}

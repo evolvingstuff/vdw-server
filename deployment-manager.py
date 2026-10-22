@@ -3896,6 +3896,38 @@ def preview_table_fixes(local_db: str):
     print("   Open it in a browser to review.")
 
 
+def preview_link_fixes(local_db: str):
+    """Phase 1 of the broken-link fix: report proposed fixes; never touches the database."""
+    import django
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vdw_server.settings')
+    django.setup()
+    from helper_functions.link_review import list_attachment_keys_from_s3, run_link_review
+
+    print("\n" + "=" * 50)
+    print("PREVIEW BROKEN LINK FIXES (read-only)")
+    print("=" * 50)
+    print("This will:")
+    print("  • Find links to pages that don't exist (old search links, Tiki downloads, renamed pages)")
+    print("  • Propose a fix for each, with a confidence level (lists PDFs in S3, read-only)")
+    print("  • Write an HTML report under tmp/link_review/ (takes about a minute)")
+    print("  • NOT modify the database")
+
+    db_path = Path(local_db)
+    if not db_path.exists():
+        print(f"❌ Local database not found: {db_path}")
+        return
+    try:
+        print("\nListing PDFs in S3 (read-only) to reconnect old Tiki download links...")
+        pdf_keys = list_attachment_keys_from_s3(dotenv_values(Path(__file__).resolve().parent / ".env"))
+        print(f"  {len(pdf_keys):,} attachment files found")
+    except Exception as exc:  # the report still works without it
+        print(f"⚠️  Could not list S3 attachments ({exc}); download links won't be matched")
+        pdf_keys = []
+    out_path = run_link_review(db_path, Path(__file__).resolve().parent / "tmp" / "link_review", pdf_keys)
+    print(f"\n✅ Report written to {out_path}")
+    print("   Open it in a browser to review.")
+
+
 def print_header():
     """Print script header"""
     print("\n" + "=" * 50)
@@ -3930,7 +3962,8 @@ def print_menu(active_host: str, label: str):
     print("19. Reboot EC2 instance")
     print("20. Preview title rewrites (LLM suggestions -> CSV, no DB changes)")
     print("21. Preview table fixes (local DB -> HTML report, no DB changes)")
-    print("22. Exit")
+    print("22. Preview broken link fixes (local DB -> HTML report, no DB changes)")
+    print("23. Exit")
     print()
 
 def main():
@@ -3939,7 +3972,7 @@ def main():
     deployer = DockerDeployment()
     
     print_menu(deployer.active_host, deployer.active_host_label)
-    choice = input("Enter choice [0-8,10-22]: ").strip()
+    choice = input("Enter choice [0-8,10-23]: ").strip()
     
     if choice == '0':
         deployer.capture_provisioning_config()
@@ -4054,6 +4087,8 @@ def main():
     elif choice == '21':
         preview_table_fixes(deployer.config['local_db'])
     elif choice == '22':
+        preview_link_fixes(deployer.config['local_db'])
+    elif choice == '23':
         print("\n👋 Goodbye!")
         return
     
