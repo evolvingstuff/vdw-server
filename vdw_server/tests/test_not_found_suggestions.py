@@ -9,7 +9,7 @@ LONG_TITLE = 'Top 10 chronic health problems of children, women, pregnancies, se
 
 
 def _hits(*titles_and_slugs):
-    return {'hits': [{'id': i, 'title': t, 'slug': s} for i, (t, s) in enumerate(titles_and_slugs)], 'totalHits': 0}
+    return [{'id': i, 'title': t, 'slug': s} for i, (t, s) in enumerate(titles_and_slugs)]
 
 
 class VeryCloseTests(TestCase):
@@ -42,7 +42,7 @@ class NotFoundViewTests(TestCase):
         self.assertEqual(response.status_code, 301)
         self.assertEqual(response['Location'], '/pages/overview-asthma-and-vitamin-d/')
 
-    @patch('search.search.search_pages')
+    @patch('search.search.search_titles_by_relevance')
     def test_very_close_title_redirects_temporarily(self, search):
         search.return_value = _hits((LONG_TITLE, 'top-10-chronic'), ('All of the top 10 chronic health problems of blacks', 'blacks'))
         response = self.client.get(
@@ -50,9 +50,8 @@ class NotFoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], '/pages/top-10-chronic/')
         self.assertTrue(search.call_args.args[0].startswith('top 10 chronic'))  # leading "The" dropped
-        self.assertEqual(search.call_args.kwargs['matching_strategy'], 'last')
 
-    @patch('search.search.search_pages')
+    @patch('search.search.search_titles_by_relevance')
     def test_not_close_shows_suggestions(self, search):
         search.return_value = _hits(('Breast Cancer survival 2X more likely if vitamin D', 'bc'), ('Breast cancer and D', 'bc2'))
         response = self.client.get('/Breast+cancer+stuff')
@@ -60,20 +59,20 @@ class NotFoundViewTests(TestCase):
         self.assertContains(response, 'Possible matches', status_code=404)
         self.assertContains(response, 'href="/pages/bc/"', status_code=404)
 
-    @patch('search.search.search_pages')
+    @patch('search.search.search_titles_by_relevance')
     def test_junk_probe_skips_search(self, search):
         response = self.client.get('/wp-login.php')
         self.assertEqual(response.status_code, 404)
         search.assert_not_called()
 
-    @patch('search.search.search_pages', side_effect=RuntimeError('meilisearch down'))
+    @patch('search.search.search_titles_by_relevance', side_effect=RuntimeError('meilisearch down'))
     def test_search_failure_shows_plain_404(self, search):
         response = self.client.get('/Some+missing+page+title')
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, 'Some missing page title', status_code=404)
 
     @override_settings(ENABLE_404_SUGGESTIONS=False)
-    @patch('search.search.search_pages')
+    @patch('search.search.search_titles_by_relevance')
     def test_disabled_mode_does_no_lookups(self, search):
         response = self.client.get('/Some+missing+page+title')
         self.assertEqual(response.status_code, 404)

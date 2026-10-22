@@ -529,7 +529,26 @@ def extract_total_hits(search_response: dict) -> int | None:
     return None
 
 
-def search_pages(query: str, limit: int = 20, offset: int = 0, matching_strategy: str | None = None):
+def search_titles_by_relevance(query: str, limit: int = 20) -> list[dict]:
+    """Published pages whose titles best match the query, by match quality only.
+
+    Unlike search_pages there is no priority/recency sort, re-ranking or overview injection:
+    used to find the page a broken address meant (404 handling). matchingStrategy 'last'
+    lets long requested titles match pages that lack some of their words.
+    """
+    if not query.strip():
+        return []
+    index = get_search_client().index(settings.MEILISEARCH_INDEX_NAME)
+    results = index.search(query, {
+        'limit': limit,
+        'filter': 'status = published',
+        'attributesToRetrieve': ['id', 'title', 'slug'],
+        'matchingStrategy': 'last',
+    })
+    return results.get('hits', [])
+
+
+def search_pages(query: str, limit: int = 20, offset: int = 0):
     """Search pages and return MeiliSearch results."""
     if not query.strip():
         return {'hits': [], 'query': query, 'totalHits': 0, 'limit': limit, 'offset': offset}
@@ -579,10 +598,7 @@ def search_pages(query: str, limit: int = 20, offset: int = 0, matching_strategy
         search_payload['attributesToCrop'] = attributes_to_crop
 
     query_terms = extract_query_tokens(query)
-    if matching_strategy:
-        # e.g. 'last' for 404 lookups: long requested titles may contain words a page lacks
-        search_payload['matchingStrategy'] = matching_strategy
-    elif len(query_terms) >= 2:
+    if len(query_terms) >= 2:
         search_payload['matchingStrategy'] = 'all'
 
     meili_started_at = time.perf_counter()

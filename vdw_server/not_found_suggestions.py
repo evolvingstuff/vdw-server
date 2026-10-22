@@ -27,7 +27,7 @@ from django.utils.text import slugify
 logger = logging.getLogger(__name__)
 
 MAX_NOT_FOUND_SUGGESTIONS = 5
-SEARCH_CANDIDATES = 10
+SEARCH_CANDIDATES = 20
 MIN_QUERY_SLUG_LENGTH = 3
 MIN_WORDS_FOR_FUZZY = 2
 CLOSE_RATIO = 0.92
@@ -132,18 +132,16 @@ def _exact_page_url(query_slug: str) -> str:
 
 
 def _search_titles(phrase: str) -> List[NotFoundSuggestion]:
-    from search.search import search_pages
+    from search.search import search_titles_by_relevance
 
     try:
-        response = search_pages(
-            _without_leading_article(phrase), limit=SEARCH_CANDIDATES, offset=0, matching_strategy='last'
-        )
+        hits = search_titles_by_relevance(_without_leading_article(phrase), limit=SEARCH_CANDIDATES)
     except Exception as exc:  # search engine down or failing: fall back to the plain 404 page
         logger.warning("404 suggestions unavailable: %s", exc)
         return []
     target = _comparable(phrase)
     hits = sorted(
-        response.get('hits', []),
+        hits,
         key=lambda hit: SequenceMatcher(a=target, b=_comparable(hit['title'])).ratio(),
         reverse=True,
     )
