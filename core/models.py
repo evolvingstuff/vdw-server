@@ -4,6 +4,17 @@ import re
 from helper_functions.markdown import render_markdown
 
 
+def derive_content_fields(content_md: str) -> tuple[str, str, int]:
+    """(content_html, content_text, character_count) for the given markdown.
+
+    Used by ContentBase.save and by data migrations that re-render stored pages.
+    """
+    content_html = render_markdown(content_md)
+    # Plain text for search: drop tags, collapse whitespace
+    content_text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', content_html)).strip()
+    return content_html, content_text, len(content_text)
+
+
 class ContentBase(models.Model):
     """Abstract base class for content with markdown editing functionality"""
     content_md = models.TextField(verbose_name="Content (Markdown)")
@@ -12,18 +23,8 @@ class ContentBase(models.Model):
     character_count = models.IntegerField(default=0, help_text="Number of non-HTML characters in content")
 
     def save(self, *args, **kwargs):
-        # Process markdown to HTML
-        self.content_html = render_markdown(self.content_md)
-
-        # Extract plain text for search
-        # Remove HTML tags
-        text = re.sub(r'<[^>]+>', '', self.content_html)
-        # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text)
-        self.content_text = text.strip()
-
-        # Calculate character count (non-HTML characters)
-        self.character_count = len(self.content_text)
+        # Markdown -> HTML, plain text for search, and non-HTML character count
+        self.content_html, self.content_text, self.character_count = derive_content_fields(self.content_md)
 
         super().save(*args, **kwargs)
 

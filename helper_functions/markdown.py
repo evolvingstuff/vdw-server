@@ -5,6 +5,8 @@ from typing import Iterable
 
 import markdown2
 
+from helper_functions.tables import prepare_tables_for_rendering
+
 
 BULLET_NUMBER_LITERAL_RE = re.compile(
     r"(?m)^(?P<prefix>\s*[*+-]\s+)(?P<number>\d+)\.(?=\s|$)"
@@ -55,6 +57,8 @@ URL_RE = re.compile(r'https?://[^\s<]+')
 
 def render_markdown(markdown_text: str) -> str:
     """Render Markdown with defaults and preserve original footnote numbers."""
+    # Make leftover Tiki tables and tables inside HTML boxes render (see helper_functions/tables.py).
+    markdown_text = prepare_tables_for_rendering(markdown_text)
     markdown_text = _escape_literal_ordered_markers(markdown_text)
     html = markdown2.markdown(markdown_text, extras=DEFAULT_MARKDOWN_EXTRAS)
 

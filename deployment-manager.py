@@ -3875,6 +3875,27 @@ def preview_title_rewrites(local_db: str):
     print(f"\n✅ Review written to {out_path}")
 
 
+def preview_table_fixes(local_db: str):
+    """Phase 1 of the table fix: report what would change; never touches the database."""
+    from helper_functions.table_review import run_table_review
+
+    print("\n" + "=" * 50)
+    print("PREVIEW TABLE FIXES (read-only)")
+    print("=" * 50)
+    print("This will:")
+    print("  • Find tables that don't render (Tiki tables, tables in boxes, missing blank lines)")
+    print("  • Write an HTML report (before/after for every table) under tmp/table_review/")
+    print("  • NOT modify the database")
+
+    db_path = Path(local_db)
+    if not db_path.exists():
+        print(f"❌ Local database not found: {db_path}")
+        return
+    out_path = run_table_review(db_path, Path(__file__).resolve().parent / "tmp" / "table_review")
+    print(f"\n✅ Report written to {out_path}")
+    print("   Open it in a browser to review.")
+
+
 def print_header():
     """Print script header"""
     print("\n" + "=" * 50)
@@ -3908,7 +3929,8 @@ def print_menu(active_host: str, label: str):
     print("18. Enable AWS management (SSM/CloudWatch + health alarms + email)")
     print("19. Reboot EC2 instance")
     print("20. Preview title rewrites (LLM suggestions -> CSV, no DB changes)")
-    print("21. Exit")
+    print("21. Preview table fixes (local DB -> HTML report, no DB changes)")
+    print("22. Exit")
     print()
 
 def main():
@@ -3918,7 +3940,7 @@ def main():
     
     while True:
         print_menu(deployer.active_host, deployer.active_host_label)
-        choice = input("Enter choice [0-8,10-21]: ").strip()
+        choice = input("Enter choice [0-8,10-22]: ").strip()
         
         if choice == '0':
             deployer.capture_provisioning_config()
@@ -4031,6 +4053,8 @@ def main():
         elif choice == '20':
             preview_title_rewrites(deployer.config['local_db'])
         elif choice == '21':
+            preview_table_fixes(deployer.config['local_db'])
+        elif choice == '22':
             print("\n👋 Goodbye!")
             break
         

@@ -110,3 +110,18 @@ class Page(ContentBase):
                 name='page_status_recent_cover',
             ),
         ]
+
+
+class PageContentBackup(models.Model):
+    """Original markdown saved before a bulk automated rewrite, so it can be restored."""
+
+    page_id = models.IntegerField(db_index=True)
+    content_md = models.TextField()
+    reason = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'posts_page_content_backup'
+
+    def __str__(self):
+        return f"Backup of page {self.page_id} ({self.reason})"
