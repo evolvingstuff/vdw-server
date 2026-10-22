@@ -37,13 +37,16 @@ Before changing anything, record a Search Console baseline so the effect can be 
 - **To do (Dad):** the homepage's hand-set description is "Welcome to VitaminDWiki". Replace it
   in admin → Site pages → Home → Meta description.
 
-### 12. Broken internal links — first pass DONE (498 of 2,476 links fixed)
+### 12. Broken internal links — two passes DONE (1,200 of 2,476 links fixed)
 - **Done (Oct 2026):** preview = deployment-manager option 22 (report + confident fixes file; lists PDFs
   in S3 read-only). Migration `0013_fix_broken_links` applies the high/likely fixes from
   `pages/migrations/data/link_fixes_0013.json`: old Tiki downloads -> matching PDF (≈200), renamed pages
   -> current page (≈150), search/category links whose text is a topic -> topic page (≈150). Originals
   backed up in `PageContentBackup`; reversible. Reviewed report: `docs/link-review/link_review_2026-10-22.html`.
-- **Left for a later pass (~1,980 links):** ~700 search links (need `/search/?q=` switched on), ~850 links
+- **Second pass (Oct 2026):** the full search page is live at `/search/?q=` (noindex; handles Tiki-style
+  `OR` by searching each alternative and interleaving results). Migration `0014_fix_search_links` repoints
+  ~700 old search links using `pages/migrations/data/search_link_fixes_0014.json`.
+- **Left for a later pass (~1,280 links):** ~850 links
   to pages that no longer exist (unlink, or search for the title?), ~310 downloads with no matching PDF,
   ~110 other Tiki addresses, 162 "possible match" guesses to review. Redirects for old `/pages/` addresses
   need a small change (the alias middleware skips `/pages/`), useful for the title-renaming project too.
