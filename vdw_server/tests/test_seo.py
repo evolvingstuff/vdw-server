@@ -121,6 +121,7 @@ class SeoHeadTagTests(TestCase):
         self.assertEqual(response["Content-Type"], "text/plain")
         body = response.content.decode()
         self.assertIn("Disallow: /admin/", body)
+        self.assertIn("Disallow: /search/", body)
         self.assertIn(f"Sitemap: {settings.SITE_BASE_URL}/sitemap.xml", body)
 
 

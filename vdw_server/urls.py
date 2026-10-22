@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from pages.views import preview_markdown, page_list, recent_page_list, page_detail, page_preview, upload_media
 from site_pages.views import homepage, site_page_detail
-from search.views import search_api
+from search.views import search_api, search_page
 from vdw_server.admin_views import code_search, manual_backup, manual_restore, refresh_sitemap
 from vdw_server.llms_txt import llms_txt
 from vdw_server.views import google_site_verification, page_detail_fallback, robots_txt, sitemap_xml
@@ -38,6 +38,7 @@ urlpatterns = [
     path('admin/refresh-sitemap/', admin.site.admin_view(refresh_sitemap), name='refresh_sitemap'),
     path('admin/', admin.site.urls),
     path('search/api/', search_api, name='search_api'),  # Keep API for global search
+    path('search/', search_page, name='search_page'),  # Full results page (old Tiki search links)
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('llms.txt', llms_txt, name='llms_txt'),

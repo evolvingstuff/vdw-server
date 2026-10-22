@@ -1,0 +1,4738 @@
+{
+ "generated": "2026-10-21T22:09:37",
+ "description": "Old Tiki search links (/pages/search-results/) -> /search/?q=<term>, applied by migration 0014_fix_search_links. Keyed by source page slug.",
+ "fixes": {
+  "1-in-6-critically-ill-in-india-have-high-levels-of-vitamin-d-100-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "1-month-after-plasma-exchange-vitamin-d-levels-reduced-by-40-percent": [
+   {
+    "target": "search-results",
+    "text": "Search Dialysis in VitaminDWiki",
+    "new_url": "/search/?q=Dialysis"
+   }
+  ],
+  "1000-iu-per-kg-vitamin-d-for-autoimmune-diseases-coimbra": [
+   {
+    "target": "search-results",
+    "text": "Search VitraminDWiki for COIMBRA",
+    "new_url": "/search/?q=COIMBRA"
+   }
+  ],
+  "1000-iu-should-be-the-new-vitamin-d-rda-if-you-think-20-ng-is-enough": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CASHMAN",
+    "new_url": "/search/?q=CASHMAN"
+   }
+  ],
+  "10x-reactions-to-flu-vaccine-when-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "Google search for Vaccine at VitaminDWiki",
+    "new_url": "/search/?q=Google+search+for+Vaccine+at+VitaminDWiki"
+   }
+  ],
+  "11-years-after-gastric-bypass-surgery-vitamin-d-still-low": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Gastric Bypass\"",
+    "new_url": "/search/?q=%22Gastric+Bypass%22"
+   }
+  ],
+  "14000-iu-vitamin-d-50000-twice-a-week-often-stops-sickle-cell-pain": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"sickle cell\"",
+    "new_url": "/search/?q=%22sickle+cell%22"
+   }
+  ],
+  "1900-iu-provides-some-increase-in-vitamin-d-in-both-mother-and-breast-milk": [
+   {
+    "target": "search-results",
+    "text": "breastfed",
+    "new_url": "/search/?q=breastfed"
+   }
+  ],
+  "2000-iu-of-vitamin-d-should-improve-toddlers-health-in-winter-rct-almost-completed": [
+   {
+    "target": "search-results",
+    "text": "RTI OR \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=RTI+OR+%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "2000-iu-vitamin-d-not-enough-to-get-most-chinese-to-20-ng-level-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (CHINA OR CHINESE OR BEIJING)",
+    "new_url": "/search/?q=CHINA+OR+CHINESE+OR+BEIJING"
+   }
+  ],
+  "25-hydroxyvitamin-d3-suppresses-hepatitis-c-virus-production": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Hepatitis C\" OR HCV",
+    "new_url": "/search/?q=%22Hepatitis+C%22+OR+HCV"
+   }
+  ],
+  "25d-form-may-be-4x-to-7x-more-potent-than-vitamin-d3-which-is-2x-better-than-d2": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Heaney",
+    "new_url": "/search/?q=Heaney"
+   }
+  ],
+  "27-percent-less-likely-to-develop-diabetes-if-prediabetic-and-have-adequate-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for prediabetes OR prediabetic",
+    "new_url": "/search/?q=prediabetes+OR+prediabetic"
+   }
+  ],
+  "2776-vitamin-d-receptor-binding-sites": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VDR OR \"Vitamin D Receptor\"",
+    "new_url": "/search/?q=VDR+OR+%22Vitamin+D+Receptor%22"
+   }
+  ],
+  "300-iu-is-not-enough-vitamin-d-for-preterm-infants": [
+   {
+    "target": "search-results",
+    "text": "((Stunting OR “low birth weight” OR LBW OR preemie OR preemies)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies"
+   }
+  ],
+  "4-out-of-10-irish-have-vitamin-d-levels-inadequate-even-for-bone-health": [
+   {
+    "target": "search-results",
+    "text": "Other mentions of Cashman in VitaminDWiki",
+    "new_url": "/search/?q=Other+mentions+of+Cashman"
+   }
+  ],
+  "4x-reduction-in-bone-fractures-following-kidney-transplant-with-monthly-vitamin-d-100000-iu-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for kidney transplant",
+    "new_url": "/search/?q=kidney+transplant"
+   }
+  ],
+  "5-traumatic-brain-injuries-resulted-in-28-x-increased-risk-of-dementia": [
+   {
+    "target": "search-results",
+    "text": "Search Vitamin D for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=Vitamin+D+for+TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "5000-iu-vitamin-d-was-not-enough-to-reduce-preeclampsia-but-did-help-future-infant-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "50000-iu-vitamin-d-weekly-improves-mood-lowers-blood-pressure-in-type-2-diabetics": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Penckofer",
+    "new_url": "/search/?q=Penckofer"
+   }
+  ],
+  "500000-iu-of-vitamin-d-cut-in-half-the-hospital-days-following-a-lung-failure-rct-2015": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"LENGTH OF STAY\"",
+    "new_url": "/search/?q=%22LENGTH+OF+STAY%22"
+   }
+  ],
+  "58-x-more-likely-to-die-in-15-year-followup-if-low-vitamin-d-and-poor-methylation": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for METHYLATION",
+    "new_url": "/search/?q=METHYLATION"
+   }
+  ],
+  "7x-increase-in-early-severe-preeclampsia-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PREECLAMPSIA",
+    "new_url": "/search/?q=PREECLAMPSIA"
+   }
+  ],
+  "91-percent-of-psychiatric-hospital-admissions-had-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "754",
+    "new_url": "/search/?q=754"
+   },
+   {
+    "target": "search-results",
+    "text": "7",
+    "new_url": "/search/?q=7"
+   },
+   {
+    "target": "search-results",
+    "text": "296",
+    "new_url": "/search/?q=296"
+   },
+   {
+    "target": "search-results",
+    "text": "132",
+    "new_url": "/search/?q=132"
+   },
+   {
+    "target": "search-results",
+    "text": "45",
+    "new_url": "/search/?q=45"
+   },
+   {
+    "target": "search-results",
+    "text": "30",
+    "new_url": "/search/?q=30"
+   },
+   {
+    "target": "search-results",
+    "text": "58",
+    "new_url": "/search/?q=58"
+   }
+  ],
+  "9x-increase-in-koreans-seeking-help-with-vitamin-d-deficiency-in-just-4-years": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for KOREA",
+    "new_url": "/search/?q=KOREA"
+   }
+  ],
+  "a-multiple-sclerosis-hypothesis-supported-by-eae-data": [
+   {
+    "target": "search-results",
+    "text": "Melatonin occurs 387 times in VitaminDWiki as of Oct 2019",
+    "new_url": "/search/?q=Melatonin+occurs+387+times"
+   }
+  ],
+  "activation-methylation-of-cyp2r1-and-cyp24a1-predict-response-to-dose-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP2R1 OR CYP24A1",
+    "new_url": "/search/?q=CYP2R1+OR+CYP24A1"
+   }
+  ],
+  "active-form-of-vitamin-d-calcitriol-cut-in-half-the-fractures-following-organ-tr-t-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TRANSPLANT",
+    "new_url": "/search/?q=TRANSPLANT"
+   }
+  ],
+  "active-vitamin-d-decreased-atrial-fibrillation-occurrence-by-9x-and-duration-by-77x-rabbits": [
+   {
+    "target": "search-results",
+    "text": "Arrhythmia OR “atrial fibrillation”",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22"
+   },
+   {
+    "target": "search-results",
+    "text": "(Arrhythmia OR “atrial fibrillation”) AND Magnesium",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22%29+Magnesium"
+   }
+  ],
+  "acute-lower-respiratory-infection-5x-more-frequent-with-low-vitamin-d-intake": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for antibiotic",
+    "new_url": "/search/?q=antibiotic"
+   }
+  ],
+  "acute-rehab-patients-23x-more-likely-to-have-musculoskeletal-pain-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"musculoskeletal pain\"",
+    "new_url": "/search/?q=%22musculoskeletal+pain%22"
+   }
+  ],
+  "acute-rheumatic-fever-associated-with-lower-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RHEUMATIC FEVER\"",
+    "new_url": "/search/?q=%22RHEUMATIC+FEVER%22"
+   }
+  ],
+  "adaptive-and-innate-immune-system-vitamin-d-genes-and-rheumatoid-arthritis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP27B1 gene",
+    "new_url": "/search/?q=CYP27B1+gene"
+   }
+  ],
+  "additional-4-ng-of-vitamin-d-reduced-chance-of-infection-by-7-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for antibiotic",
+    "new_url": "/search/?q=antibiotic"
+   }
+  ],
+  "adiponectin-links-vitamin-d-to-obesity": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Adiponectin",
+    "new_url": "/search/?q=Adiponectin"
+   }
+  ],
+  "adults-with-eating-disorders-consumed-less-than-400-iu-of-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “Bulimia nervosa” OR “anorexia nervosa” OR “binge eating” OR “eating disorder”",
+    "new_url": "/search/?q=%22Bulimia+nervosa%22+OR+%22anorexia+nervosa%22+OR+%22binge+eating%22+OR+%22eating+disorder%22"
+   }
+  ],
+  "advanced-liver-cirrhosis-death-63x-more-likely-if-extremely-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "age-adjusted-dementia-may-be-declining-nejm": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for demntia anywhere in text",
+    "new_url": "/search/?q=demntia+anywhere+in+text"
+   }
+  ],
+  "aging-leads-to-a-decrease-of-vitamin-d-getting-to-cells": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for\"P LIPS\" OR \"PAUL LIPS\" OR \"LIPS P\"  (one of the authors of this sludy)",
+    "new_url": "/search/?q=%22P+LIPS%22+OR+%22PAUL+LIPS%22+OR+%22LIPS+P%22+%28one+of+the+authors+of+this+sludy%29"
+   }
+  ],
+  "alcoholic-liver-cirrhosis-treated-by-1000-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   },
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "all-infants-with-small-heads-less-than-33-cm-were-from-mothers-with-low-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"HEAD CIRCUMFERENCE\"",
+    "new_url": "/search/?q=%22HEAD+CIRCUMFERENCE%22"
+   }
+  ],
+  "all-pregnant-women-in-uk-should-have-free-vitamin-d-gillie": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for GILLIE",
+    "new_url": "/search/?q=GILLIE"
+   }
+  ],
+  "allergic-rhinitis-56-percent-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"allergic rhinitis\"",
+    "new_url": "/search/?q=%22allergic+rhinitis%22"
+   }
+  ],
+  "allergic-rhinitis-associated-with-less-vitamin-d-in-men-yet-more-in-women": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “allergic rhinitis”",
+    "new_url": "/search/?q=%22allergic+rhinitis%22"
+   }
+  ],
+  "allergy-overview": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ALLERGY (CAT OR DOG OR PET OR DANDER)",
+    "new_url": "/search/?q=ALLERGY+%28CAT+OR+DOG+OR+PET+OR+DANDER%29"
+   }
+  ],
+  "alopecia-areata-spot-baldness-associated-with-85-ng-lower-levels-of-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for alopecia areata",
+    "new_url": "/search/?q=alopecia+areata"
+   }
+  ],
+  "alzheimer-risk-reduced-by-combination-of-memantine-and-vitamin-d-patented": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Annweiler",
+    "new_url": "/search/?q=Annweiler"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Memantine",
+    "new_url": "/search/?q=Memantine"
+   }
+  ],
+  "american-college-of-rheumatology-guidelines-finally-include-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Glucocorticoid",
+    "new_url": "/search/?q=Glucocorticoid"
+   }
+  ],
+  "an-attempt-at-inferring-health-risks-from-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (\"R LUCAS\" OR \"ROBYN LUCAS\")",
+    "new_url": "/search/?q=%22R+LUCAS%22+OR+%22ROBYN+LUCAS%22"
+   }
+  ],
+  "an-exploratory-study-of-postpartum-depression-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "postpartum depression",
+    "new_url": "/search/?q=postpartum+depression"
+   }
+  ],
+  "angina-dramatically-reduced-by-injections-of-vitamin-d-twice-a-month-300000-iu": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANGINA",
+    "new_url": "/search/?q=ANGINA"
+   }
+  ],
+  "ankle-fractures-associated-with-low-vitamin-d-smoking-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANKLE",
+    "new_url": "/search/?q=ANKLE"
+   }
+  ],
+  "ankle-sprains-evolving-to-olt-talus-bone-pain-are-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANKLE",
+    "new_url": "/search/?q=ANKLE"
+   }
+  ],
+  "anorexia-nervosa-and-vitamin-d-several-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “Bulimia nervosa” OR “anorexia nervosa” OR “binge eating” OR “eating disorder”",
+    "new_url": "/search/?q=%22Bulimia+nervosa%22+OR+%22anorexia+nervosa%22+OR+%22binge+eating%22+OR+%22eating+disorder%22"
+   }
+  ],
+  "anti-aging-effect-of-magnesium-on-telomeres-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search for TELEOMERE or TELOMERASE",
+    "new_url": "/search/?q=TELEOMERE+or+TELOMERASE"
+   }
+  ],
+  "anti-inflamatory-cytokines-increased-when-vitamin-d-levels-were-raised-above-30-ng-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYTOKINE",
+    "new_url": "/search/?q=CYTOKINE"
+   }
+  ],
+  "antibiotics-and-vitamin-d-are-associated-with-many-of-the-same-diseases": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANTIBIOTIC",
+    "new_url": "/search/?q=ANTIBIOTIC"
+   }
+  ],
+  "antimicrobial-peptides-which-attack-pathogens-are-increased-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for cathelicidin",
+    "new_url": "/search/?q=cathelicidin"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Antimicrobial Peptides \"",
+    "new_url": "/search/?q=%22Antimicrobial+Peptides+%22"
+   }
+  ],
+  "arthritic-children-have-low-vitamin-d-84-percent-of-the-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “Juvenile idiopathic arthritis” OR “Juvenile Rheumatoid Arthritis”",
+    "new_url": "/search/?q=%22Juvenile+idiopathic+arthritis%22+OR+%22Juvenile+Rheumatoid+Arthritis%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"IDOPATHIC ARTHRITIS\"",
+    "new_url": "/search/?q=%22IDOPATHIC+ARTHRITIS%22"
+   }
+  ],
+  "assisted-reproduction-might-be-aided-by-vitamin-d-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Assisted reproduction\"",
+    "new_url": "/search/?q=%22Assisted+reproduction%22"
+   }
+  ],
+  "atherogenesis-atherosclerosis-and-vitamin-d-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Atherogenesis OR atherosclerosis",
+    "new_url": "/search/?q=Atherogenesis+OR+atherosclerosis"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hardening arteries",
+    "new_url": "/search/?q=hardening+arteries"
+   }
+  ],
+  "atrial-fibrillation-associated-with-lower-levels-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"atrial fibrilation\"",
+    "new_url": "/search/?q=%22atrial+fibrilation%22"
+   }
+  ],
+  "atrial-fibrillation-reduced-with-modest-vitamin-d-levels-did-not-consider-magnesium": [
+   {
+    "target": "search-results",
+    "text": "(Arrhythmia OR “atrial fibrillation”)  AND Magnesium",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22%29+Magnesium"
+   }
+  ],
+  "australian-shade-audits-finds-uv-typically-reduced-by-only-2x-to-8x": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SHADE",
+    "new_url": "/search/?q=SHADE"
+   }
+  ],
+  "autism-vitamin-d-and-serotonin-patrick-interview-by-mercola": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for autism serotonin",
+    "new_url": "/search/?q=autism+serotonin"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEROTONIN",
+    "new_url": "/search/?q=SEROTONIN"
+   }
+  ],
+  "autoimmune-diseases-and-over-active-t-cells-which-are-deactivated-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"T-CELL\"",
+    "new_url": "/search/?q=%22T-CELL%22"
+   }
+  ],
+  "autoimmune-system-dendric-cells-and-active-vitamin-d-technical": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for \"Dendritic Cell\"",
+    "new_url": "/search/?q=%22Dendritic+Cell%22"
+   }
+  ],
+  "bacterial-vaginosis-reduced-10-times-by-2000-iu-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for VAGINOSIS",
+    "new_url": "/search/?q=VAGINOSIS"
+   }
+  ],
+  "bariatric-surgery-problems-associated-with-season-latitude-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"bariatric surgery\" OR \"gastric bypass\"",
+    "new_url": "/search/?q=%22bariatric+surgery%22+OR+%22gastric+bypass%22"
+   }
+  ],
+  "being-on-the-pill-increases-low-vitamin-d-levels-by-about-20-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Contraceptive",
+    "new_url": "/search/?q=Contraceptive"
+   }
+  ],
+  "best-supplements-for-hay-fever-quercetin-which-activates-the-vitamin-d-receptor": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"allergic rhinitis\" or \"hay fever\"",
+    "new_url": "/search/?q=%22allergic+rhinitis%22+or+%22hay+fever%22"
+   }
+  ],
+  "better-total-hip-replacement-if-have-high-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for replacement (hip OR joint OR knee)",
+    "new_url": "/search/?q=replacement+%28hip+OR+joint+OR+knee%29"
+   }
+  ],
+  "bio-engineered-salmon-raised-in-tanks-can-be-sold-in-us-restaurants": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for SALMON",
+    "new_url": "/search/?q=SALMON"
+   }
+  ],
+  "bioavailable-vitamin-d-is-the-same-blacks-and-whites-but-measured-vit-d-is-not": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ALBUMIN",
+    "new_url": "/search/?q=ALBUMIN"
+   }
+  ],
+  "birth-defects-march-of-dimes-global-report-does-not-even-mention-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"BIRTH DEFECTS\"",
+    "new_url": "/search/?q=%22BIRTH+DEFECTS%22"
+   }
+  ],
+  "black-infant-recurrent-wheezing-rate-dropped-from-42-percent-to-31-percent-with--f-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Wheeze",
+    "new_url": "/search/?q=Wheeze"
+   }
+  ],
+  "black-prisoners-have-lower-vitamin-d-than-whites-in-maximum-security": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRISON",
+    "new_url": "/search/?q=PRISON"
+   }
+  ],
+  "blood-in-urine-of-postmenopausal-women-16x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search HEMATURIA in VitaminDWiki",
+    "new_url": "/search/?q=HEMATURIA"
+   }
+  ],
+  "blood-vessels-not-helped-vitamin-d-they-included-low-doses-and-only-4-week-trials": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"endothelial function\"",
+    "new_url": "/search/?q=%22endothelial+function%22"
+   }
+  ],
+  "bone-mineral-density-increased-by-resveratrol-which-activates-the-vitamin-d-receptor-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BMD OR \"Bone Mineral Density\"",
+    "new_url": "/search/?q=BMD+OR+%22Bone+Mineral+Density%22"
+   }
+  ],
+  "bone-strength-increased-when-sow-and-piglets-had-enough-vitamin-d-and-phosphorus": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PHOSPHORUS",
+    "new_url": "/search/?q=PHOSPHORUS"
+   }
+  ],
+  "bones-grow-better-with-high-level-of-magnesium-rat-study": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Magesium and Bone",
+    "new_url": "/search/?q=Magesium+Bone"
+   }
+  ],
+  "boron-and-granulomas-tb-rheumatoid-arthritis-crohns-rheumatic-fever-etc-2015": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Granuloma",
+    "new_url": "/search/?q=Granuloma"
+   }
+  ],
+  "boys-who-were-born-small-for-gestational-age-are-19x-more-likely-to-be-infertile": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki form LBW OR \" Low Birth Weight\"",
+    "new_url": "/search/?q=form+LBW+OR+%22+Low+Birth+Weight%22"
+   }
+  ],
+  "brain-cells-can-probably-activate-vitamin-d-without-liver-or-kidney-at-least-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Google Search for \"paracrine OR autocrine\" in VitaminDWiki",
+    "new_url": "/search/?q=Google+Search+for+%22paracrine+OR+autocrine%22"
+   }
+  ],
+  "brain-lesions-might-be-associated-with-vitamin-d-deficiency": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Annweiler",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "brains-of-seniors-had-60-percent-more-white-matter-abnormalities-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"WHITE MATTER\"",
+    "new_url": "/search/?q=%22WHITE+MATTER%22"
+   }
+  ],
+  "breast-cancer-and-vitamin-d-dr-garland-video": [
+   {
+    "target": "search-results",
+    "text": "All items for Cedric Garland in VitaminDWiki",
+    "new_url": "/search/?q=Cedric+Garland"
+   },
+   {
+    "target": "search-results",
+    "text": "All items for Garland  and \"Breast Cancer\" in VitaminDWiki",
+    "new_url": "/search/?q=Garland+%22Breast+Cancer%22"
+   }
+  ],
+  "breast-feeding-increased-risk-of-low-bone-density-by-24-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Breast Feeding\" BMD",
+    "new_url": "/search/?q=%22Breast+Feeding%22+BMD"
+   }
+  ],
+  "breast-milk-resulted-in-20-ng-of-vitamin-d-for-infant-if-mother-had-taken-5000-iu-daily-rct": [
+   {
+    "target": "search-results",
+    "text": "breastfed OR breastfeeding",
+    "new_url": "/search/?q=breastfed+OR+breastfeeding"
+   }
+  ],
+  "breastfeeding-mother-getting-6400-iu-of-vitamin-d-is-similar-to-infant-getting-400-iu-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HOLLIS OR WAGNER",
+    "new_url": "/search/?q=HOLLIS+OR+WAGNER"
+   }
+  ],
+  "burka-clothing-reduces-vitamin-d-levels-which-causes-pregnancy-problems": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "cadmium-liver-problem-5-x-less-likely-when-vitamin-d-is-greater-than-40-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki fpr CADMIUM",
+    "new_url": "/search/?q=fpr+CADMIUM"
+   }
+  ],
+  "caesarean-emergency-risk-2-x-higher-for-indian-women-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "c-section OR \"caesarean section\" (various spellings)",
+    "new_url": "/search/?q=c-section+OR+%22caesarean+section%22+%28various+spellings%29"
+   }
+  ],
+  "calcitriol-active-vitamin-d-recommended-after-kidney-transplant": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for kidney transplant",
+    "new_url": "/search/?q=kidney+transplant"
+   }
+  ],
+  "can-take-40000-iu-of-vitamin-d-daily-before-prostate-cancer-surgery-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for microrna on VitaminDWiki",
+    "new_url": "/search/?q=microrna"
+   }
+  ],
+  "cancer-after-diagnosis": [
+   {
+    "target": "search-results",
+    "text": "kill some cancer cells",
+    "new_url": "/search/?q=kill+some+cancer+cells"
+   }
+  ],
+  "cancer-and-active-vitamin-d-in-spanish": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for calcitriol cancer",
+    "new_url": "/search/?q=calcitriol+cancer"
+   }
+  ],
+  "cancer-prostate": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BPH",
+    "new_url": "/search/?q=BPH"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Prostate Volume\"",
+    "new_url": "/search/?q=%22Prostate+Volume%22"
+   }
+  ],
+  "cardiometabolic-markers-indicate-that-11-14-ng-is-enough-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for\"insulin resistance\" OR homa-ir",
+    "new_url": "/search/?q=%22insulin+resistance%22+OR+homa-ir"
+   }
+  ],
+  "causes-consequences-and-treatment-of-osteoporosis-in-men": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Bone Strength\"",
+    "new_url": "/search/?q=%22Bone+Strength%22"
+   }
+  ],
+  "cdc-influenza-vaccinations-not-expected-to-work-well-this-year-but-vitamin-d-should": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (vaccine OR vaccination)",
+    "new_url": "/search/?q=vaccine+OR+vaccination"
+   }
+  ],
+  "cerebral-palsy-language-development-significantly-helped-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Most of the 267 Cerebral Palsy articles in VitaminDWiki concern Magnesium",
+    "new_url": "/search/?q=Most+of+the+267+Cerebral+Palsy+articles"
+   }
+  ],
+  "cesarean-associated-with-low-vitamin-d-increased-asthma-obesity-miscarriage-and--h-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "c-section OR \"caesarean section\" (various spellings)",
+    "new_url": "/search/?q=c-section+OR+%22caesarean+section%22+%28various+spellings%29"
+   }
+  ],
+  "cesarean-section-60-percent-increased-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "c-section OR \"caesarean section\"",
+    "new_url": "/search/?q=c-section+OR+%22caesarean+section%22"
+   }
+  ],
+  "chance-of-preterm-birth-is-strongly-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"PRETERM BIRTH\"",
+    "new_url": "/search/?q=%22PRETERM+BIRTH%22"
+   }
+  ],
+  "child-asthma-increased-21-x-by-antibiotics-child-milk-allergy-increased-44-x-by-ppi": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Acid Suppressive  OR PPI",
+    "new_url": "/search/?q=Acid+Suppressive+OR+PPI"
+   }
+  ],
+  "child-died-in-hospital-death-due-to-low-vitamin-d-mother-is-suing-hospital": [
+   {
+    "target": "search-results",
+    "text": "\"SUDDEN INFANT DEATH\" OR SIDS",
+    "new_url": "/search/?q=%22SUDDEN+INFANT+DEATH%22+OR+SIDS"
+   }
+  ],
+  "children-low-on-vitamin-d-were-2x-more-likely-to-have-diarrhea-and-vomiting": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFECTION is title OR text",
+    "new_url": "/search/?q=INFECTION+is+title+OR+text"
+   }
+  ],
+  "children-with-epilepsy-advised-to-take-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Epilepsy OR Seizure in VitaminDWiki",
+    "new_url": "/search/?q=Epilepsy+OR+Seizure"
+   }
+  ],
+  "children-with-mental-disorders-have-somewhat-less-vitamin-d-levels-graph": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for (\"mental health\" OR \"mental illness\")",
+    "new_url": "/search/?q=%22mental+health%22+OR+%22mental+illness%22"
+   }
+  ],
+  "cholesterol": [
+   {
+    "target": "search-results",
+    "text": "HLD OR LDL",
+    "new_url": "/search/?q=HLD+OR+LDL"
+   }
+  ],
+  "cholesterol-is-needed-to-produce-both-vitamin-d-and-cortisol": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Cortisol",
+    "new_url": "/search/?q=Cortisol"
+   }
+  ],
+  "chronic-heart-failure-helped-with-2000-iu-of-vitamin-d-pra-reduced-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for  plasma renin activity  in VitaminDWiki",
+    "new_url": "/search/?q=plasma+renin+activity"
+   }
+  ],
+  "chronic-heart-failure-not-treated-by-vitamin-d-if-dose-size-is-ignored-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "CHF OR {CONGESTIVE HEART FAILURE)",
+    "new_url": "/search/?q=CHF+OR+%7BCONGESTIVE+HEART+FAILURE"
+   }
+  ],
+  "chronic-hepatitis-c-vitamin-d-and-interferon": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYTOKINES",
+    "new_url": "/search/?q=CYTOKINES"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INTERFERON",
+    "new_url": "/search/?q=INTERFERON"
+   }
+  ],
+  "cirrhosis-in-hospital-29-x-less-likely-to-get-need-icu-when-supplemented-with-vitamin-k": [
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "cirrhosis-infection-and-death-both-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "clear-association-between-influenza-and-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Seasonality",
+    "new_url": "/search/?q=Seasonality"
+   }
+  ],
+  "cochrane-reviews-might-be-influenced-by-big-pharma-5-board-members-leave-in-1-day": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COCHRANE",
+    "new_url": "/search/?q=COCHRANE"
+   }
+  ],
+  "cognition-and-vitamin-d-in-elderly-is-10-ng-the-correct-breakpoint": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Annweiler",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "cognition-and-vitamin-d-summary-of-expert-opinions": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Annweiler",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "cognitive": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"WHITE MATTER\"",
+    "new_url": "/search/?q=%22WHITE+MATTER%22"
+   }
+  ],
+  "cognitive-decline-after-traumatic-brain-injury-reduced-by-omega-3-mice": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "comparing-vitamin-d-and-analogs-for-kidney-patients": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Analogs",
+    "new_url": "/search/?q=Analogs"
+   }
+  ],
+  "congestive-heart-failure-in-infants-virtually-cured-by-1000-iu-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaiminDWiki for \"Congestive heart failure\"",
+    "new_url": "/search/?q=%22Congestive+heart+failure%22"
+   }
+  ],
+  "congestive-heart-failure-patients-helped-with-vitamin-d-intervention": [
+   {
+    "target": "search-results",
+    "text": "CHF OR {CONGESTIVE HEART FAILURE)",
+    "new_url": "/search/?q=CHF+OR+%7BCONGESTIVE+HEART+FAILURE"
+   }
+  ],
+  "constipation-magnesium-calcium-and-cofactors": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for pages which contain the word  constipation",
+    "new_url": "/search/?q=pages+which+contain+the+word+constipation"
+   }
+  ],
+  "cooking-reduces-vitamin-d-content-by-about-30-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Baking OR Cooking",
+    "new_url": "/search/?q=Baking+OR+Cooking"
+   }
+  ],
+  "copd-osteoporosis-and-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Glucocorticoids",
+    "new_url": "/search/?q=Glucocorticoids"
+   }
+  ],
+  "covid-19-t-cells-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for treg OR \"t-cell\" in VitaminDWiki",
+    "new_url": "/search/?q=treg+OR+%22t-cell%22"
+   }
+  ],
+  "critically-ill-need-vitamin-d-how-much-and-which-test-to-use-is-tbd": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "crohns-disease-helped-when-vitamin-d-level-raised-above-30-ng-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Martineau (one of the authors)",
+    "new_url": "/search/?q=Martineau+%28one+of+the+authors%29"
+   }
+  ],
+  "cyp2r1-mutations-also-cause-vitamin-d-deficient-rickets": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RESISTANT RICKETS",
+    "new_url": "/search/?q=%22RESISTANT+RICKETS"
+   }
+  ],
+  "cystic-fibrosis-not-statistically-helped-by-1600-iu-of-vitamin-d-cochrane-review-2012": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Cystic \"vitamin K\"",
+    "new_url": "/search/?q=Cystic+%22vitamin+K%22"
+   }
+  ],
+  "daily-headaches-and-musculoskeletal-pain-may-be-due-to-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"musculoskeletal pain\"",
+    "new_url": "/search/?q=%22musculoskeletal+pain%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for osteomalacia",
+    "new_url": "/search/?q=osteomalacia"
+   }
+  ],
+  "daily-magnesium-improved-all-aspects-of-metabolic-profile-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HOMA-IR",
+    "new_url": "/search/?q=HOMA-IR"
+   }
+  ],
+  "dark-skined-mothers-preeclampsia-12x-more-likely-if-gestational-hypertension": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PREECLAMPSIA",
+    "new_url": "/search/?q=PREECLAMPSIA"
+   }
+  ],
+  "decreased-risk-of-preterm-birth-if-have-more-than-36-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"PRETERM BIRTH\"",
+    "new_url": "/search/?q=%22PRETERM+BIRTH%22"
+   }
+  ],
+  "defining-normal-level-of-vitamin-d-need-4000-5000-iu-heaney-spring-2013": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Heaney",
+    "new_url": "/search/?q=Heaney"
+   }
+  ],
+  "dementia-risk-increased-24-x-following-tbi-even-if-had-not-lost-consciousness": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "dementia-risk-increases-with-latitude-less-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for LATITUDE",
+    "new_url": "/search/?q=LATITUDE"
+   }
+  ],
+  "dementia-risk-significantly-increased-if-have-4-chronic-diseases-all-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for dyslipidemia",
+    "new_url": "/search/?q=dyslipidemia"
+   }
+  ],
+  "depression-after-pregnancy-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "postpartum depression",
+    "new_url": "/search/?q=postpartum+depression"
+   }
+  ],
+  "diabetes-type-1-and-2-known-for-since-500-ad-type-15-lada-known-since-1993": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for LADA",
+    "new_url": "/search/?q=LADA"
+   }
+  ],
+  "diabetic-children-often-need-more-than-7000-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DIABETES AND MAGNESIUM",
+    "new_url": "/search/?q=DIABETES+MAGNESIUM"
+   }
+  ],
+  "diabetics-are-27-x-more-likely-to-get-peripheral-neuropathy-if-low-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Peripheral Neuropathy",
+    "new_url": "/search/?q=Peripheral+Neuropathy"
+   }
+  ],
+  "diabetics-with-8ng-less-vitamin-d-had-a-50-percent-increase-chance-of-dhcr7-gene-variation": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DHCR7",
+    "new_url": "/search/?q=DHCR7"
+   }
+  ],
+  "diabetics-with-severely-low-vitamin-d-had-more-inflammatory-cytokines": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYTOKINE",
+    "new_url": "/search/?q=CYTOKINE"
+   }
+  ],
+  "diverticulitis-less-likely-and-less-severe-if-high-level-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for diverticulitis",
+    "new_url": "/search/?q=diverticulitis"
+   }
+  ],
+  "dopamine-increased-with-vitamin-d-supplementation-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DOPAMINE",
+    "new_url": "/search/?q=DOPAMINE"
+   }
+  ],
+  "dopamine-quickly-increased-by-calcitriol-fully-activated-vitamin-d-might-be-a-way-to-treat-adhd": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DOPAMINE",
+    "new_url": "/search/?q=DOPAMINE"
+   }
+  ],
+  "dr-grant-on-vitamin-d-and-mortality-in-vitamindwiki": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"W * grant\" OR \"William grant\"",
+    "new_url": "/search/?q=%22W+%2A+grant%22+OR+%22William+grant%22"
+   }
+  ],
+  "dsm-holder-of-many-vitamin-d-patents-to-make-deficiency-map": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DSM",
+    "new_url": "/search/?q=DSM"
+   }
+  ],
+  "ebooks-on-vitamin-d-by-dr-grimes": [
+   {
+    "target": "search-results",
+    "text": "All pages with GRIMES in VitaminDWiki",
+    "new_url": "/search/?q=All+pages+with+GRIMES"
+   }
+  ],
+  "elderly-3x-more-likely-to-have-30-ng-of-vitamin-d-if-frequently-eat-fatty-fish-eggs": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"fatty fish\"",
+    "new_url": "/search/?q=%22fatty+fish%22"
+   }
+  ],
+  "elderly-lost-extra-half-pound-of-leg-and-arm-muscle-mass-if-low-vitamin-d-6-years": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRAILITY",
+    "new_url": "/search/?q=FRAILITY"
+   }
+  ],
+  "elderly-urinary-urgency-incontinence-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INCONTINENCE",
+    "new_url": "/search/?q=INCONTINENCE"
+   }
+  ],
+  "ensure-a-healthy-pregnancy-and-baby-take-vitamin-d-before-conception": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for c-section OR \"caesarean section\" (various spellings)",
+    "new_url": "/search/?q=c-section+OR+%22caesarean+section%22+%28various+spellings%29"
+   },
+   {
+    "target": "search-results",
+    "text": "postpartum depression",
+    "new_url": "/search/?q=postpartum+depression"
+   }
+  ],
+  "epilepsy-seizures-reduced-by-40-percent-after-vitamin-d-levels-normalized": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEIZURES",
+    "new_url": "/search/?q=SEIZURES"
+   }
+  ],
+  "ethical-quandary-give-vitamin-d-to-all-in-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for UNETHICAL",
+    "new_url": "/search/?q=UNETHICAL"
+   }
+  ],
+  "even-small-amounts-of-uvb-result-in-increased-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MacKenzie and UV",
+    "new_url": "/search/?q=MacKenzie+UV"
+   }
+  ],
+  "excess-body-hair-in-women-hirsutism-not-much-evidence-that-vitamin-d-helps": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"polycystic ovary syndrome\" OR PCOS",
+    "new_url": "/search/?q=%22polycystic+ovary+syndrome%22+OR+PCOS"
+   }
+  ],
+  "extremely-low-vitamin-d-in-mother-early-birth-and-low-weight-in-children-mortality-in-mice": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   }
+  ],
+  "far-fewer-lower-respiratory-tract-infections-at-36-months-if-good-vitamin-d-during-pregnancy": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"lower respiratory tract infection\"",
+    "new_url": "/search/?q=%22lower+respiratory+tract+infection%22"
+   }
+  ],
+  "fast-blood-flow-68-x-more-likely-if-high-vitamin-d-and-high-vitamin-k": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   VERMEER",
+    "new_url": "/search/?q=VERMEER"
+   }
+  ],
+  "fatigue-reduced-by-a-single-dose-of-vitamin-d-100000-iu-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"CHRONIC FATIGUE\"",
+    "new_url": "/search/?q=%22CHRONIC+FATIGUE%22"
+   }
+  ],
+  "fatty-liver-disease-associated-with-low-level-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "fda-decided-to-double-vitamin-d-in-milk-after-talking-4-times-with-by-dr-matthews": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MATTHEWS",
+    "new_url": "/search/?q=MATTHEWS"
+   }
+  ],
+  "fertility-in-both-women-and-men-improves-with-more-vitamin-d-but-less-than-50-ng-for-men": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “U SHAPED”",
+    "new_url": "/search/?q=%22U+SHAPED%22"
+   }
+  ],
+  "fewer-complications-following-revision-hip-and-knee-arthroplasty-in-patients-wit-itamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (Hip OR Knee) Arthroplasty",
+    "new_url": "/search/?q=Hip+OR+Knee%29+Arthroplasty"
+   }
+  ],
+  "fewer-pre-term-births-after-pollution-reduction-vitamin-d-not-mentioned": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRE-TERM OR PREMATURE",
+    "new_url": "/search/?q=PRE-TERM+OR+PREMATURE"
+   }
+  ],
+  "fewer-respiratory-infections-if-optimal-level-of-vitamin-d-more-than-47-ng": [
+   {
+    "target": "search-results",
+    "text": "Search \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "fewer-white-blood-cells-needed-to-deal-with-infection-when-higher-levels-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Eosinophil",
+    "new_url": "/search/?q=Eosinophil"
+   }
+  ],
+  "first-episode-psychosis-associated-with-a-33-percent-lower-vitamin-d-in-3-races": [
+   {
+    "target": "search-results",
+    "text": "Search Psychosis in VitaminDWiki",
+    "new_url": "/search/?q=Psychosis"
+   }
+  ],
+  "food-allergies-6-times-higher-in-south-australia-2009": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CARMARGO",
+    "new_url": "/search/?q=CARMARGO"
+   }
+  ],
+  "food-allergies-are-associated-with-vitamin-d-thru-genes-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   \"IL-4\"",
+    "new_url": "/search/?q=%22IL-4%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   \"IL-13\"",
+    "new_url": "/search/?q=%22IL-13%22"
+   }
+  ],
+  "food-sources-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for EGGS",
+    "new_url": "/search/?q=EGGS"
+   }
+  ],
+  "frailty-and-vitamin-d-with-influence-diagram-miller": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Frailty",
+    "new_url": "/search/?q=Frailty"
+   }
+  ],
+  "frailty-can-be-avoided-vitamin-d-is-one-of-the-ways": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Frailty",
+    "new_url": "/search/?q=Frailty"
+   }
+  ],
+  "frailty-risk-increases-12-percent-for-every-10-ng-less-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRAILITY",
+    "new_url": "/search/?q=FRAILITY"
+   }
+  ],
+  "frequent-miscarriage-associated-with-both-lower-vitamin-d-and-poor-vitamin-d-receptor": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDiiki for MISCARRIAGE  OR \"Spontaneous abortion\"",
+    "new_url": "/search/?q=VitaminDiiki+for+MISCARRIAGE+OR+%22Spontaneous+abortion%22"
+   }
+  ],
+  "fructose-high-fructose-corn-syrup-consumes-2x-more-magnesium-than-sugar": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HFCS OR \"HIGH FRUCTOSE CORN SYRUP\"",
+    "new_url": "/search/?q=HFCS+OR+%22HIGH+FRUCTOSE+CORN+SYRUP%22"
+   }
+  ],
+  "gastric-bypass-reduces-vitamin-d-by-at-least-25-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"bariatric surgery\" OR \"gastric bypass\"",
+    "new_url": "/search/?q=%22bariatric+surgery%22+OR+%22gastric+bypass%22"
+   }
+  ],
+  "gc-and-cyp2r1-genes-associated-with-higher-summer-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Google search VitaminDWiki for CYP2R1",
+    "new_url": "/search/?q=Google+search+VitaminDWiki+for+CYP2R1"
+   }
+  ],
+  "gc-genotypes-associated-with-lower-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search for  DHCR7 in VitaminDWiki",
+    "new_url": "/search/?q=DHCR7"
+   }
+  ],
+  "gene-differences-can-result-in-14-ng-difference-in-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "GC gene",
+    "new_url": "/search/?q=GC+gene"
+   }
+  ],
+  "genes-and-different-vitamin-d-related-substances-in-the-skin": [
+   {
+    "target": "search-results",
+    "text": "Search for Photo-products on VitaminDWiki",
+    "new_url": "/search/?q=Photo-products"
+   }
+  ],
+  "genes-cyp2r1-and-gc-which-restrict-the-amount-of-vitamin-d-which-gets-into-bloodstream": [
+   {
+    "target": "search-results",
+    "text": "GC gene",
+    "new_url": "/search/?q=GC+gene"
+   }
+  ],
+  "genetics": [
+   {
+    "target": "search-results",
+    "text": "DHCR7",
+    "new_url": "/search/?q=DHCR7"
+   },
+   {
+    "target": "search-results",
+    "text": "epigenome OR epigenetics",
+    "new_url": "/search/?q=epigenome+OR+epigenetics"
+   },
+   {
+    "target": "search-results",
+    "text": "Telomere",
+    "new_url": "/search/?q=Telomere"
+   }
+  ],
+  "germans-like-many-other-europeans-are-vitamin-d-insufficient-only-12-percent-hav-than-30-ng-2015": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for GERMANY",
+    "new_url": "/search/?q=GERMANY"
+   }
+  ],
+  "gestational-diabetes-reduced-40-percent-by-5000-iu-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "gestational diabetes\"",
+    "new_url": "/search/?q=gestational+diabetes%22"
+   }
+  ],
+  "gestational-diabetes-vitamin-d-and-calcium-provided-huge-benefits-rct": [
+   {
+    "target": "search-results",
+    "text": "gestational diabetes\"",
+    "new_url": "/search/?q=gestational+diabetes%22"
+   }
+  ],
+  "global-sperm-count-dropped-by-59-percent-in-40-years-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SPERM QUALITY",
+    "new_url": "/search/?q=SPERM+QUALITY"
+   }
+  ],
+  "great-vitamin-d-webinar-for-doctors-plotnikoff": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Plotnikoff",
+    "new_url": "/search/?q=Plotnikoff"
+   }
+  ],
+  "growing-pains-reduced-60-percent-by-monthly-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"GROWING PAINS\"",
+    "new_url": "/search/?q=%22GROWING+PAINS%22"
+   }
+  ],
+  "growth-hormone-increased-height-of-children-more-if-higher-levels-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “GROWTH HORMONE”",
+    "new_url": "/search/?q=%22GROWTH+HORMONE%22"
+   }
+  ],
+  "growth-hormone-problem-acromegaly-more-likely-if-vitamin-d-gene-problems": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"GROWTH HORMONE\"",
+    "new_url": "/search/?q=%22GROWTH+HORMONE%22"
+   }
+  ],
+  "growth-hormone-treatment-raised-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “GROWTH HORMONE”",
+    "new_url": "/search/?q=%22GROWTH+HORMONE%22"
+   }
+  ],
+  "growth-hormone-treatment-raised-vitamin-d-levels-by-16-ng-2018": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"growth hormone\"",
+    "new_url": "/search/?q=%22growth+hormone%22"
+   }
+  ],
+  "gut": [
+   {
+    "target": "search-results",
+    "text": "\"celiac disease\" OR CD",
+    "new_url": "/search/?q=%22celiac+disease%22+OR+CD"
+   }
+  ],
+  "half-of-obese-children-had-fatty-liver-and-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "hay-fever-allergic-rhinitis-risk-reduced-20-percent-for-each-100-iu-of-vitamin-d-early-pregnancy": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"allergic rhinitis\" or \"hay fever\"",
+    "new_url": "/search/?q=%22allergic+rhinitis%22+or+%22hay+fever%22"
+   }
+  ],
+  "hay-fever-treated-by-vitamin-d-50000-iu-weekly-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"allergic rhinitis\" OR \"hay fever\"",
+    "new_url": "/search/?q=%22allergic+rhinitis%22+OR+%22hay+fever%22"
+   }
+  ],
+  "health-care-costs-in-us-are-increasing-infographics-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "health-problems-and-vitamin-d-association-prevention-and-treatment": [
+   {
+    "target": "search-results",
+    "text": "Gestational Diabetes",
+    "new_url": "/search/?q=Gestational+Diabetes"
+   }
+  ],
+  "heart-failure-among-137-seniors-12x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CHF or \"HEART FAILURE\"",
+    "new_url": "/search/?q=CHF+or+%22HEART+FAILURE%22"
+   }
+  ],
+  "heart-problems-such-as-afib-related-to-little-magnesium-omega-3-vitamin-d-getting-to-tissues": [
+   {
+    "target": "search-results",
+    "text": "(Arrhythmia OR “atrial fibrillation”)  AND Magnesium",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22%29+Magnesium"
+   }
+  ],
+  "heavier-babies-do-better-in-school-perhaps-more-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   }
+  ],
+  "hemodialysis-not-helped-by-weekly-vitamin-d2-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DIALYSIS",
+    "new_url": "/search/?q=DIALYSIS"
+   }
+  ],
+  "hepatitis-b-clinical-event-was-2x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"hepatitis B\"",
+    "new_url": "/search/?q=%22hepatitis+B%22"
+   }
+  ],
+  "hepatitis-b-virus-might-be-treated-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"hepatitis B\"",
+    "new_url": "/search/?q=%22hepatitis+B%22"
+   }
+  ],
+  "hepatitis-c-non-alcoholic-fatty-liver-disease-and-vitamin-d-deficiency": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "high-blood-pressure-during-pregnancy-preeclampsia-associated-with-low-vitamin-d-c-section": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "high-fructose-diet-slows-recovery-from-brain-injury-tbi-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "high-risk-of-extremely-premature-birth-if-high-bmi-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "higher-air-pollution-associated-with-7-ng-lower-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for pollution",
+    "new_url": "/search/?q=pollution"
+   }
+  ],
+  "higher-vitamin-d-and-2x-higher-testosterone-in-summer-than-winter": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (estrogen OR testosterone) sports",
+    "new_url": "/search/?q=estrogen+OR+testosterone%29+sports"
+   }
+  ],
+  "higher-vitamin-d-levels-associated-with-health-and-lower-risk-of-atrial-fibrillation": [
+   {
+    "target": "search-results",
+    "text": "Arrhythmia OR “atrial fibrillation”",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22"
+   },
+   {
+    "target": "search-results",
+    "text": "(Arrhythmia OR “atrial fibrillation”)  AND Magnesium",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22%29+Magnesium"
+   }
+  ],
+  "hip-fracture-25-times-more-likely-if-poor-vitamin-d-binding-protein-gene": [
+   {
+    "target": "search-results",
+    "text": "GC gene",
+    "new_url": "/search/?q=GC+gene"
+   }
+  ],
+  "hospital-acquired-infections-3x-more-likely-after-gastric-bypass-if-less-than-30-ng-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"hospital acquired infection\" OR HAI",
+    "new_url": "/search/?q=%22hospital+acquired+infection%22+OR+HAI"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEPSISI",
+    "new_url": "/search/?q=SEPSISI"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"gastric bypass\"",
+    "new_url": "/search/?q=%22gastric+bypass%22"
+   }
+  ],
+  "hospital-acquired-pneumonia-treated-by-vitamin-d-if-person-was-deficient-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for community pneumonia",
+    "new_url": "/search/?q=community+pneumonia"
+   }
+  ],
+  "hospital-icu-added-high-dose-vitamin-d-malpractice-lawsuit-costs-dropped-from-26-dollars-to-zero": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MATTHEWS",
+    "new_url": "/search/?q=MATTHEWS"
+   }
+  ],
+  "how-vitamin-d-helps-exercise-igf-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for IGF OR \"Insulin-Like Growth Factor\"",
+    "new_url": "/search/?q=IGF+OR+%22Insulin-Like+Growth+Factor%22"
+   }
+  ],
+  "human-grown-hormone-igf1-in-seniors-greatly-increased-with-7000-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for IGF",
+    "new_url": "/search/?q=IGF"
+   }
+  ],
+  "huntington-disease-patients-also-have-low-levels-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Huntington disease\"",
+    "new_url": "/search/?q=%22Huntington+disease%22"
+   }
+  ],
+  "hydrochlorothiazide-might-be-a-problem-when-getting-lots-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki forhypercalcemia",
+    "new_url": "/search/?q=forhypercalcemia"
+   }
+  ],
+  "hypertension-associated-with-genes-which-reduce-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DHCR7",
+    "new_url": "/search/?q=DHCR7"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hypertension (CYP2r1 OR DHCR7)",
+    "new_url": "/search/?q=hypertension+%28CYP2r1+OR+DHCR7%29"
+   }
+  ],
+  "hypertension-gene-expression-reduced-by-high-dose-vitamin-d-hypertensive-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hypertension (CYP2r1 OR DHCR7)",
+    "new_url": "/search/?q=hypertension+%28CYP2r1+OR+DHCR7%29"
+   }
+  ],
+  "hypothesis-chronic-headache-and-musculoskeletal-pain-both-result-from-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki: headache muscular",
+    "new_url": "/search/?q=headache+muscular"
+   }
+  ],
+  "hypothesis-excess-phosophorus-lowers-level-of-active-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Phosphorus on VitaminDWiki",
+    "new_url": "/search/?q=Phosphorus"
+   }
+  ],
+  "hypothesis-gait-speed-and-mental-health-both-poor-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"GAIT SPEED\" MENTAL",
+    "new_url": "/search/?q=%22GAIT+SPEED%22+MENTAL"
+   }
+  ],
+  "hypothesis-low-vitamin-d-level-may-indicate-calcium-deficiency-masterjohn-ii": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Masterjohn",
+    "new_url": "/search/?q=Masterjohn"
+   }
+  ],
+  "hypothesis-metabolic-disease-is-due-to-tissue-renin-angiotensin-systems": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Renin-Angiotensin",
+    "new_url": "/search/?q=Renin-Angiotensin"
+   }
+  ],
+  "hypothesis-reduced-circadian-rhythms-not-vitamin-d-nor-melatonin-is-the-risk-fac-health-problems": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MELATONIN",
+    "new_url": "/search/?q=MELATONIN"
+   }
+  ],
+  "hypothesis-vitamin-d-deficiency-is-due-to-malfunctioning-renin-angiotensin-system": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Renin-Angiotensin",
+    "new_url": "/search/?q=Renin-Angiotensin"
+   }
+  ],
+  "hypothesis-vitamin-d-maintains-health-by-stabilizing-ros-and-ca2-signaling": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ROS OR CA2",
+    "new_url": "/search/?q=ROS+OR+CA2"
+   }
+  ],
+  "hypothesis-vitamin-k-will-reduce-prostate-blood-vessel-problems": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   \"VARICOSE VEINS\"",
+    "new_url": "/search/?q=%22VARICOSE+VEINS%22"
+   }
+  ],
+  "ibd-helped-by-vitamin-d-but-reluctant-to-state-who-helped-in-what-form-and-how-much-review": [
+   {
+    "target": "search-results",
+    "text": "\"inflammatory bowel disease\" OR \"inflammatory bowel symptom\"",
+    "new_url": "/search/?q=%22inflammatory+bowel+disease%22+OR+%22inflammatory+bowel+symptom%22"
+   }
+  ],
+  "ibd-more-likely-in-areas-with-low-uv-and-thus-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "\"inflammatory bowel disease\" OR \"inflammatory bowel symptom\"",
+    "new_url": "/search/?q=%22inflammatory+bowel+disease%22+OR+%22inflammatory+bowel+symptom%22"
+   }
+  ],
+  "icu-death-2x-more-likely-if-low-vitamin-d-sensitivity-and-selectivity-chart": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "icu-patients-with-pneumonia-stay-7-days-longer-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search pneumoma in VitaminDWiki",
+    "new_url": "/search/?q=pneumoma"
+   }
+  ],
+  "if-have-brca1-breast-cancer-gene-instead-of-double-mastectomy-get-40ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BRCA1",
+    "new_url": "/search/?q=BRCA1"
+   }
+  ],
+  "immune-system-is-helped-by-vitamin-d-via-dendritic-cells": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYTOKINE",
+    "new_url": "/search/?q=CYTOKINE"
+   },
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for \"Dendritic Cell\"",
+    "new_url": "/search/?q=%22Dendritic+Cell%22"
+   }
+  ],
+  "immunity": [
+   {
+    "target": "search-results",
+    "text": "Search for treg OR \"t-cell\" in VitaminDWiki",
+    "new_url": "/search/?q=treg+OR+%22t-cell%22"
+   }
+  ],
+  "important-interactions-between-the-liver-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"FATTY LIVER\"",
+    "new_url": "/search/?q=%22FATTY+LIVER%22"
+   }
+  ],
+  "increased-mortality-associated-with-low-vitamin-d-genes": [
+   {
+    "target": "search-results",
+    "text": "DHCR7",
+    "new_url": "/search/?q=DHCR7"
+   },
+   {
+    "target": "search-results",
+    "text": "CPY27A1",
+    "new_url": "/search/?q=CPY27A1"
+   },
+   {
+    "target": "search-results",
+    "text": "GG  and GENE but not Schartz",
+    "new_url": "/search/?q=GG+GENE+but+not+Schartz"
+   },
+   {
+    "target": "search-results",
+    "text": "GC gene",
+    "new_url": "/search/?q=GC+gene"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for epigenome OR epigenetics",
+    "new_url": "/search/?q=epigenome+OR+epigenetics"
+   }
+  ],
+  "increased-mortality-if-more-than-100-ng-of-vitamin-d-not-much-detail": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "increased-testosterone-and-erectile-function-decreased-weight-with-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"erectile dysfunction\"",
+    "new_url": "/search/?q=%22erectile+dysfunction%22"
+   }
+  ],
+  "increased-vitamin-d-increases-phosphate-as-well-as-calcium": [
+   {
+    "target": "search-results",
+    "text": "Google Site Search for Phosphate  or Phosphorus on VitaminDWiki",
+    "new_url": "/search/?q=Google+Site+Search+for+Phosphate+or+Phosphorus"
+   }
+  ],
+  "increasing-vitamin-d-level-in-blood-failed-to-decrease-fatty-liver-inflammation-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "infant-child": [
+   {
+    "target": "search-results",
+    "text": "Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   },
+   {
+    "target": "search-results",
+    "text": "\"SUDDEN INFANT DEATH\" OR SIDS",
+    "new_url": "/search/?q=%22SUDDEN+INFANT+DEATH%22+OR+SIDS"
+   },
+   {
+    "target": "search-results",
+    "text": "\"BIRTH DEFECTS\"",
+    "new_url": "/search/?q=%22BIRTH+DEFECTS%22"
+   }
+  ],
+  "infant-psychomotor-development-has-a-u-shaped-relationship-with-vitamin-d-cord-blood-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for U SHAPED",
+    "new_url": "/search/?q=U+SHAPED"
+   }
+  ],
+  "inflammation-anemia-in-blacks-8x-more-likely-if-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFLAMMATION ANEMIA",
+    "new_url": "/search/?q=INFLAMMATION+ANEMIA"
+   }
+  ],
+  "inflammation-due-to-house-dust-mite-did-not-change-vitamin-d-levels-in-mice": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"HOUSE DUST MITE",
+    "new_url": "/search/?q=%22HOUSE+DUST+MITE"
+   }
+  ],
+  "inflammation-markers-associated-with-less-than-10-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for cytokine",
+    "new_url": "/search/?q=cytokine"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for interleukin",
+    "new_url": "/search/?q=interleukin"
+   }
+  ],
+  "inflammation-reduction-through-diet-omega-3-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Inflammation and Omega on the same page",
+    "new_url": "/search/?q=Inflammation+Omega+on+the+same+page"
+   }
+  ],
+  "inflammatory-diseases-review-of-vitamin-d-with-many-tables": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Proinflammatory cytokines”",
+    "new_url": "/search/?q=%22Proinflammatory+cytokines%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Agrawal",
+    "new_url": "/search/?q=Agrawal"
+   }
+  ],
+  "influenza-prevented-by-40-ng-levels-or-treated-with-vitamin-d-hammer-50000-iu": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Schwalfenberg",
+    "new_url": "/search/?q=Schwalfenberg"
+   }
+  ],
+  "infographic-of-vitamin-d-foundmyfitness": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFOGRAPHIC",
+    "new_url": "/search/?q=INFOGRAPHIC"
+   }
+  ],
+  "innate-and-adaptive-immune-systems-probably-helped-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANTIMICROBIAL PEPTIDES",
+    "new_url": "/search/?q=ANTIMICROBIAL+PEPTIDES"
+   }
+  ],
+  "interview-of-dr-robert-heaney-md": [
+   {
+    "target": "search-results",
+    "text": "All items with the word Heaney in VitaminDWiki",
+    "new_url": "/search/?q=Heaney"
+   }
+  ],
+  "irritable-bowel-syndrome-social-media-indicates-that-vitamin-d-is-a-good-treatment": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Irritable Bowel Syndrome\" OR IBS",
+    "new_url": "/search/?q=%22Irritable+Bowel+Syndrome%22+OR+IBS"
+   }
+  ],
+  "is-hyd-25ohd-a-better-form-of-vitamin-d-for-some-animals-and-maybe-humans-with-liver-problems": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DSM",
+    "new_url": "/search/?q=DSM"
+   }
+  ],
+  "is-too-much-vitamin-d-bad-possible-causes-and-cures": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “U SHAPED”",
+    "new_url": "/search/?q=%22U+SHAPED%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “J SHAPED”",
+    "new_url": "/search/?q=%22J+SHAPED%22"
+   }
+  ],
+  "is-vitamin-ds-moment-in-the-sun-behind-us-nope": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"chronic obstructive pulmonary disease\"",
+    "new_url": "/search/?q=%22chronic+obstructive+pulmonary+disease%22"
+   }
+  ],
+  "ischemic-stroke-with-low-vitamin-d-resulted-in-larger-lesions": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for LESIONS",
+    "new_url": "/search/?q=LESIONS"
+   }
+  ],
+  "japanese-decided-that-28-ng-mimimum-for-proper-parathyroid-hormone": [
+   {
+    "target": "search-results",
+    "text": "Search PTH in VitaminDWiki",
+    "new_url": "/search/?q=PTH"
+   }
+  ],
+  "joint-replacement-infection-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for replacement (hip OR joint OR knee)",
+    "new_url": "/search/?q=replacement+%28hip+OR+joint+OR+knee%29"
+   }
+  ],
+  "knee-arthroplasty-complications-were-2-x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (Hip OR Knee) Arthroplasty",
+    "new_url": "/search/?q=Hip+OR+Knee%29+Arthroplasty"
+   }
+  ],
+  "knee-joint-space-narrowing-osteoarthritis-15x-worse-with-low-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CARTILAGE",
+    "new_url": "/search/?q=CARTILAGE"
+   }
+  ],
+  "knee-osteoarthritis-23-x-more-likely-to-get-worse-if-low-level-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for knee osteoarthritis",
+    "new_url": "/search/?q=knee+osteoarthritis"
+   }
+  ],
+  "knee-osteoarthritis-32x-more-likely-to-get-worse-if-low-vitamin-d-and-high-pth": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "knee-osteoarthritis-more-painful-if-low-vitamin-d-especially-among-obese": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "knee-osteoarthritis-not-helped-by-vitamin-d-when-you-ignore-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "knee-osteoarthritis-pain-reduced-by-60000-iu-monthly-vitamin-d-following-loading-dose-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "knee-osteoarthritis-radiographic-3x-less-if-have-lots-of-magnesium": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "knee-osteoarthritis-vitamin-d-is-the-4th-best-treatment-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "leprosy-low-vitamin-d-and-poor-vitamin-d-receptor-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for  Cathelicidin",
+    "new_url": "/search/?q=Cathelicidin"
+   }
+  ],
+  "less-sun-less-vitamin-d-more-anaphylaxis-severe-allergic-reaction": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for anaphylaxis",
+    "new_url": "/search/?q=anaphylaxis"
+   }
+  ],
+  "less-sun-means-more-disease-grant-holick-cannell-et-al": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"W * grant\" OR \"William grant\"",
+    "new_url": "/search/?q=%22W+%2A+grant%22+OR+%22William+grant%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DISABILITY",
+    "new_url": "/search/?q=DISABILITY"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"VITAMIN D COUNCIL\"",
+    "new_url": "/search/?q=%22VITAMIN+D+COUNCIL%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Płudowski",
+    "new_url": "/search/?q=P%C5%82udowski"
+   }
+  ],
+  "less-than-18-percent-of-irish-take-vitamin-d-and-76-percent-have-less-than-30-ng": [
+   {
+    "target": "search-results",
+    "text": "Other mentions of Cashman in VitaminDWiki",
+    "new_url": "/search/?q=Other+mentions+of+Cashman"
+   }
+  ],
+  "light-and-vitamins-d-a-c-b1-b2-b3-b9-b12-e": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Vitamin B3",
+    "new_url": "/search/?q=Vitamin+B3"
+   }
+  ],
+  "liver": [
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "liver-cancer-half-as-likely-if-high-level-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"LIVER CANCER\"",
+    "new_url": "/search/?q=%22LIVER+CANCER%22"
+   }
+  ],
+  "liver-cancer-nicely-treated-by-high-dose-vitamin-d-for-16-weeks-early-stage-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"LIVER CANCER\"",
+    "new_url": "/search/?q=%22LIVER+CANCER%22"
+   }
+  ],
+  "liver-failure-in-icu-25x-more-likely-to-die-in-within-six-months-if-very-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for CIRRHOSIS in VitaminDWiki",
+    "new_url": "/search/?q=CIRRHOSIS"
+   }
+  ],
+  "loading-dose-greatly-improves-subsequent-daily-vitamin-d-if-have-liver-fibrosis-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "longer-time-to-fall-to-sleep-in-winter-unless-eat-salmon-vitamin-d-and-omega-3": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for SALMON",
+    "new_url": "/search/?q=SALMON"
+   }
+  ],
+  "lots-of-vitamin-d-supplementation-by-those-with-primary-hyperparathyroidism": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEASONALITY",
+    "new_url": "/search/?q=SEASONALITY"
+   }
+  ],
+  "low-adioponectin-and-low-vitamin-d-both-associated-with-obesity": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Adiponectin",
+    "new_url": "/search/?q=Adiponectin"
+   }
+  ],
+  "low-birth-weight-associated-low-vitamin-d-little-sunshine-in-china-in-this-case": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW"
+   }
+  ],
+  "low-birth-weight-far-more-likely-if-african-american-low-vitamin-d-1997": [
+   {
+    "target": "search-results",
+    "text": "\"low birth weight\" OR LBW OR VLBW OR ELBW",
+    "new_url": "/search/?q=%22low+birth+weight%22+OR+LBW+OR+VLBW+OR+ELBW"
+   }
+  ],
+  "low-testosterone-is-associated-with-levels-higher-than-40-ng-of-vitamin-d-u-shaped": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for U-SHAPED",
+    "new_url": "/search/?q=U-SHAPED"
+   }
+  ],
+  "low-vitamin-d-in-pregnancy-epigenetic-pancreas-problems-in-offspring-mice": [
+   {
+    "target": "search-results",
+    "text": "epigenome OR epigenetics",
+    "new_url": "/search/?q=epigenome+OR+epigenetics"
+   },
+   {
+    "target": "search-results",
+    "text": "Telomere",
+    "new_url": "/search/?q=Telomere"
+   }
+  ],
+  "low-vitamin-d-increased-probability-of-low-birth-weight-by-60-percent-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (Stunting OR “low birth weight” OR LBW )",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for(Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   }
+  ],
+  "low-vitamin-d-not-low-bmd-associated-with-both-breaking-hip-and-upper-body-bone-in-a-fall": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BMD",
+    "new_url": "/search/?q=BMD"
+   }
+  ],
+  "low-vitamin-d-permeates-all-stages-of-psychosis": [
+   {
+    "target": "search-results",
+    "text": "Searchg VitaminDWiki for PSYCHOSIS",
+    "new_url": "/search/?q=Searchg+VitaminDWiki+for+PSYCHOSIS"
+   }
+  ],
+  "lung-asbestos-problems-15-x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ASBESTOS",
+    "new_url": "/search/?q=ASBESTOS"
+   }
+  ],
+  "lung-capacity-vo2max-reduced-in-senior-african-american-women-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"lung capacity\" OR vo2max OR cardiorespiratory",
+    "new_url": "/search/?q=%22lung+capacity%22+OR+vo2max+OR+cardiorespiratory"
+   }
+  ],
+  "lupus": [
+   {
+    "target": "search-results",
+    "text": "PTSD",
+    "new_url": "/search/?q=PTSD"
+   }
+  ],
+  "macula-in-eyes-of-seniors-were-37x-more-likely-to-be-thin-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"macular degeneration\" OR AMD",
+    "new_url": "/search/?q=%22macular+degeneration%22+OR+AMD"
+   }
+  ],
+  "magnesium-update-by-dr-dean": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Dean and Magnesium",
+    "new_url": "/search/?q=Dean+Magnesium"
+   }
+  ],
+  "majority-of-frail-hospital-patients-had-low-vitamin-d-which-did-not-change-with-season-2018": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRAILITY",
+    "new_url": "/search/?q=FRAILITY"
+   }
+  ],
+  "malabsorption-syndromes-and-low-vitamin-d-interesting-behind-6-dollar-paywall": [
+   {
+    "target": "search-results",
+    "text": "\"Ulcerative Colitis\" OR UC",
+    "new_url": "/search/?q=%22Ulcerative+Colitis%22+OR+UC"
+   },
+   {
+    "target": "search-results",
+    "text": "\"celiac disease\" OR CD",
+    "new_url": "/search/?q=%22celiac+disease%22+OR+CD"
+   },
+   {
+    "target": "search-results",
+    "text": "\"inflammatory bowel disease\" OR \"inflammatory bowel symptom\"",
+    "new_url": "/search/?q=%22inflammatory+bowel+disease%22+OR+%22inflammatory+bowel+symptom%22"
+   }
+  ],
+  "male-late-stage-age-related-macular-degeneration-is-strongly-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for AMD OR \"macular degeneration\"",
+    "new_url": "/search/?q=AMD+OR+%22macular+degeneration%22"
+   }
+  ],
+  "malnourished-children-with-low-vitamin-d-were-28-x-more-likely-to-be-stunted": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for STUNTING OR STUNTED",
+    "new_url": "/search/?q=STUNTING+OR+STUNTED"
+   }
+  ],
+  "many-diseases-of-aging-are-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRAILITY",
+    "new_url": "/search/?q=FRAILITY"
+   },
+   {
+    "target": "search-results",
+    "text": "Searcdh VitaminDWiki for \"GAIT SPEED\"",
+    "new_url": "/search/?q=Searcdh+VitaminDWiki+for+%22GAIT+SPEED%22"
+   }
+  ],
+  "many-other-anti-cancer-photoproducts-generated-on-the-skin-in-addition-to-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP OR CYP11A1 OR cytochrome OR CYP7A1 OR CYP7B1 OR CYP39",
+    "new_url": "/search/?q=CYP+OR+CYP11A1+OR+cytochrome+OR+CYP7A1+OR+CYP7B1+OR+CYP39"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PHOTOPRODUCTS",
+    "new_url": "/search/?q=PHOTOPRODUCTS"
+   }
+  ],
+  "many-vitamin-d-articles-and-videos-by-schwalfenberg-in-canada": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Schwalfenberg",
+    "new_url": "/search/?q=Schwalfenberg"
+   }
+  ],
+  "masterjohn-on-relationships-between-vitamin-a-d-and-k": [
+   {
+    "target": "search-results",
+    "text": "Search for Masterjohn in VitaminDWiki",
+    "new_url": "/search/?q=Masterjohn"
+   }
+  ],
+  "maternal-supplementation-vitamin-d-is-an-emerging-topic-lancet": [
+   {
+    "target": "search-results",
+    "text": "Search for (Stunting OR “low birth weight” OR LBW)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW"
+   }
+  ],
+  "mayo-clinic-starting-cancer-rct-using-grossly-inadequate-2000-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for chronic lymphocytic leukemia",
+    "new_url": "/search/?q=chronic+lymphocytic+leukemia"
+   }
+  ],
+  "medicare-now-pays-for-just-one-vitamin-d-test-but-20-ct-scans-for-smokers": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"VITAMIN C\" (SMOKE OR SMOKING)",
+    "new_url": "/search/?q=%22VITAMIN+C%22+%28SMOKE+OR+SMOKING%29"
+   }
+  ],
+  "meningitis-and-other-brain-infections-should-be-prevented-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for meningitis",
+    "new_url": "/search/?q=meningitis"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"bacterial infection\"",
+    "new_url": "/search/?q=%22bacterial+infection%22"
+   }
+  ],
+  "micronutrients-methylation-epigenetics-longevity-podcast-by-rhonda-patrick-and-tim-ferriss": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for METHYLATION",
+    "new_url": "/search/?q=METHYLATION"
+   }
+  ],
+  "migration-to-northern-latitudes-enabled-by-mutation-of-gene-dhcr7-resulting-in-more-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for DHCR7 in VitaminDWiki",
+    "new_url": "/search/?q=DHCR7"
+   }
+  ],
+  "mild-traumatic-brain-injury-reduced-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "miscarriage-in-2nd-trimester-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "MISCARRIAGE",
+    "new_url": "/search/?q=MISCARRIAGE"
+   }
+  ],
+  "miscarriage-in-first-trimester-25x-more-likely-if-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MISCARRIAGE",
+    "new_url": "/search/?q=MISCARRIAGE"
+   }
+  ],
+  "more-blood-was-pumped-by-those-getting-800000-iu-of-vitamin-d-after-heart-failure-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Ejection Fraction\"",
+    "new_url": "/search/?q=%22Ejection+Fraction%22"
+   }
+  ],
+  "more-fast-twitch-muscles-iia-are-associated-with-higher-levels-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"FAST TWITCH\"",
+    "new_url": "/search/?q=%22FAST+TWITCH%22"
+   }
+  ],
+  "more-fat-in-liver-associated-with-lower-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "more-hypertension-in-obese-children-with-low-vitamin-d-especially-at-night": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Hypertension and Night",
+    "new_url": "/search/?q=Hypertension+Night"
+   },
+   {
+    "target": "search-results",
+    "text": "Search for VitaminDWiki for \"sleep apnea\"",
+    "new_url": "/search/?q=%22sleep+apnea%22"
+   }
+  ],
+  "more-pain-after-knee-surgery-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for knee and pain",
+    "new_url": "/search/?q=knee+pain"
+   }
+  ],
+  "more-vitamin-d-makes-for-better-health-dissertation-based-on-rotterdam-studies": [
+   {
+    "target": "search-results",
+    "text": "Arrhythmia OR “atrial fibrillation”",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22"
+   },
+   {
+    "target": "search-results",
+    "text": "(Arrhythmia OR “atrial fibrillation”)  AND Magnesium",
+    "new_url": "/search/?q=Arrhythmia+OR+%22atrial+fibrillation%22%29+Magnesium"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VITEZOVA",
+    "new_url": "/search/?q=VITEZOVA"
+   }
+  ],
+  "more-vitamin-k2-needed-by-seniors": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for Vermeer",
+    "new_url": "/search/?q=Vermeer"
+   }
+  ],
+  "moscow-prison-to-install-tanning-beds": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRISON",
+    "new_url": "/search/?q=PRISON"
+   }
+  ],
+  "most-visited-pages-on-vitamindwiki": [
+   {
+    "target": "search-results",
+    "text": "Search Results",
+    "new_url": "/search/?q=Results"
+   }
+  ],
+  "mrsa-inpatient-cost-2x-higher-if-less-than-20-ng-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MRSA",
+    "new_url": "/search/?q=MRSA"
+   }
+  ],
+  "multiple-sclerosis-associated-with-low-vitamin-d-by-b-cells-which-produce-antibodies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for B-cells",
+    "new_url": "/search/?q=B-cells"
+   },
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for IL-6",
+    "new_url": "/search/?q=IL-6"
+   }
+  ],
+  "multiple-sclerosis-incidence-rate-cut-in-half-by-800-iu-of-vitamin-d-in-cod-liver-oil": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COD \"MULTIPLE SCLEROSIS",
+    "new_url": "/search/?q=COD+%22MULTIPLE+SCLEROSIS"
+   }
+  ],
+  "multiple-sclerosis-risk-factors-vitamin-d-parasites-and-ebv-2015": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \" Epstein-Barr virus\"",
+    "new_url": "/search/?q=%22+Epstein-Barr+virus%22"
+   }
+  ],
+  "multiple-sclerosis-risk-increased-if-both-epstein-bar-virus-and-low-sun-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \" Epstein-Barr virus\"",
+    "new_url": "/search/?q=%22+Epstein-Barr+virus%22"
+   }
+  ],
+  "mussels-may-have-an-equivalent-of-2000-iu-of-vitamin-d-per-100-grams": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Calcidiol",
+    "new_url": "/search/?q=Calcidiol"
+   }
+  ],
+  "myasthenia-gravis-score-improved-38-percent-with-just-800-iu-of-vitamin-d-daily": [
+   {
+    "target": "search-results",
+    "text": "All items with Myasthenia gravis in  VitaminDWiki",
+    "new_url": "/search/?q=Myasthenia+gravis"
+   }
+  ],
+  "myopia-boom-still-no-mention-of-vitamin-d-nature": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Myopia",
+    "new_url": "/search/?q=Myopia"
+   }
+  ],
+  "nafld-is-treated-by-vitamin-d-omega-3-curcumin-silymarinm-etc": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "nafld-weakly-associated-with-low-vitamin-d-meta-analysis-2013": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "need-to-adjust-cofactors-if-take-50000-iu-of-vitamin-d-weekly": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Zwart",
+    "new_url": "/search/?q=Zwart"
+   }
+  ],
+  "neonates-were-288-gram-06-lbs-heavier-if-mother-stopped-smoking-while-pregnant": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"birth weight\"",
+    "new_url": "/search/?q=%22birth+weight%22"
+   }
+  ],
+  "neural-tube-defects-of-pregnant-mice-reduced-by-vitamin-d-perhaps-less-folate-needed": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FOLATE OR \"NEURAL TUBE\"",
+    "new_url": "/search/?q=FOLATE+OR+%22NEURAL+TUBE%22"
+   }
+  ],
+  "new-approaches-to-bones-genes-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for RANKL OR LRP5 OR CBS OR CYP24a1",
+    "new_url": "/search/?q=RANKL+OR+LRP5+OR+CBS+OR+CYP24a1"
+   }
+  ],
+  "new-blood-vessels-angiogenesis-is-regulated-by-vitamin-d-2016": [
+   {
+    "target": "search-results",
+    "text": "Angiogenesis",
+    "new_url": "/search/?q=Angiogenesis"
+   }
+  ],
+  "newborn-acute-lower-respiratory-tract-infection-associated-with-low-maternal-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search  for acute lower respiratory tract infection",
+    "new_url": "/search/?q=acute+lower+respiratory+tract+infection"
+   }
+  ],
+  "nice-overview-of-vitamin-d-in-64-slides-glossmann-2013": [
+   {
+    "target": "search-results",
+    "text": "Search for Glossmann on VitaminDWiki",
+    "new_url": "/search/?q=Glossmann"
+   }
+  ],
+  "no-risk-of-hypercalcemia-with-prolonged-10000-iu-of-vitamin-d3": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HYPECALCEMIA",
+    "new_url": "/search/?q=HYPECALCEMIA"
+   }
+  ],
+  "non-alcoholic-fatty-liver-disease-associated-with-low-vitamin-d-independent-of-bmi": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "not-all-vitamin-d-levels-follow-the-season-asthma-rhinitis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"SEASONALLY ADJUSTED\"",
+    "new_url": "/search/?q=%22SEASONALLY+ADJUSTED%22"
+   }
+  ],
+  "obese-need-25-iu-of-vitamin-d-per-kg-to-increase-1-ng-about-34-x-more-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Heaney and Obese",
+    "new_url": "/search/?q=Heaney+Obese"
+   }
+  ],
+  "off-topic-malpractice-costs-around-the-world": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for malpractice",
+    "new_url": "/search/?q=malpractice"
+   }
+  ],
+  "off-topic-statins-associated-with-increased-cataracts-wonder-about-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Statins AND Diabetes",
+    "new_url": "/search/?q=Statins+Diabetes"
+   }
+  ],
+  "omega-3-and-vitamin-d-each-treat-many-mental-health-problems": [
+   {
+    "target": "search-results",
+    "text": "754",
+    "new_url": "/search/?q=754"
+   },
+   {
+    "target": "search-results",
+    "text": "7",
+    "new_url": "/search/?q=7"
+   },
+   {
+    "target": "search-results",
+    "text": "296",
+    "new_url": "/search/?q=296"
+   },
+   {
+    "target": "search-results",
+    "text": "132",
+    "new_url": "/search/?q=132"
+   },
+   {
+    "target": "search-results",
+    "text": "45",
+    "new_url": "/search/?q=45"
+   },
+   {
+    "target": "search-results",
+    "text": "30",
+    "new_url": "/search/?q=30"
+   },
+   {
+    "target": "search-results",
+    "text": "58",
+    "new_url": "/search/?q=58"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"mental illness\" OR “Mental Health\"",
+    "new_url": "/search/?q=%22mental+illness%22+OR+%22Mental+Health%22"
+   }
+  ],
+  "omega-3-for-just-3-months-greatly-reduced-psychosis-for-80-months-rct": [
+   {
+    "target": "search-results",
+    "text": "PSYCHOSIS",
+    "new_url": "/search/?q=PSYCHOSIS"
+   }
+  ],
+  "omega-3-prevents-ptsd-and-some-mood-disorders": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PTSD OR \"Post Traumatic Stress Disorder\"",
+    "new_url": "/search/?q=PTSD+OR+%22Post+Traumatic+Stress+Disorder%22"
+   }
+  ],
+  "optic-neuritis-progession-into-multiple-sclerosis-reduced-68-percent-by-50000-iu-of-vitamin-d-weekly": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"optic neuritis\"",
+    "new_url": "/search/?q=%22optic+neuritis%22"
+   }
+  ],
+  "oral-contraceptives-may-reduce-or-increase-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CONTRACEPTIVES",
+    "new_url": "/search/?q=CONTRACEPTIVES"
+   }
+  ],
+  "osteocalcin-and-vitamin-d-both-are-hormones": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for OSTEOCALCIN",
+    "new_url": "/search/?q=OSTEOCALCIN"
+   }
+  ],
+  "osteomalacia-soft-bones-ricket-in-children-vitamin-d-occurs-87-times-in-pdf-but--in-the-abstract": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Osteomalacia",
+    "new_url": "/search/?q=Osteomalacia"
+   }
+  ],
+  "osteoporosis-due-to-antiepileptic-drugs-placebo-including-vitamin-d-helped-69-pe-lped-70-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for bisphosphonate OR risedronate",
+    "new_url": "/search/?q=bisphosphonate+OR+risedronate"
+   }
+  ],
+  "osteoporosis-is-associated-with-more-than-vitamin-d-genes": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP P450;",
+    "new_url": "/search/?q=CYP+P450%3B"
+   }
+  ],
+  "ovarian-cancer-58-x-more-likely-if-both-low-vitamin-d-and-fok1-gene-change": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Fok1",
+    "new_url": "/search/?q=Fok1"
+   }
+  ],
+  "ovarian-cancer-interplay-of-vitamin-d-signaling-and-mirna-action-2014": [
+   {
+    "target": "search-results",
+    "text": "See also VitaminDWiki \"Ovarian Cancer\"",
+    "new_url": "/search/?q=See+also+VitaminDWiki+%22Ovarian+Cancer%22"
+   }
+  ],
+  "ovarian-cancer-more-likely-to-survive-if-more-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "See also VitaminDWiki \"Ovarian Cancer\"",
+    "new_url": "/search/?q=See+also+VitaminDWiki+%22Ovarian+Cancer%22"
+   }
+  ],
+  "overactive-bladder-32-x-more-likely-if-very-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “URINARY URGENCY” OR “OVERACTIVE BLADDER”",
+    "new_url": "/search/?q=%22URINARY+URGENCY%22+OR+%22OVERACTIVE+BLADDER%22"
+   }
+  ],
+  "overview-alzheimers-cognition-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for dementia anywhere in text",
+    "new_url": "/search/?q=dementia+anywhere+in+text"
+   }
+  ],
+  "overview-dark-skin-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for KD Cashman",
+    "new_url": "/search/?q=KD+Cashman"
+   }
+  ],
+  "overview-gut-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "\"Ulcerative Colitis\" OR UC",
+    "new_url": "/search/?q=%22Ulcerative+Colitis%22+OR+UC"
+   },
+   {
+    "target": "search-results",
+    "text": "\"celiac disease\" OR CD",
+    "new_url": "/search/?q=%22celiac+disease%22+OR+CD"
+   },
+   {
+    "target": "search-results",
+    "text": "diverticulitis",
+    "new_url": "/search/?q=diverticulitis"
+   }
+  ],
+  "overview-hyperparathyroidism-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hyperparathyroidism",
+    "new_url": "/search/?q=hyperparathyroidism"
+   }
+  ],
+  "overview-hypertension-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PREECLAMPSIA",
+    "new_url": "/search/?q=PREECLAMPSIA"
+   },
+   {
+    "target": "search-results",
+    "text": "Search  VitaminDWiki for \"blood pressure\"",
+    "new_url": "/search/?q=%22blood+pressure%22"
+   }
+  ],
+  "overview-influenza-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for flu",
+    "new_url": "/search/?q=flu"
+   }
+  ],
+  "overview-iron-supplements-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hepcidin",
+    "new_url": "/search/?q=hepcidin"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANEMIA & AFRICAN-AMERICAN",
+    "new_url": "/search/?q=ANEMIA+%26+AFRICAN-AMERICAN"
+   }
+  ],
+  "overview-kidney-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Dialysis",
+    "new_url": "/search/?q=Dialysis"
+   }
+  ],
+  "overview-of-rickets-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RESISTANT RICKETS",
+    "new_url": "/search/?q=%22RESISTANT+RICKETS"
+   }
+  ],
+  "overview-tuberculosis-and-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Martineau",
+    "new_url": "/search/?q=Martineau"
+   }
+  ],
+  "pain-chronic": [
+   {
+    "target": "search-results",
+    "text": "\"musculoskeletal pain\"",
+    "new_url": "/search/?q=%22musculoskeletal+pain%22"
+   },
+   {
+    "target": "search-results",
+    "text": "\"chronic fatigue\"",
+    "new_url": "/search/?q=%22chronic+fatigue%22"
+   }
+  ],
+  "pain-of-diabetic-neuropathy-reduced-with-weekly-50000-iu-vitamin-d-ct": [
+   {
+    "target": "search-results",
+    "text": "Peripheral Neuropathy",
+    "new_url": "/search/?q=Peripheral+Neuropathy"
+   }
+  ],
+  "pancreatic-cancer-treatment-by-calcipotriol-a-synthetic-vitamin-d-improves-outcome-by-57-percent": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for calcipotriol",
+    "new_url": "/search/?q=calcipotriol"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for calcipotriol AND pancreatic",
+    "new_url": "/search/?q=calcipotriol+pancreatic"
+   }
+  ],
+  "paricalcitol-quickly-creates-vitamin-d-deficiency-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for paricalcitol",
+    "new_url": "/search/?q=paricalcitol"
+   }
+  ],
+  "patent-application-for-a-skin-cream-which-enhances-production-of-vitamin-d-holick": [
+   {
+    "target": "search-results",
+    "text": "Search for lumisterol OR tachysterol  in VitaminDWiki",
+    "new_url": "/search/?q=lumisterol+OR+tachysterol"
+   }
+  ],
+  "patent-for-combination-of-vitamin-d3-and-calcifediol": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DSM",
+    "new_url": "/search/?q=DSM"
+   }
+  ],
+  "pelvic-floor-muscle-strength-is-low-after-giving-birth-if-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "SearchVitaminDWiki for \"pelvic floor\"",
+    "new_url": "/search/?q=SearchVitaminDWiki+for+%22pelvic+floor%22"
+   }
+  ],
+  "people-more-likely-to-freckle-are-more-likely-to-get-prostate-cancer-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Proxy",
+    "new_url": "/search/?q=Proxy"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Freckle",
+    "new_url": "/search/?q=Freckle"
+   }
+  ],
+  "people-with-gut-problems-are-low-on-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for idb OR celiac OR gut",
+    "new_url": "/search/?q=idb+OR+celiac+OR+gut"
+   }
+  ],
+  "periodontitis-treated-by-4000-iu-of-vitamin-d-pilot-study": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Periodontitis",
+    "new_url": "/search/?q=Periodontitis"
+   }
+  ],
+  "peripheral-arterial-disease-37-x-more-likely-in-diabetics-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "\"Peripheral Artery Disease\"",
+    "new_url": "/search/?q=%22Peripheral+Artery+Disease%22"
+   }
+  ],
+  "peripheral-neuropathy-is-26-times-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Peripheral Neuropathy",
+    "new_url": "/search/?q=Peripheral+Neuropathy"
+   }
+  ],
+  "peripheral-neuropathy-pain-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Peripheral Neuropathy",
+    "new_url": "/search/?q=Peripheral+Neuropathy"
+   }
+  ],
+  "peritoneal-dialysis-nicely-treated-by-active-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for dialysis OR haemodialysis",
+    "new_url": "/search/?q=dialysis+OR+haemodialysis"
+   }
+  ],
+  "personal-stories-of-getting-lots-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for remyelination",
+    "new_url": "/search/?q=remyelination"
+   }
+  ],
+  "pharmacology-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Glossman on VitaminDWiki",
+    "new_url": "/search/?q=Glossman"
+   }
+  ],
+  "physical-function-of-sedentary-seniors-not-helped-by-vitamin-d-for-several-reasons-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRAILITY",
+    "new_url": "/search/?q=FRAILITY"
+   }
+  ],
+  "pms-reduced-by-half-in-girls-who-had-low-levels-of-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"premenstrual syndrome\" OR PMS",
+    "new_url": "/search/?q=%22premenstrual+syndrome%22+OR+PMS"
+   }
+  ],
+  "pneumonia-acquired-in-hospital-3x-more-likely-to-die-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for community pneumonia",
+    "new_url": "/search/?q=community+pneumonia"
+   }
+  ],
+  "pneumonia-and-low-vitamin-d-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for community pneumonia",
+    "new_url": "/search/?q=community+pneumonia"
+   }
+  ],
+  "pneumonia-is-less-frequent-in-people-with-more-than-35-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search pneumoma in VitaminDWiki",
+    "new_url": "/search/?q=pneumoma"
+   }
+  ],
+  "poor-sleep-associated-with-low-vitamin-d-again": [
+   {
+    "target": "search-results",
+    "text": "Sleep Apnea",
+    "new_url": "/search/?q=Sleep+Apnea"
+   }
+  ],
+  "poor-sleep-if-low-vitamin-d-magnesium-or-vitamin-b6-nhanes": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (sleep OR insomnia) Magnesium",
+    "new_url": "/search/?q=sleep+OR+insomnia%29+Magnesium"
+   }
+  ],
+  "poorly-functioning-livers-do-not-process-vitamin-d-calcidiol-is-needed": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "postpartum-depression-7x-more-likely-if-less-than-10-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "postpartum depression",
+    "new_url": "/search/?q=postpartum+depression"
+   }
+  ],
+  "posttraumatic-stress-disorder-5x-more-likely-if-both-low-vitamin-d-and-poor-gene-vdbp": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PTSD OR \"Post Traumatic Stress Disorder\"",
+    "new_url": "/search/?q=PTSD+OR+%22Post+Traumatic+Stress+Disorder%22"
+   }
+  ],
+  "pre-term-birth-3x-more-likely-and-c-section-4x-if-less-than-20-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "pre-term-births-reduced-in-half-if-40-ng-of-vitamin-d-in-3rd-trimester": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRETERM BIRTH",
+    "new_url": "/search/?q=PRETERM+BIRTH"
+   }
+  ],
+  "prebiotics-increased-vitamin-d-in-celiac-disease-patients-gut-friendly-vit-d-also-helps-rct": [
+   {
+    "target": "search-results",
+    "text": "\"celiac disease\" OR CD",
+    "new_url": "/search/?q=%22celiac+disease%22+OR+CD"
+   }
+  ],
+  "prediabetes-15-x-more-likely-to-go-away-if-take-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "prediabetes OR prediabetic",
+    "new_url": "/search/?q=prediabetes+OR+prediabetic"
+   }
+  ],
+  "prediabetes-progression-to-diabetes-25-percent-less-for-every-4-ng-increase-in-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for prediabetes OR prediabetic",
+    "new_url": "/search/?q=prediabetes+OR+prediabetic"
+   }
+  ],
+  "prediabetes-treated-by-vitamin-d-34-ng-3500-iu-per-day-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for prediabetes OR prediabetic",
+    "new_url": "/search/?q=prediabetes+OR+prediabetic"
+   }
+  ],
+  "preeclampsia-2x-more-likely-if-low-vitamin-d-unless-adjust-for-vitamin-d-factors-bmi-skin-color": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "preeclampsia-and-eclampsia-associated-with-lower-vitamin-d-etc": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "preeclampsia-rate-cut-in-half-by-high-level-of-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRE_ECLAMPSIA",
+    "new_url": "/search/?q=PRE_ECLAMPSIA"
+   }
+  ],
+  "preeclampsia-was-prevented-or-treated-by-vitamin-d-in-majority-of-studies-review": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "preemies-25-x-more-likely-to-get-hip-replacement-etc-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"PRETERM BIRTH\"",
+    "new_url": "/search/?q=%22PRETERM+BIRTH%22"
+   }
+  ],
+  "preemies-with-low-vitamin-d-are-14-percent-more-like-to-have-expensive-gut-probl-g-enterocolitis": [
+   {
+    "target": "search-results",
+    "text": "Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   }
+  ],
+  "pregnancy": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Assisted reproduction\"",
+    "new_url": "/search/?q=%22Assisted+reproduction%22"
+   }
+  ],
+  "pregnancy-and-placenta-benefits-of-vitamin-d-2010": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PLACENTA",
+    "new_url": "/search/?q=PLACENTA"
+   }
+  ],
+  "pregnancy-complications-cut-in-half-by-4400-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HOLLIS or WAGNER",
+    "new_url": "/search/?q=HOLLIS+or+WAGNER"
+   }
+  ],
+  "pregnancy-low-vitamin-d-associated-with-many-health-problems-barker-hypothesis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Heaney",
+    "new_url": "/search/?q=Heaney"
+   }
+  ],
+  "premature-infants-need-400-to-800-iu-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Stunting OR “low birth weight” OR LBW OR preemie OR preemies OR preterm",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies+OR+preterm"
+   }
+  ],
+  "prenatal-vitamin-d-is-more-important-than-other-prenatal-vitamins": [
+   {
+    "target": "search-results",
+    "text": "Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "preterm-birth-risk-increased-16-pcnt-if-heat-wave-perhaps-outside-less": [
+   {
+    "target": "search-results",
+    "text": "Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "preterm-births-strongly-related-to-vitamin-d-vitamin-d-receptor-iodine-omega-3-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MISCARRIAGE",
+    "new_url": "/search/?q=MISCARRIAGE"
+   }
+  ],
+  "preterm-infants-more-likely-to-have-vitamin-d-levels-below-20-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "preventing-and-treating-tbi-with-vitamin-d-magnesium-omega-3-zinc-etc-book-2011": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "prison-doctor-on-lack-of-vitamin-d-in-solitary-confinement": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRISON",
+    "new_url": "/search/?q=PRISON"
+   }
+  ],
+  "prisoners-have-very-low-vitamin-d-and-get-tb-influenza-and-depression": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRISON",
+    "new_url": "/search/?q=PRISON"
+   }
+  ],
+  "pro-inflammatory-cytokines-cause-the-74-percent-drop-in-vitamin-d-after-knee-arthroplasty": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Proinflammatory cytokines”",
+    "new_url": "/search/?q=%22Proinflammatory+cytokines%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"knee arthroplasty\"",
+    "new_url": "/search/?q=%22knee+arthroplasty%22"
+   }
+  ],
+  "progesterone-activates-vitamin-d-receptor-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for T-CELL PROGESTRONE",
+    "new_url": "/search/?q=T-CELL+PROGESTRONE"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"T CELL\"",
+    "new_url": "/search/?q=%22T+CELL%22"
+   }
+  ],
+  "progesterone-and-ace2-are-possible-reasons-for-fewer-female-covid-19-deaths": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   }
+  ],
+  "prostate-cancer-in-veterans-more-survivable-when-have-enough-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Peiris",
+    "new_url": "/search/?q=Peiris"
+   }
+  ],
+  "prostate-volume-decreases-with-vitamin-d-supplementation": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"benign prostatic hyperplasia \"",
+    "new_url": "/search/?q=%22benign+prostatic+hyperplasia+%22"
+   }
+  ],
+  "protective-cardiovascular-and-renal-actions-of-vitamin-d-and-sex-hormones": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Estrogen OR progestin OR Estradiol OR testosterone OR Androgens OR DHEA",
+    "new_url": "/search/?q=Estrogen+OR+progestin+OR+Estradiol+OR+testosterone+OR+Androgens+OR+DHEA"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Renal (Estrogen OR progestin OR Estradiol OR testosterone OR Androgens OR DHEA)",
+    "new_url": "/search/?q=Renal+%28Estrogen+OR+progestin+OR+Estradiol+OR+testosterone+OR+Androgens+OR+DHEA%29"
+   }
+  ],
+  "psychiatric-disorders-4x-more-likely-in-teens-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search Psychosis in VitaminDWiki",
+    "new_url": "/search/?q=Psychosis"
+   }
+  ],
+  "quality-of-life": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for QOL OR \"QUALITY OF LIFE\"",
+    "new_url": "/search/?q=QOL+OR+%22QUALITY+OF+LIFE%22"
+   }
+  ],
+  "randomized-controlled-trials-vs-pragmatic-trials-vs-health-insurance-trials-nejm": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PRAGMATIC TRIALS",
+    "new_url": "/search/?q=PRAGMATIC+TRIALS"
+   }
+  ],
+  "rare-diseases-hit-fewer-than-1-in-1500-people-but-1-in-12-people-have-a-rare-dis-in-might-d-help": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (\"rare disease\" OR orphan disease\")",
+    "new_url": "/search/?q=%22rare+disease%22+OR+orphan+disease%22"
+   }
+  ],
+  "recurrent-pregnancy-loss-miscarriage-is-associated-with-low-vitamin-d-in-6-ways": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDiiki for MISCARRIAGE  OR \"Spontaneous abortion\"",
+    "new_url": "/search/?q=VitaminDiiki+for+MISCARRIAGE+OR+%22Spontaneous+abortion%22"
+   }
+  ],
+  "recurrent-urinary-tract-infection-4x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Urinary Tract Infection",
+    "new_url": "/search/?q=Urinary+Tract+Infection"
+   }
+  ],
+  "reduced-knee-osteoarthritis-if-consistently-supplement-with-vitamin-d-for-2-years": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "respiratory-infection-associated-with-vitamin-d-less-than-40-ng": [
+   {
+    "target": "search-results",
+    "text": "Search \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "respiratory-viral-infections-might-be-prevented-by-vitamin-d-supplementation-in--h-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search RTI OR \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=RTI+OR+%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "response-to-vitamin-d-summary-chart-of-8-studies": [
+   {
+    "target": "search-results",
+    "text": "All items with the word Heaney in VitaminDWiki",
+    "new_url": "/search/?q=Heaney"
+   }
+  ],
+  "result-of-5-years-of-vitamin-d-given-to-athletes-in-a-high-school-60-million-in--concussions-etc": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MATTHEWS",
+    "new_url": "/search/?q=MATTHEWS"
+   }
+  ],
+  "rheumatoid-arthritis-synovial-fluid-has-lower-levels-vitamin-d-binding-protein-3-epi": [
+   {
+    "target": "search-results",
+    "text": "Searvch VitaminDWiki for 3-epi-25(OH)D3",
+    "new_url": "/search/?q=Searvch+VitaminDWiki+for+3-epi-25%28OH%29D3"
+   }
+  ],
+  "rickets-in-half-of-premature-births-200-iu-of-vitamin-d-is-enough-rct": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW OR preemie OR preemies)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW+OR+preemie+OR+preemies"
+   }
+  ],
+  "rickets-less-costly-to-prevent-than-to-treat-se-asians-in-uk-2006": [
+   {
+    "target": "search-results",
+    "text": "All pages in VitaminDWiki with Zipitis",
+    "new_url": "/search/?q=All+pages"
+   }
+  ],
+  "risk-a-small-infant-sga-increased-by-9-percent-for-every-ng-lower-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   SGA OR \"small for gestational age\"",
+    "new_url": "/search/?q=SGA+OR+%22small+for+gestational+age%22"
+   }
+  ],
+  "risk-of-colon-cancer-increases-in-mice-with-no-vitamin-d-receptor-in-colon": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Claudin-5,",
+    "new_url": "/search/?q=Claudin-5%2C"
+   }
+  ],
+  "role-of-vitamin-d-in-the-pathogenesis-of-diabetes-holick": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HOLICK DIABETES",
+    "new_url": "/search/?q=HOLICK+DIABETES"
+   }
+  ],
+  "salmon-and-iu-of-vitamin-d-per-100-g-baltic-760-north-sea-360-farmed-200": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for SALMON",
+    "new_url": "/search/?q=SALMON"
+   }
+  ],
+  "sarcopenia-and-non-alcoholic-fatty-liver-disease-vitamin-d-not-mentioned": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for NAFLD OR \"fatty liver”",
+    "new_url": "/search/?q=NAFLD+OR+%22fatty+liver%22"
+   }
+  ],
+  "schizophrenia-veterans-with-low-vitamin-d-more-likely-to-smoke-and-have-ocd-parkinsons": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for OCD OR \"Obsessive-Compulsive Disorder\"",
+    "new_url": "/search/?q=OCD+OR+%22Obsessive-Compulsive+Disorder%22"
+   }
+  ],
+  "sclerodoma-and-vitamin-d-deficiency": [
+   {
+    "target": "search-results",
+    "text": "Search Sclerodema in VitaminDWiki",
+    "new_url": "/search/?q=Sclerodema"
+   }
+  ],
+  "semen-worse-when-vitamin-d-lower-than-20-or-higher-than-50-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “U SHAPED”",
+    "new_url": "/search/?q=%22U+SHAPED%22"
+   }
+  ],
+  "seniors-getting-noon-sun-had-88-percent-chance-of-having-at-least-30-ng-of-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search for Annweiler on VitaminDWiki",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "seniors-having-minimal-vitamin-d-and-vitamin-k-walked-faster": [
+   {
+    "target": "search-results",
+    "text": "Searcdh VitaminDWiki for \"GAIT SPEED\"",
+    "new_url": "/search/?q=Searcdh+VitaminDWiki+for+%22GAIT+SPEED%22"
+   }
+  ],
+  "seniors-like-everyone-else-need-vitamin-d-and-should-avoid-sunburns-2011": [
+   {
+    "target": "search-results",
+    "text": "Search for Glossman on VitaminDWiki",
+    "new_url": "/search/?q=Glossman"
+   }
+  ],
+  "seniors-were-2x-more-likely-to-have-functional-limitation-in-3-years-if-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Frality",
+    "new_url": "/search/?q=Frality"
+   }
+  ],
+  "seniors-with-more-vitamin-d-are-less-light-headed-orthostatic-hypotension-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"ORTHOSTATIC HYPOTENSION\"",
+    "new_url": "/search/?q=%22ORTHOSTATIC+HYPOTENSION%22"
+   }
+  ],
+  "serotonin-regulated-by-vitamin-d-part-1-autism": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for SEROTONIN",
+    "new_url": "/search/?q=SEROTONIN"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for tryptophan",
+    "new_url": "/search/?q=tryptophan"
+   }
+  ],
+  "severe-myopia-associated-with-low-vitamin-d-and-smoking-which-also-reduces-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Myopia",
+    "new_url": "/search/?q=Myopia"
+   }
+  ],
+  "sickle-cell-and-low-vitamin-d-3-presentations": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"sickle cell\"",
+    "new_url": "/search/?q=%22sickle+cell%22"
+   }
+  ],
+  "sickle-cell-children-need-more-than-7000-iu-of-vitamin-d-daily": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"SICKLE CELL\"",
+    "new_url": "/search/?q=%22SICKLE+CELL%22"
+   }
+  ],
+  "sickle-cell-treated-by-vitamin-d-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"sickle cell\"",
+    "new_url": "/search/?q=%22sickle+cell%22"
+   }
+  ],
+  "sids-associated-with-poor-bone-growth-in-infants-rickets-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "\"SUDDEN INFANT DEATH\" OR SIDS",
+    "new_url": "/search/?q=%22SUDDEN+INFANT+DEATH%22+OR+SIDS"
+   }
+  ],
+  "skin-damaged-by-sun-helped-by-vitamin-d-supplementation-pilot-study": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Caspase-14",
+    "new_url": "/search/?q=Caspase-14"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for  CPY24",
+    "new_url": "/search/?q=CPY24"
+   }
+  ],
+  "skin-dark": [
+   {
+    "target": "search-results",
+    "text": "\"Sickle Cell\"",
+    "new_url": "/search/?q=%22Sickle+Cell%22"
+   }
+  ],
+  "skin-fold-thickness-but-not-bmi-associated-with-poor-vitamin-d-receptor-in-han-chinese": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"SKIN FOLD\"",
+    "new_url": "/search/?q=%22SKIN+FOLD%22"
+   }
+  ],
+  "skin-physiology-pathology-and-vitamin-d-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"ATOPIC DERMATITIS\" OR ECZEMA",
+    "new_url": "/search/?q=%22ATOPIC+DERMATITIS%22+OR+ECZEMA"
+   },
+   {
+    "target": "search-results",
+    "text": "Search for Vitiligo",
+    "new_url": "/search/?q=Vitiligo"
+   }
+  ],
+  "skin-whitening-cream-rd-may-cause-blotchy-skin-5000-vitamin-d-can-treat-it-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for Vitiligo",
+    "new_url": "/search/?q=Vitiligo"
+   }
+  ],
+  "sleep-disorders-cured-by-60-80-ng-of-vitamin-d-and-some-b-vitamins": [
+   {
+    "target": "search-results",
+    "text": "Search for Gominak on VitaminDWiki",
+    "new_url": "/search/?q=Gominak"
+   }
+  ],
+  "small-for-gestational-age-birth-was-65x-more-likely-if-mother-was-vitamin-d-deficient": [
+   {
+    "target": "search-results",
+    "text": "(Stunting OR “low birth weight” OR LBW)",
+    "new_url": "/search/?q=Stunting+OR+%22low+birth+weight%22+OR+LBW"
+   }
+  ],
+  "solar-and-nutritional-osteomalacia-soft-bones-at-all-stages-of-life": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Osteomalacia",
+    "new_url": "/search/?q=Osteomalacia"
+   }
+  ],
+  "spinal-cord-injury-outcome-was-better-if-got-vitamin-d-and-progesterone-within-4-hours-rct-2016": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   }
+  ],
+  "spinal-muscular-atrophy-rare-disease-might-be-helped-with-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for other AUTOSOMAL diseases having low vitamin D",
+    "new_url": "/search/?q=other+AUTOSOMAL+diseases+having+low+vitamin+D"
+   }
+  ],
+  "spotty-skin-coloring-vitiligo-treated-by-augmenting-topical-tacrolimus-with-oral-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for vitiligo",
+    "new_url": "/search/?q=vitiligo"
+   }
+  ],
+  "stayed-3-days-longer-in-geriatric-acute-care-unit-if-low-vitamin-d-2013": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Annweiler",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "stroke-recovery-was-aided-by-vitamin-d-and-progesterone-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   }
+  ],
+  "strong-interactions-between-vitamin-d-and-the-gut-microbiota-via-butyrate-and-vdr": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for   BUTYRATE",
+    "new_url": "/search/?q=BUTYRATE"
+   }
+  ],
+  "strong-vitamin-d-deficiency-associations-in-asthma-patients": [
+   {
+    "target": "search-results",
+    "text": "GG  and GENE but not Schartz",
+    "new_url": "/search/?q=GG+GENE+but+not+Schartz"
+   }
+  ],
+  "stronger-bones-if-get-uvb-vitamin-d-when-young-in-storks-as-well": [
+   {
+    "target": "search-results",
+    "text": "Seach VitaminDWiki for “van Leeuwen”",
+    "new_url": "/search/?q=%22van+Leeuwen%22"
+   }
+  ],
+  "sugary-drinks-associated-with-5x-worse-multiple-sclerosis-reduces-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRUCTOSE",
+    "new_url": "/search/?q=FRUCTOSE"
+   }
+  ],
+  "summary-of-vitamin-d-trials-grant": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"W * grant\" OR \"William grant\"",
+    "new_url": "/search/?q=%22W+%2A+grant%22+OR+%22William+grant%22"
+   }
+  ],
+  "sun-avoidance-increases-risk-of-death-by-2x": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Lindqvist",
+    "new_url": "/search/?q=Lindqvist"
+   }
+  ],
+  "sunlight-and-your-health-an-enlightening-perspective-holick-video": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Holick Video",
+    "new_url": "/search/?q=Holick+Video"
+   }
+  ],
+  "sunny-vacations-are-one-of-the-ways-to-raise-vitamin-d-levels": [
+   {
+    "target": "search-results",
+    "text": "Search for \"cod liver\" on VitaminDWiki",
+    "new_url": "/search/?q=%22cod+liver%22"
+   }
+  ],
+  "superbug-clostridium-difficile-47x-more-of-a-problem-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Clostridium difficile\"",
+    "new_url": "/search/?q=%22Clostridium+difficile%22"
+   }
+  ],
+  "surgical-icu-27-x-more-likely-go-home-if-ok-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "surgical-outcomes-are-better-for-higher-levels-of-vitamin-d-systematic-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "surprisethree-different-types-of-vitamin-d-can-activate-the-vitamin-d-receptor": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for  1α,25(OH)2D3",
+    "new_url": "/search/?q=1%CE%B1%2C25%28OH%292D3"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for  24R,25(OH)2D3",
+    "new_url": "/search/?q=24R%2C25%28OH%292D3"
+   }
+  ],
+  "swallowing-problems-dysphagia-in-multiple-sclerosis-and-parkinsons-disease-perhaps-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Gavin Giovannoni",
+    "new_url": "/search/?q=Gavin+Giovannoni"
+   }
+  ],
+  "systematic-reviews-and-vitamin-d-vitamin-d-council": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"systematic review\"",
+    "new_url": "/search/?q=%22systematic+review%22"
+   }
+  ],
+  "t1dm-toll-like-receptors-and-vitamin-d-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Toll-like receptors\"",
+    "new_url": "/search/?q=%22Toll-like+receptors%22"
+   }
+  ],
+  "telomeres-in-boys-were-25-percent-longer-if-9-ng-higher-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Telomere",
+    "new_url": "/search/?q=Telomere"
+   }
+  ],
+  "telomeres-which-extend-life-appear-to-be-extended-by-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Telomere",
+    "new_url": "/search/?q=Telomere"
+   }
+  ],
+  "the-antibiotic-effects-of-vitamin-d-2014": [
+   {
+    "target": "search-results",
+    "text": "Search RTI OR \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=RTI+OR+%22Respiratory+Tract+Infection%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for cathelicidin",
+    "new_url": "/search/?q=cathelicidin"
+   }
+  ],
+  "the-better-sleep-vitamin-vitamin-d-nice-3-dollar-book": [
+   {
+    "target": "search-results",
+    "text": "Sleep Apnea on VitaminDWiki",
+    "new_url": "/search/?q=Sleep+Apnea"
+   }
+  ],
+  "the-earlier-the-better-preconception-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for HEWISON",
+    "new_url": "/search/?q=HEWISON"
+   }
+  ],
+  "the-more-preterm-the-birth-the-lower-the-vitamin-d-level-both-mothers-and-infants": [
+   {
+    "target": "search-results",
+    "text": "Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "the-relationship-between-vitamin-d-deficiency-and-pulmonary-hypertension-2013": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki PULMINARY HYPERTENSION",
+    "new_url": "/search/?q=PULMINARY+HYPERTENSION"
+   }
+  ],
+  "the-role-of-vitamin-d-in-depression-from-a-curious-idea-to-a-therapeutic-option-noabstract": [
+   {
+    "target": "search-results",
+    "text": "Search for Annweiler in VitaminDWiki",
+    "new_url": "/search/?q=Annweiler"
+   }
+  ],
+  "the-role-of-vitamin-d-in-thyroid-diseases": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Thyroid Cancer\"",
+    "new_url": "/search/?q=%22Thyroid+Cancer%22"
+   }
+  ],
+  "the-statin-crestor-dramatically-increases-levels-of-vitamin-d-in-the-blood": [
+   {
+    "target": "search-results",
+    "text": "Search for Glossman on VitaminDWiki",
+    "new_url": "/search/?q=Glossman"
+   }
+  ],
+  "the-sun-provides-more-health-benefit-than-vitamin-d-dr-lucas-podcast": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (\"R LUCAS\" OR \"ROBYN LUCAS\")",
+    "new_url": "/search/?q=%22R+LUCAS%22+OR+%22ROBYN+LUCAS%22"
+   }
+  ],
+  "the-surprising-link-between-vitamin-d-deficiency-and-dementia-not-a-surprise": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for dementia anywhere in text",
+    "new_url": "/search/?q=dementia+anywhere+in+text"
+   }
+  ],
+  "the-vitamin-d-receptor-and-t-cell-function": [
+   {
+    "target": "search-results",
+    "text": "Search for treg OR \"t-cell\" in VitaminDWiki",
+    "new_url": "/search/?q=treg+OR+%22t-cell%22"
+   }
+  ],
+  "the-vitamin-deficiency-signs-that-can-send-you-to-prison": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Calcium carbonate\"",
+    "new_url": "/search/?q=%22Calcium+carbonate%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"acid reflux\"",
+    "new_url": "/search/?q=%22acid+reflux%22"
+   }
+  ],
+  "thin-epidermis-under-skin-cancer-was-thickened-when-vitamin-d-was-raised-to-70-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CPY24",
+    "new_url": "/search/?q=CPY24"
+   }
+  ],
+  "those-with-ulcerative-colitis-and-low-vitamin-d-were-33x-more-likely-to-have-anemia": [
+   {
+    "target": "search-results",
+    "text": "Search for \"Ulcerative Colitis\"",
+    "new_url": "/search/?q=%22Ulcerative+Colitis%22"
+   }
+  ],
+  "too-much-fructose-reduced-both-serum-and-active-vitamin-d-in-rats": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FRUCTOSE",
+    "new_url": "/search/?q=FRUCTOSE"
+   }
+  ],
+  "top-20-vitamin-d-papers-for-2013": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"W * grant\" OR \"William grant\"",
+    "new_url": "/search/?q=%22W+%2A+grant%22+OR+%22William+grant%22"
+   }
+  ],
+  "total-knee-arthroplasty-worse-outcome-if-low-vitamin-d-many-studies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (Hip OR Knee) Arthroplasty",
+    "new_url": "/search/?q=Hip+OR+Knee%29+Arthroplasty"
+   }
+  ],
+  "traumatic-brain-injuries-routinely-treated-by-vitamin-d-omega-3-progesterone-and-gluatmine": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   }
+  ],
+  "traumatic-brain-injury-treated-by-vitamin-d-progesterone-omega-3-and-glutamine": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   }
+  ],
+  "tricyclic-antidepressants-reduce-the-active-but-not-the-normally-measured-form-o-in-d-in-seniors": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Antidepressant",
+    "new_url": "/search/?q=Antidepressant"
+   }
+  ],
+  "tuberculosis-genes-and-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (tuberculosis AND (genes OR genetics OR polymorphism)",
+    "new_url": "/search/?q=tuberculosis+%28genes+OR+genetics+OR+polymorphism%29"
+   }
+  ],
+  "tylenol-associated-with-both-low-vitamin-d-and-autism": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CPY27A1",
+    "new_url": "/search/?q=CPY27A1"
+   }
+  ],
+  "type-1-diabetes-autoimmune-and-vitamin-d-vitamin-d-receptor-and-cathelicidin": [
+   {
+    "target": "search-results",
+    "text": "162 pages in VitaminDWiki have cathelicidin as of Dec 2020",
+    "new_url": "/search/?q=162+pages"
+   }
+  ],
+  "uk-nice-draft-on-vitamin-d-extremely-low-doses-and-levels": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “HEALTHY START”",
+    "new_url": "/search/?q=%22HEALTHY+START%22"
+   }
+  ],
+  "uk-would-save-as-least-636-million-dollars-annually-by-giving-800-iu-vitamin-d-free-to-all-seniors": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COMPLIANCE",
+    "new_url": "/search/?q=COMPLIANCE"
+   }
+  ],
+  "ulcerative-colitis-new-associated-with-lower-free-and-bioavailable-vitamin-d-but-not-total": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for GC OR VDBP",
+    "new_url": "/search/?q=GC+OR+VDBP"
+   }
+  ],
+  "ultraviolet-light-which-produces-vitamin-d-decreased-the-use-of-psoriasis-drugs-for-a-year": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for NARROWBAND",
+    "new_url": "/search/?q=NARROWBAND"
+   }
+  ],
+  "unplanned-c-section-birth-40-percent-less-often-if-sufficient-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "c-section OR \"caesarean section\" (various spellings)",
+    "new_url": "/search/?q=c-section+OR+%22caesarean+section%22+%28various+spellings%29"
+   }
+  ],
+  "upper-respiratory-tract-infection-2x-more-likely-if-vitamin-d-less-than-30-ng": [
+   {
+    "target": "search-results",
+    "text": "Search RTI OR \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=RTI+OR+%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "urgent-need-to-pee-overactive-bladder-in-elderly-men-was-decreased-by-200000-iu-vitamin-d-injection": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Urinary Tract Infection",
+    "new_url": "/search/?q=Urinary+Tract+Infection"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “URINARY URGENCY” OR “OVERACTIVE BLADDER”",
+    "new_url": "/search/?q=%22URINARY+URGENCY%22+OR+%22OVERACTIVE+BLADDER%22"
+   }
+  ],
+  "urinary-tract-infection-in-children-strongly-associated-with-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Urinary tract infection\" OR UTI",
+    "new_url": "/search/?q=%22Urinary+tract+infection%22+OR+UTI"
+   }
+  ],
+  "uv-and-vitamin-d-with-in-vitro-model-phd-wj-olds-2010": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for W. J. Olds",
+    "new_url": "/search/?q=W.+J.+Olds"
+   }
+  ],
+  "uv-better-than-vitamin-d-in-reducing-metabolic-syndrome-in-mice-thesis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for UV and \"Metabolic Syndrome\"",
+    "new_url": "/search/?q=UV+%22Metabolic+Syndrome%22"
+   }
+  ],
+  "uvb-increases-vitamin-d-even-if-poor-kidney-by-changing-cyp27b1-genes-in-skin": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for CYP27A1 KIDNEY",
+    "new_url": "/search/?q=CYP27A1+KIDNEY"
+   }
+  ],
+  "vaccinated-children-had-more-chronic-diseases": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VACCINE",
+    "new_url": "/search/?q=VACCINE"
+   }
+  ],
+  "vaginosis-during-pregnancy-5x-more-likely-if-low-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VAGINOSIS PREGNANCY",
+    "new_url": "/search/?q=VAGINOSIS+PREGNANCY"
+   }
+  ],
+  "variety-of-non-skeletal-vitamin-d-studies-in-special-issue-of-nutrients": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “Nutrients 2013”",
+    "new_url": "/search/?q=%22Nutrients+2013%22"
+   }
+  ],
+  "vascular-calcification-greatly-reduced-by-3-per-week-1000-ug-of-vitamin-k2-mk-7": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for K2 (Calcium OR bone)",
+    "new_url": "/search/?q=K2+%28Calcium+OR+bone%29"
+   }
+  ],
+  "venous-ulcers-healed-4x-faster-with-weekly-50000-iu-vitamin-d-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ulcers skin (both words)",
+    "new_url": "/search/?q=ulcers+skin+%28both+words%29"
+   }
+  ],
+  "very-low-birth-weight-infants-were-ok-with-600-iu-of-vitamin-d-plus-calcium-and-phosphorus": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"VERY LOW BIRTH WEIGHT\"",
+    "new_url": "/search/?q=%22VERY+LOW+BIRTH+WEIGHT%22"
+   }
+  ],
+  "very-poor-follow-thu-with-vitamin-d-testing-and-supplementation-of-obese-children": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for compliance",
+    "new_url": "/search/?q=compliance"
+   }
+  ],
+  "virus-blocking-by-placenta-when-mother-has-enough-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PLACENTA",
+    "new_url": "/search/?q=PLACENTA"
+   }
+  ],
+  "visceral-fat-is-thicker-if-vitamin-d-is-lower": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Visceral",
+    "new_url": "/search/?q=Visceral"
+   }
+  ],
+  "vitamin-a-interferes-with-vitamin-d-and-may-be-the-cause-of-u-shaped-relationships": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Bouscher",
+    "new_url": "/search/?q=Bouscher"
+   }
+  ],
+  "vitamin-b12-treats-traumatic-brain-injury-in-mice": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for TBI OR \"Traumatic Brain Injury\"",
+    "new_url": "/search/?q=TBI+OR+%22Traumatic+Brain+Injury%22"
+   }
+  ],
+  "vitamin-b2-riboflavin-is-needed-to-process-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for riboflavin OR \"vitamin b2\"",
+    "new_url": "/search/?q=riboflavin+OR+%22vitamin+b2%22"
+   }
+  ],
+  "vitamin-c-reduces-liver-inflammation-which-improves-vitamin-d-production": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "vitamin-d-absorption-by-the-gut-is-not-a-passive-process": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for absorption",
+    "new_url": "/search/?q=absorption"
+   }
+  ],
+  "vitamin-d-advocate-dr-matthews-is-now-in-whos-who-marquis": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MATTHEWS",
+    "new_url": "/search/?q=MATTHEWS"
+   }
+  ],
+  "vitamin-d-analogs-25-years-of-trying-to-trying-to-patent-vitamin-d": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ANALOGS",
+    "new_url": "/search/?q=ANALOGS"
+   }
+  ],
+  "vitamin-d-and-autoimmune-thyroid-diseases": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for“Graves' disease” OR “Hashimoto thyroid*” OR “autoimmune thyroid disease”",
+    "new_url": "/search/?q=%22Graves%27+disease%22+OR+%22Hashimoto+thyroid%2A%22+OR+%22autoimmune+thyroid+disease%22"
+   }
+  ],
+  "vitamin-d-and-benign-gynaecological-diseases-short-abstract": [
+   {
+    "target": "search-results",
+    "text": "Search Endometriosis in VitaminDWiki",
+    "new_url": "/search/?q=Endometriosis"
+   }
+  ],
+  "vitamin-d-and-immune-function-review": [
+   {
+    "target": "search-results",
+    "text": "Seach for \"T cells\" in VitaminDWiki",
+    "new_url": "/search/?q=%22T+cells%22"
+   }
+  ],
+  "vitamin-d-and-inflammatory-bowel-disease-review": [
+   {
+    "target": "search-results",
+    "text": "\"inflammatory bowel disease\" OR \"inflammatory bowel symptom\"",
+    "new_url": "/search/?q=%22inflammatory+bowel+disease%22+OR+%22inflammatory+bowel+symptom%22"
+   }
+  ],
+  "vitamin-d-and-its-active-metabolites-deluca": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for History OR Metaboltes",
+    "new_url": "/search/?q=History+OR+Metaboltes"
+   }
+  ],
+  "vitamin-d-and-menopause-a-narrative-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MENOPAUSE",
+    "new_url": "/search/?q=MENOPAUSE"
+   }
+  ],
+  "vitamin-d-and-micrornas-in-bone": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for MicroRNAs  OR miRNAs",
+    "new_url": "/search/?q=MicroRNAs+OR+miRNAs"
+   }
+  ],
+  "vitamin-d-and-ms-als-autism-alzheimers-and-other-nervous-system-diseases-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"amyotrophic lateral sclerosis\" OR ALS",
+    "new_url": "/search/?q=%22amyotrophic+lateral+sclerosis%22+OR+ALS"
+   }
+  ],
+  "vitamin-d-and-multiple-sclerosis-alzheimers-parkinsons-dementia-and-als-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for dementia anywhere in text",
+    "new_url": "/search/?q=dementia+anywhere+in+text"
+   }
+  ],
+  "vitamin-d-and-pancreatic-cancer-risk-no-u-shaped-curve": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for U-SHAPED",
+    "new_url": "/search/?q=U-SHAPED"
+   }
+  ],
+  "vitamin-d-and-peripheral-arterial-disease": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Peripheral Artery Disease\"",
+    "new_url": "/search/?q=%22Peripheral+Artery+Disease%22"
+   }
+  ],
+  "vitamin-d-and-primary-hyperparathyroidism-2011-2016": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for hyperparathyroidism",
+    "new_url": "/search/?q=hyperparathyroidism"
+   }
+  ],
+  "vitamin-d-and-progesterone-are-synergistic-during-pregnancy": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for PROGESTERONE",
+    "new_url": "/search/?q=PROGESTERONE"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for T-CELL PROGESTRONE",
+    "new_url": "/search/?q=T-CELL+PROGESTRONE"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"T CELL\"",
+    "new_url": "/search/?q=%22T+CELL%22"
+   }
+  ],
+  "vitamin-d-and-the-skin-focus-on-a-complex-relationship": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"ATOPIC DERMATITIS\" OR ECZEMA",
+    "new_url": "/search/?q=%22ATOPIC+DERMATITIS%22+OR+ECZEMA"
+   },
+   {
+    "target": "search-results",
+    "text": "Search for Vitiligo",
+    "new_url": "/search/?q=Vitiligo"
+   }
+  ],
+  "vitamin-d-and-vdr-vieth-book-chapter-2017": [
+   {
+    "target": "search-results",
+    "text": "Vieth",
+    "new_url": "/search/?q=Vieth"
+   }
+  ],
+  "vitamin-d-as-a-modifiable-risk-factor-in-critical-illness-english-and-portuguese": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "vitamin-d-athletes-hormones": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for (estrogen OR testosterone) sports",
+    "new_url": "/search/?q=estrogen+OR+testosterone%29+sports"
+   }
+  ],
+  "vitamin-d-augmented-conventional-congestive-heart-failure-treatment-in-perhaps-10-ways-case-reports": [
+   {
+    "target": "search-results",
+    "text": "CHF OR {CONGESTIVE HEART FAILURE)",
+    "new_url": "/search/?q=CHF+OR+%7BCONGESTIVE+HEART+FAILURE"
+   }
+  ],
+  "vitamin-d-beyond-the-bone-webinar": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DSM",
+    "new_url": "/search/?q=DSM"
+   }
+  ],
+  "vitamin-d-bioavailability-state-of-the-art": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for BIO_AVAILABILITY",
+    "new_url": "/search/?q=BIO_AVAILABILITY"
+   }
+  ],
+  "vitamin-d-can-inhibit-enveloped-virus-eg-corona-herpes-bird-flu-epstein-hepatitis-rsv-etc": [
+   {
+    "target": "search-results",
+    "text": "LL-37",
+    "new_url": "/search/?q=LL-37"
+   }
+  ],
+  "vitamin-d-comparing-symptoms-of-hypercalcemia-with-low-magnesium": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki fof CALCEMIA",
+    "new_url": "/search/?q=fof+CALCEMIA"
+   }
+  ],
+  "vitamin-d-compliance-3x-higher-when-children-with-fractures-actually-knew-their-low-vitamin-d-level": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for COMPLIANCE",
+    "new_url": "/search/?q=COMPLIANCE"
+   }
+  ],
+  "vitamin-d-conference-ireland": [
+   {
+    "target": "search-results",
+    "text": "Other mentions of Cashman in VitaminDWiki",
+    "new_url": "/search/?q=Other+mentions+of+Cashman"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ODIN",
+    "new_url": "/search/?q=ODIN"
+   }
+  ],
+  "vitamin-d-deficiency-for-childrens-bones-is-14ng-based-on-pth-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search PTH in VitaminDWiki",
+    "new_url": "/search/?q=PTH"
+   }
+  ],
+  "vitamin-d-deficiency-in-europe-need-at-least-1000-iu-to-get-to-even-20-ng-cashman": [
+   {
+    "target": "search-results",
+    "text": "Other mentions of Cashman in VitaminDWiki",
+    "new_url": "/search/?q=Other+mentions+of+Cashman"
+   }
+  ],
+  "vitamin-d-deficiency-time-for-inaction-question-mark": [
+   {
+    "target": "search-results",
+    "text": "Plotknioff at VitaminDWiki",
+    "new_url": "/search/?q=Plotknioff+at+VitaminDWiki"
+   }
+  ],
+  "vitamin-d-deficiency-varies-widely-with-season-in-young-women-but-not-in-old": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"SEASONALLY ADJUSTED\"",
+    "new_url": "/search/?q=%22SEASONALLY+ADJUSTED%22"
+   }
+  ],
+  "vitamin-d-dosing-weekly-may-be-better-than-daily-video": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for WEEKLY",
+    "new_url": "/search/?q=WEEKLY"
+   }
+  ],
+  "vitamin-d-dr-mccullough-videos-and-transcript": [
+   {
+    "target": "search-results",
+    "text": "256 references in VDW",
+    "new_url": "/search/?q=256+references"
+   }
+  ],
+  "vitamin-d-during-pregnancy-dramatic-changes-in-both-metabolism-and-genes": [
+   {
+    "target": "search-results",
+    "text": "Search for Hollis and Wagner",
+    "new_url": "/search/?q=Hollis+Wagner"
+   }
+  ],
+  "vitamin-d-extends-lifespan-about-60-percent-for-worms-in-a-lab": [
+   {
+    "target": "search-results",
+    "text": "Telomere",
+    "new_url": "/search/?q=Telomere"
+   }
+  ],
+  "vitamin-d-from-animal-increases-6x-when-consider-that-already-processed-by-animal-livers": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Calcidiol",
+    "new_url": "/search/?q=Calcidiol"
+   }
+  ],
+  "vitamin-d-helps-t-cell-and-immune-system-overview": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for T-cell",
+    "new_url": "/search/?q=T-cell"
+   }
+  ],
+  "vitamin-d-helps-women-in-many-ways-review": [
+   {
+    "target": "search-results",
+    "text": "Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   },
+   {
+    "target": "search-results",
+    "text": "\"polycystic ovary syndrome\" OR PCOS",
+    "new_url": "/search/?q=%22polycystic+ovary+syndrome%22+OR+PCOS"
+   },
+   {
+    "target": "search-results",
+    "text": "Search Endometriosis in VitaminDWiki",
+    "new_url": "/search/?q=Endometriosis"
+   }
+  ],
+  "vitamin-d-immunity-and-microbiome": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Robyn Lucas - one of the authors",
+    "new_url": "/search/?q=Robyn+Lucas+-+one+of+the+authors"
+   }
+  ],
+  "vitamin-d-improves-t-cell-immunity-rct": [
+   {
+    "target": "search-results",
+    "text": "Search for treg OR \"t-cell\" in VitaminDWiki",
+    "new_url": "/search/?q=treg+OR+%22t-cell%22"
+   }
+  ],
+  "vitamin-d-in-haematological-disorders-and-malignancies": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for haematological OR haematology",
+    "new_url": "/search/?q=haematological+OR+haematology"
+   }
+  ],
+  "vitamin-d-in-ireland-400-iu-for-child-more-than-3200-iu-by-prescription-only": [
+   {
+    "target": "search-results",
+    "text": "Search for Cashman in VitaminDWiki",
+    "new_url": "/search/?q=Cashman"
+   }
+  ],
+  "vitamin-d-increased-absorption-of-phosphorus-and-calcium-in-steers": [
+   {
+    "target": "search-results",
+    "text": "Google Site Search for Phosphate  or Phosphorus on VitaminDWiki",
+    "new_url": "/search/?q=Google+Site+Search+for+Phosphate+or+Phosphorus"
+   }
+  ],
+  "vitamin-d-increasing-muscle-strength-may-reduce-knee-pain": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Knee Osteoarthritis\"",
+    "new_url": "/search/?q=%22Knee+Osteoarthritis%22"
+   }
+  ],
+  "vitamin-d-infographic-vitamin-d-foods-org-2014": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for INFOGRAPHIC",
+    "new_url": "/search/?q=INFOGRAPHIC"
+   }
+  ],
+  "vitamin-d-intervention-increased-by-20-percent-the-survival-of-critically-ill-patients-rct": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for ICU OR “critical care” OR “intensive care” OR “acute care”",
+    "new_url": "/search/?q=ICU+OR+%22critical+care%22+OR+%22intensive+care%22+OR+%22acute+care%22"
+   }
+  ],
+  "vitamin-d-is-sequestered-in-fat-total-body-adipose-and-liver": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "vitamin-d-levels-around-the-world-dsm-review": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for DSM",
+    "new_url": "/search/?q=DSM"
+   }
+  ],
+  "vitamin-d-limits-inflammation-from-some-foods-advanced-glycation-end-products": [
+   {
+    "target": "search-results",
+    "text": "57 results June 2025",
+    "new_url": "/search/?q=57+results+June+2025"
+   }
+  ],
+  "vitamin-d-may-protect-against-ebola": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for H1N1 (another enveloped virus)",
+    "new_url": "/search/?q=H1N1+%28another+enveloped+virus%29"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “Herpes simplex” OR “cold sore” OR “varicella-zoster” OR Shingles OR cytomegalovirus OR Epstein-Barr OR  “Hepatitis B” OR  retrovirus  OR HIV OR Dengue OR “Yellow fever” OR “Measles” OR Mumps OR  smallpox OR EBOLA",
+    "new_url": "/search/?q=%22Herpes+simplex%22+OR+%22cold+sore%22+OR+%22varicella-zoster%22+OR+Shingles+OR+cytomegalovirus+OR+Epstein-Barr+OR+%22Hepatitis+B%22+OR+retrovirus+OR+HIV+OR+Dengue+OR+%22Yellow+fever%22+OR+%22Measles%22+OR+Mumps+OR+smallpox+OR+EBOLA"
+   }
+  ],
+  "vitamin-d-might-stop-colon-cancer-metastasis-to-liver-cancer": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for metastasis",
+    "new_url": "/search/?q=metastasis"
+   }
+  ],
+  "vitamin-d-needed-after-most-spinal-surgeries-and-before-as-well-2013": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for backpain OR \"back pain\"",
+    "new_url": "/search/?q=backpain+OR+%22back+pain%22"
+   },
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Musculoskeletal Pain",
+    "new_url": "/search/?q=Musculoskeletal+Pain"
+   }
+  ],
+  "vitamin-d-not-associated-with-pad-after-adjusting-for-race-diabetes-and-bmi": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Peripheral Artery Disease\"",
+    "new_url": "/search/?q=%22Peripheral+Artery+Disease%22"
+   }
+  ],
+  "vitamin-d-once-every-two-weeks-is-ok-daily-is-nice-but-not-required": [
+   {
+    "target": "search-results",
+    "text": "breastfed OR breastfeeding",
+    "new_url": "/search/?q=breastfed+OR+breastfeeding"
+   }
+  ],
+  "vitamin-d-osteomalacia-education-in-urdu-via-leaflets-and-dvds": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for OSTEOMALACIA",
+    "new_url": "/search/?q=OSTEOMALACIA"
+   }
+  ],
+  "vitamin-d-probably-important-for-bariatric-surgery": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"BARIATRIC SURGERY\"",
+    "new_url": "/search/?q=%22BARIATRIC+SURGERY%22"
+   }
+  ],
+  "vitamin-d-random-controlled-trials-are-becoming-impossible": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for UNETHICAL",
+    "new_url": "/search/?q=UNETHICAL"
+   }
+  ],
+  "vitamin-d-receptor-activators-such-as-paricalcitol-treat-dialysis-patients-similarly": [
+   {
+    "target": "search-results",
+    "text": "Search ViitaminDWiki for “Vitamin D receptor activator” OR VDRA OR paricalcitol OR “Vitamin D Receptor agonists”",
+    "new_url": "/search/?q=ViitaminDWiki+for+%22Vitamin+D+receptor+activator%22+OR+VDRA+OR+paricalcitol+OR+%22Vitamin+D+Receptor+agonists%22"
+   }
+  ],
+  "vitamin-d-receptor-mutations-might-cause-hereditary-vitamin-d-resistant-rickets": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"RESISTANT RICKETS",
+    "new_url": "/search/?q=%22RESISTANT+RICKETS"
+   }
+  ],
+  "vitamin-d-reduces-fatty-liver-problems-in-rats-fed-a-high-fat-diet": [
+   {
+    "target": "search-results",
+    "text": "Search for Fatty Liver in VitaminDWiki",
+    "new_url": "/search/?q=Fatty+Liver"
+   }
+  ],
+  "vitamin-d-reference-levels-varied-with-race-caliper": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Race OR Ethnic",
+    "new_url": "/search/?q=Race+OR+Ethnic"
+   }
+  ],
+  "vitamin-d-research-dr-heaney-interview-by-dr-mercola": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki forf HEANEY",
+    "new_url": "/search/?q=forf+HEANEY"
+   }
+  ],
+  "vitamin-d-response-time-is-3-6-months-not-much-benefit-in-first-4-months-rct": [
+   {
+    "target": "search-results",
+    "text": "Search \"Respiratory Tract Infection\"",
+    "new_url": "/search/?q=%22Respiratory+Tract+Infection%22"
+   }
+  ],
+  "vitamin-d-webinar-cost-of-pre-term-birth-etc-baggerly": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Pre-term",
+    "new_url": "/search/?q=Pre-term"
+   }
+  ],
+  "vitamin-d-webinars-by-diasorin-2013-2014": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Diasorin",
+    "new_url": "/search/?q=Diasorin"
+   }
+  ],
+  "was-a-healthy-and-avid-runner-can-now-barely-walk-low-vitamin-d-and-tumor-change--gene-july-2018": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for FGF23",
+    "new_url": "/search/?q=FGF23"
+   }
+  ],
+  "what-is-the-optimal-level-of-vitamin-dletter-to-editor-more-than-30-ng": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for “U SHAPED”",
+    "new_url": "/search/?q=%22U+SHAPED%22"
+   }
+  ],
+  "white-matter-hyperintensities-brain-18x-more-likely-if-10-ng-less-vitamin-d-meta-analysis": [
+   {
+    "target": "search-results",
+    "text": "Search for \"White Matter\"",
+    "new_url": "/search/?q=%22White+Matter%22"
+   }
+  ],
+  "who-still-says-mistakenly-says-no-vitamin-d-during-pregnancy-and-only-200-iu-after": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Preeclampsia",
+    "new_url": "/search/?q=Preeclampsia"
+   }
+  ],
+  "why-deficiencies-in-vitamin-d-and-magnesium-are-linked-to-asthma": [
+   {
+    "target": "search-results",
+    "text": "Search of Asthma and Magnesium on same page in VitaminDWiki",
+    "new_url": "/search/?q=of+Asthma+Magnesium+on+same+page"
+   }
+  ],
+  "why-vitamin-d-is-better-than-the-flu-vaccine": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for VACCINE",
+    "new_url": "/search/?q=VACCINE"
+   }
+  ],
+  "will-1600-iu-vitamin-d-prevent-gestational-diabetes-no-not-enough": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for \"Gestational Diabetes",
+    "new_url": "/search/?q=%22Gestational+Diabetes"
+   }
+  ],
+  "women": [
+   {
+    "target": "search-results",
+    "text": "Search for HRT OR \"hormone replacement therapy\"",
+    "new_url": "/search/?q=HRT+OR+%22hormone+replacement+therapy%22"
+   }
+  ],
+  "women-taking-vitamin-d-had-fewest-deaths-after-post-menopause-breast-cancer": [
+   {
+    "target": "search-results",
+    "text": "Search VitaminDWiki for Estrogen Receptor and \"breast cancer\"",
+    "new_url": "/search/?q=Estrogen+Receptor+%22breast+cancer%22"
+   }
+  ],
+  "your-brain-on-covid-19-long-haul-dr-galland-video-and-transcript": [
+   {
+    "target": "search-results",
+    "text": "Search for BNDF",
+    "new_url": "/search/?q=BNDF"
+   }
+  ]
+ }
+}

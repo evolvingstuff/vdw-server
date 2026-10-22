@@ -22,6 +22,8 @@ from urllib.parse import quote_plus
 
 from django.utils.text import slugify
 
+from search.query import extract_search_term
+
 SITE_BASE_URL = "https://vitamindwiki.com"
 ATTACHMENTS_BASE_URL = "https://d378j1rmrlek7x.cloudfront.net"  # S3 key public/<path> -> <base>/<path>
 
@@ -185,7 +187,7 @@ class Resolver:
         topic = self._topic(text)
         if topic:
             return topic
-        term = _SEARCH_PREFIX_RE.sub('', text).strip() or text.strip()
+        term = extract_search_term(text)
         if not term or term.lower() in _GENERIC_TEXT:
             return Fix('unlink', '', 'Remove the link, keep the text', REVIEW, 'search link without a usable term')
         return Fix('search', f'/search/?q={quote_plus(term)}', f'Search: {term}', HIGH, 'old Tiki search link')
@@ -355,6 +357,21 @@ def confident_fixes(groups: Dict[Tuple[str, str], TargetGroup]) -> Dict[str, Lis
                 'target': target, 'text': text, 'new_url': fix.url,
                 'confidence': fix.confidence, 'method': fix.method,
             })
+    return dict(sorted(by_page.items()))
+
+
+def search_link_fixes(groups: Dict[Tuple[str, str], TargetGroup]) -> Dict[str, List[dict]]:
+    """Old Tiki search links -> /search/?q=<term>, per source page (applied by migration 0014)."""
+    by_page: Dict[str, List[dict]] = defaultdict(list)
+    seen = set()
+    for group in groups.values():
+        if group.kind != 'search':
+            continue
+        for source_slug, target, text, fix in group.link_fixes:
+            if fix.action != 'search' or (source_slug, text) in seen:
+                continue
+            seen.add((source_slug, text))
+            by_page[source_slug].append({'target': target, 'text': text, 'new_url': fix.url})
     return dict(sorted(by_page.items()))
 
 

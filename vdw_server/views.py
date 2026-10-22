@@ -91,7 +91,7 @@ def robots_txt(request):
     lines = [
         "User-agent: *",
         "Disallow: /admin/",
-        "Disallow: /search/api/",
+        "Disallow: /search/",
         "Disallow: /markdownx/",
         "Disallow: /pages/*/preview/",
         "",
