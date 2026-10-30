@@ -183,7 +183,7 @@ def compute_search_priority(tag_names: list[str], tag_slugs: list[str], title: s
 
     if is_summary_hit(normalized_tag_keys):
         return SEARCH_PRIORITY_SUMMARY
-    if is_overview_hit(normalized_title, normalized_tag_keys):
+    if is_overview_hit(normalized_tag_keys):
         return SEARCH_PRIORITY_OVERVIEW
     if is_extended_hit(normalized_tag_keys):
         return SEARCH_PRIORITY_EXTENDED
@@ -214,14 +214,12 @@ def is_summary_hit(tags_casefold: list[str]) -> bool:
     return any(SUMMARY_PATTERN.search(tag) for tag in tags_casefold)
 
 
-def is_overview_hit(title_casefold: str, tags_casefold: list[str]) -> bool:
-    assert isinstance(title_casefold, str), f"title_casefold must be str, got {type(title_casefold)}"
+def is_overview_hit(tags_casefold: list[str]) -> bool:
+    # Tag only: the word "overview" in a title doesn't make a page an Overview (the editor tags those).
     assert isinstance(tags_casefold, list), f"tags_casefold must be list, got {type(tags_casefold)}"
     assert all(isinstance(tag, str) for tag in tags_casefold), "tags_casefold must contain strings"
 
-    return bool(OVERVIEW_PATTERN.search(title_casefold)) or any(
-        OVERVIEW_PATTERN.search(tag) for tag in tags_casefold
-    )
+    return any(OVERVIEW_PATTERN.search(tag) for tag in tags_casefold)
 
 
 def is_extended_hit(tags_casefold: list[str]) -> bool:
@@ -297,7 +295,7 @@ def sort_hits_by_priority(hits: list[dict], query: str) -> list[dict]:
         strong_match = 1 if title_match or tag_match else 0
 
         has_summary = is_summary_hit(tags_casefold)
-        has_overview = is_overview_hit(title_casefold, tags_casefold)
+        has_overview = is_overview_hit(tags_casefold)
         has_extended = is_extended_hit(tags_casefold)
         has_many_studies = is_many_studies_hit(title_casefold, tags_casefold)
         has_several_studies = is_several_studies_hit(title_casefold, tags_casefold)
@@ -362,9 +360,8 @@ def _has_overview_query_match_pattern(hit: dict, query_pattern: re.Pattern[str] 
     if not isinstance(title, str) or not isinstance(tags, list):
         return False
 
-    title_casefold = normalize_priority_text(title)
     tags_casefold = [normalize_priority_text(tag) for tag in tags if isinstance(tag, str)]
-    if not is_overview_hit(title_casefold, tags_casefold):
+    if not is_overview_hit(tags_casefold):
         return False
 
     if query_pattern is None:
@@ -436,7 +433,7 @@ def fetch_overview_hits(query: str, limit: int = 10) -> list[dict]:
 
     overview_pages = (
         Page.objects.filter(status='published')
-        .filter(Q(title__icontains='overview') | Q(tags__name__icontains='overview'))
+        .filter(tags__name__icontains='overview')  # hand-assigned Overview tags only
         .filter(Q(title__icontains=trimmed) | Q(tags__name__iexact=trimmed))
         .distinct()
         .order_by('-public_modified_date')[:limit]

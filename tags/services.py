@@ -2,7 +2,8 @@
 
 Each worker process builds the index once (a few seconds on the server) and then
 answers every topic request from memory in milliseconds. Membership uses
-Page.derived_tags: tags assigned in admin plus tags implied by words in the title.
+Page.derived_tags: tags assigned in admin plus tags implied by words in the title
+(except Summary and Overview, which are only ever assigned by hand).
 
 Keeping it fresh:
 - Page and tag saves/deletes write a marker file (see tags/signals.py); bulk tag changes

@@ -1,8 +1,15 @@
+import re
+
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from core.models import ContentBase
 from tags.models import Tag
+
+
+# Summary and Overview tags are assigned by hand: the word in a title doesn't make a page one.
+# (Study-type tags such as Meta-analysis, RCT and Many studies are still implied by the title.)
+_HAND_ASSIGNED_ONLY_TAG_SLUG = re.compile(r'(?:^|-)(?:summary|overview)(?:-|$)')
 
 
 def _title_slug_haystack(title: str) -> str:
@@ -86,7 +93,7 @@ class Page(ContentBase):
         for tag in Tag.objects.only('id', 'slug'):
             if tag.pk in explicit_ids:
                 continue
-            if not tag.slug:
+            if not tag.slug or _HAND_ASSIGNED_ONLY_TAG_SLUG.search(tag.slug):
                 continue
             if f"-{tag.slug}-" in title_haystack:
                 implied_tags.append(tag)

@@ -123,9 +123,9 @@ class SearchPriorityTests(SimpleTestCase):
         priority = compute_search_priority(["Overview"], ["overview"], "Alcohol and Vitamin D")
         self.assertEqual(priority, SEARCH_PRIORITY_OVERVIEW)
 
-    def test_overview_title_rank_highest(self):
-        priority = compute_search_priority([], [], "Overview Alcohol and Vitamin D")
-        self.assertEqual(priority, SEARCH_PRIORITY_OVERVIEW)
+    def test_overview_or_summary_in_title_alone_does_not_count(self):
+        self.assertEqual(compute_search_priority([], [], "Overview Alcohol and Vitamin D"), 0)
+        self.assertEqual(compute_search_priority([], [], "Summary of Alcohol and Vitamin D"), 0)
 
     def test_overview_phrase_in_tag_ranks_highest(self):
         priority = compute_search_priority(
@@ -432,15 +432,16 @@ class SearchHitSortingTests(SimpleTestCase):
     def test_overview_query_match_detection(self):
         hit = {
             "title": "Overview Alcohol and Vitamin D",
-            "tags": [],
+            "tags": ["Overview"],
         }
 
         self.assertTrue(has_overview_query_match(hit, "alcohol"))
+        self.assertFalse(has_overview_query_match({**hit, "tags": []}, "alcohol"))  # title alone
 
     def test_overview_query_match_ignores_non_alcoholic(self):
         hit = {
             "title": "Overview Non-Alcoholic Fatty Liver Disease",
-            "tags": [],
+            "tags": ["Overview"],
         }
 
         self.assertFalse(has_overview_query_match(hit, "alcohol"))

@@ -22,10 +22,12 @@ class TopicBrowserTests(TestCase):
         self.bone = Tag.objects.create(name='Bone', slug='bone')
         self.infant = Tag.objects.create(name='Infant-Child', slug='infant-child')
         self.rct = Tag.objects.create(name='RCT', slug='rct')
+        self.overview_tag = Tag.objects.create(name='Overview', slug='overview')
+        self.summary_tag = Tag.objects.create(name='Summary', slug='summary')
 
         self.old_rct = self._page('Infant bone density – RCT', [self.bone, self.infant], 2020)
         self.new_plain = self._page('Infant bones and vitamin D', [self.bone, self.infant], 2024)
-        self.overview = self._page('Overview Bone and vitamin D', [self.bone], 2010)
+        self.overview = self._page('Overview Bone and vitamin D', [self.bone, self.overview_tag], 2010)
         # Not assigned the tag, but "Bone" is in the title, so it counts (derived tag).
         self.title_only = self._page('Bone fractures in seniors', [], 2022)
         self.draft = self._page('Draft about bone', [self.bone, self.infant], 2025, status='draft')
@@ -42,6 +44,13 @@ class TopicBrowserTests(TestCase):
         counts = {t.slug: t.count for t in get_topic_index().topic_counts}
         self.assertEqual(counts['bone'], 4)
         self.assertEqual(counts['infant-child'], 2)
+
+    def test_summary_and_overview_come_only_from_assigned_tags(self):
+        page = self._page('Summary and overview of bone studies', [], 2023)
+        self.assertEqual({t.slug for t in page.derived_tags.all()}, {'bone'})
+        counts = {t.slug: t.count for t in get_topic_index().topic_counts}
+        self.assertEqual(counts['overview'], 1)
+        self.assertNotIn('summary', counts)
 
     def test_combined_counts(self):
         index = get_topic_index()
