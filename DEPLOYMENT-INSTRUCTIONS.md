@@ -284,11 +284,22 @@ python deployment-manager.py
 8. Docker Compose mounts host directory `/app/data` into the container; SQLite DB path is `/app/data/db.sqlite3`, and Meilisearch storage lives at `/app/data/meilisearch`
 
 ### Database Deployment Process
-1. Stops Django container to release database lock
+1. Stops the Django and backup-scheduler containers to release the database
 2. Ensures `/app/data` exists and uploads local SQLite database to `/app/data/db.sqlite3`
 3. Sets root:root ownership and 644 permissions (required for Docker)
-4. Restarts Django container
+4. Restarts the Django and backup-scheduler containers
 5. Rebuilds search index automatically
+
+### Database Backups
+- Backups go to `s3://<bucket>/db_backups/manual_backups/` as `backup_YYYYmmdd_HHMMSS.sqlite3`
+  (admin "Trigger Manual Backup" button) or `backup_YYYYmmdd_HHMMSS_auto.sqlite3` (automatic), UTC times.
+- The `backup-scheduler` container checks every 5 minutes. It backs up 30 minutes after the last
+  edit, and at least once per day (US Pacific) even with no edits, so a missing day means a failure.
+  Backups always wait for 30 minutes without edits.
+- After every backup, old ones are cleaned up: all backups from the last 3 days are kept, then the
+  last backup of each day, and anything older than 90 days is deleted.
+- Settings: `BACKUP_*` in `vdw_server/settings.py`; rules in `vdw_server/backups.py`.
+- Logs: `sudo docker compose logs backup-scheduler`
 
 ### In-App Admin Restore Process
 1. Download the selected S3 backup to a temporary SQLite file on disk

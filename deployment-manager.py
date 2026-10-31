@@ -2139,8 +2139,8 @@ class DockerDeployment:
                     return False
 
             # Stop Django container to avoid database locks
-            print("🛑 Stopping Django container...")
-            self.execute_command(f"cd {remote_app_path} && sudo docker compose stop django")
+            print("🛑 Stopping Django and backup containers...")
+            self.execute_command(f"cd {remote_app_path} && sudo docker compose stop backup-scheduler django")
 
             # Ensure DB directory exists and is writable for upload
             self.execute_command(f"sudo mkdir -p {remote_db_dir_q}")
@@ -2196,6 +2196,11 @@ class DockerDeployment:
             if not success:
                 print(f"❌ Failed to start Django container: {error}")
                 return False
+            success, output, error = self.execute_command(
+                f"cd {app_path} && sudo docker compose start backup-scheduler"
+            )
+            if not success:
+                print(f"⚠️  Backup scheduler not started (deploy code with option 3 to create it): {error}")
             
             # Wait a moment for container to be ready
             print("⏳ Waiting for container to be ready...")

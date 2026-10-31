@@ -212,6 +212,13 @@ else:
     ENABLE_404_SUGGESTIONS = _parse_bool_env(_enable_404_suggestions_value)
 del _enable_404_suggestions_value
 
+# Automatic backups and cleanup (rules in vdw_server/backups.py)
+BACKUP_TIME_ZONE = 'America/Los_Angeles'  # what counts as "a day" for daily backups and cleanup
+BACKUP_CHECK_SECONDS = 300
+BACKUP_QUIET_MINUTES = 30
+BACKUP_KEEP_ALL_DAYS = 3
+BACKUP_KEEP_DAILY_DAYS = 90
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

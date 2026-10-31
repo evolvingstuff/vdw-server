@@ -7,7 +7,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./static:/app/static
-    environment:
+    environment: &app-environment
       - RUNNING_IN_DOCKER=true
       - MEILISEARCH_URL=http://meilisearch:7700
       - MEILISEARCH_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
@@ -30,6 +30,24 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    restart: unless-stopped
+
+  # Automatic database backups to S3 (rules in vdw_server/backups.py).
+  # Same image as django; skips the entrypoint so it doesn't run migrations itself.
+  backup-scheduler:
+    build: .
+    entrypoint: ["python", "manage.py", "run_backup_scheduler"]
+    command: []
+    volumes:
+      - ./data:/app/data
+    environment: *app-environment
+    depends_on:
+      - django
     logging:
       driver: "json-file"
       options:
