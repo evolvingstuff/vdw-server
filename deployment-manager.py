@@ -6,6 +6,7 @@ Clean, simple deployment without the Bitnami nightmare
 
 import json
 import os
+import re
 import shlex
 import socket
 import ssl
@@ -17,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 import http.client
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
+from zoneinfo import ZoneInfo
 import io
 
 import boto3
@@ -29,6 +31,8 @@ from scp import SCPClient
 load_dotenv()
 
 MANUAL_BACKUP_PREFIX = "db_backups/manual_backups"
+BACKUP_TIME_ZONE = "America/Los_Angeles"  # keep in sync with BACKUP_TIME_ZONE in vdw_server/settings.py
+BACKUP_NAME_RE = re.compile(r"^backup_(\d{8}_\d{6})(_auto)?\.sqlite3$")
 ACME_WEBROOT = "/var/www/letsencrypt"
 MAINTENANCE_PAGE_REMOTE_DIR = "/var/www/vdw"
 MAINTENANCE_PAGE_REMOTE_PATH = f"{MAINTENANCE_PAGE_REMOTE_DIR}/maintenance.html"
@@ -2273,6 +2277,41 @@ class DockerDeployment:
         finally:
             self.disconnect()
 
+    def show_backup_status(self) -> bool:
+        """Option 23: backups in S3 plus the backup-scheduler container and its recent log."""
+        print("\n🗄️  Backup status")
+        bucket = os.getenv('AWS_STORAGE_BUCKET_NAME')
+        if not bucket:
+            print("❌ AWS_STORAGE_BUCKET_NAME is not set in your environment")
+            return False
+
+        names = []
+        try:
+            paginator = boto3.client('s3').get_paginator('list_objects_v2')
+            for page in paginator.paginate(Bucket=bucket, Prefix=f"{MANUAL_BACKUP_PREFIX}/"):
+                names.extend(obj['Key'].split('/')[-1] for obj in page.get('Contents', []) if not obj['Key'].endswith('/'))
+        except Exception as exc:
+            print(f"❌ Failed to list backups: {exc}")
+            return False
+        print(f"\n☁️  s3://{bucket}/{MANUAL_BACKUP_PREFIX}/")
+        for line in summarize_backups(names, datetime.now(timezone.utc), ZoneInfo(BACKUP_TIME_ZONE)):
+            print(line)
+
+        host = self.prompt_host_for_operation('backup scheduler status')
+        if not self.connect(host_override=host):
+            return False
+        try:
+            app_path = shlex.quote(self.config['app_path'])
+            print("\n🐳 Backup scheduler container:")
+            self.execute_command(f"cd {app_path} && sudo docker compose ps backup-scheduler")
+            print("\n📜 Backup scheduler log (last 3 days, newest at the bottom):")
+            self.execute_command(
+                f"cd {app_path} && sudo docker compose logs backup-scheduler --since=72h --tail=40 --no-log-prefix"
+            )
+            return True
+        finally:
+            self.disconnect()
+
     def restore_local_db_from_s3(self) -> bool:
         """Download an S3 backup and swap it into the local db.sqlite3 path."""
         print("\n☁️  Restoring local database from S3 backup...")
@@ -3933,6 +3972,60 @@ def preview_link_fixes(local_db: str):
     print("   Open it in a browser to review.")
 
 
+def summarize_backups(names: List[str], now: datetime, tz: ZoneInfo) -> List[str]:
+    """Report lines for option 23: totals, newest backup, the last week, and missing days."""
+    backups = []  # (UTC time, automatic)
+    for name in names:
+        match = BACKUP_NAME_RE.match(name)
+        if match:
+            taken_at = datetime.strptime(match.group(1), "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)
+            backups.append((taken_at, bool(match.group(2))))
+    backups.sort()
+    other = len(names) - len(backups)
+    if not backups:
+        return ["❌ No backups found."]
+
+    auto_count = sum(1 for _, automatic in backups if automatic)
+    lines = [f"Backups in S3: {len(backups)} ({auto_count} automatic, {len(backups) - auto_count} manual)"
+             + (f", plus {other} file(s) with other names" if other else "")]
+
+    newest, newest_auto = backups[-1]
+    age = now - newest
+    hours, minutes = int(age.total_seconds() // 3600), int(age.total_seconds() % 3600 // 60)
+    status = "✅" if age < timedelta(hours=26) else "⚠️ "
+    lines.append(
+        f"{status} Newest: {newest.astimezone(tz):%a %b %d %Y %I:%M %p %Z} "
+        f"({'automatic' if newest_auto else 'manual'}, {hours}h {minutes}m ago)"
+    )
+
+    per_day: Dict = {}
+    for taken_at, automatic in backups:
+        counts = per_day.setdefault(taken_at.astimezone(tz).date(), [0, 0])
+        counts[0 if automatic else 1] += 1
+    today = now.astimezone(tz).date()
+    # Every day since automatic backups began should have a backup (today may still be pending).
+    first_auto = next((t for t, automatic in backups if automatic), None)
+    lines.append("Last 7 days:")
+    for offset in range(7):
+        day = today - timedelta(days=offset)
+        auto_n, manual_n = per_day.get(day, (0, 0))
+        detail = f"{auto_n} automatic, {manual_n} manual" if auto_n or manual_n else "none"
+        expected = first_auto is not None and offset > 0 and day >= first_auto.astimezone(tz).date()
+        flag = "⚠️  " if expected and not (auto_n or manual_n) else "   "
+        lines.append(f"  {flag}{day:%a %b %d}: {detail}")
+
+    if first_auto is None:
+        lines.append("ℹ️  No automatic backups yet.")
+    else:
+        start = first_auto.astimezone(tz).date()
+        missing = [start + timedelta(days=i) for i in range((today - start).days) if start + timedelta(days=i) not in per_day]
+        if missing:
+            lines.append(f"⚠️  Days with no backup since automatic backups began: {', '.join(f'{d:%b %d}' for d in missing)}")
+        else:
+            lines.append(f"✅ Every day since automatic backups began ({start:%b %d}) has a backup.")
+    return lines
+
+
 def print_header():
     """Print script header"""
     print("\n" + "=" * 50)
@@ -3968,7 +4061,8 @@ def print_menu(active_host: str, label: str):
     print("20. Preview title rewrites (LLM suggestions -> CSV, no DB changes)")
     print("21. Preview table fixes (local DB -> HTML report, no DB changes)")
     print("22. Preview broken link fixes (local DB -> HTML report, no DB changes)")
-    print("23. Exit")
+    print("23. Check backups (S3 backup list + backup scheduler status)")
+    print("24. Exit")
     print()
 
 def main():
@@ -3977,7 +4071,7 @@ def main():
     deployer = DockerDeployment()
     
     print_menu(deployer.active_host, deployer.active_host_label)
-    choice = input("Enter choice [0-8,10-23]: ").strip()
+    choice = input("Enter choice [0-8,10-24]: ").strip()
     
     if choice == '0':
         deployer.capture_provisioning_config()
@@ -4094,6 +4188,8 @@ def main():
     elif choice == '22':
         preview_link_fixes(deployer.config['local_db'])
     elif choice == '23':
+        deployer.show_backup_status()
+    elif choice == '24':
         print("\n👋 Goodbye!")
         return
     

@@ -190,7 +190,12 @@ python deployment-manager.py
 - Resolves the backing EC2 instance for the production host, calls AWS `reboot_instances`, and waits for both AWS reachability checks to return to `ok`.
 - Use this when the box is still “running” in EC2 but `22/80/443` are hung.
 
-### 20. Exit
+### 23. Check Backups
+- Lists backups in `s3://<bucket>/db_backups/manual_backups/`: how many, the newest one and how long ago,
+  backups per day for the last week, and any day with no backup since automatic backups began.
+- Then shows the `backup-scheduler` container status and its log for the last 3 days.
+
+### 24. Exit
 - Leaves the tool
 
 ## Typical Workflows

@@ -199,3 +199,32 @@ class ManagementHealthAlarmTests(TestCase):
             progress_messages,
             ["   Still working... SSM status: InProgress (16s elapsed)"],
         )
+
+
+class BackupSummaryTests(TestCase):
+    def test_reports_newest_last_week_and_missing_days(self):
+        tz = DEPLOYMENT_MANAGER.ZoneInfo("America/Los_Angeles")
+        now = DEPLOYMENT_MANAGER.datetime(2026, 11, 5, 20, tzinfo=DEPLOYMENT_MANAGER.timezone.utc)  # Nov 5, noon Pacific
+        names = [
+            "backup_20261020_180000.sqlite3",  # manual, before automatic backups began
+            "backup_20261101_080500_auto.sqlite3",  # Nov 1 Pacific
+            "backup_20261102_080500_auto.sqlite3",
+            # Nov 3 missing
+            "backup_20261104_080500_auto.sqlite3",
+            "backup_20261104_230000.sqlite3",
+            "backup_20261105_080500_auto.sqlite3",
+            "notes.txt",
+        ]
+        text = "\n".join(DEPLOYMENT_MANAGER.summarize_backups(names, now, tz))
+
+        self.assertIn("Backups in S3: 6 (4 automatic, 2 manual), plus 1 file(s) with other names", text)
+        self.assertIn("✅ Newest: Thu Nov 05 2026 12:05 AM PST (automatic, 11h 55m ago)", text)
+        self.assertIn("Wed Nov 04: 1 automatic, 1 manual", text)
+        self.assertIn("⚠️  Tue Nov 03: none", text)
+        self.assertIn("   Sat Oct 31: none", text)  # before automatic backups began: not flagged
+        self.assertIn("Days with no backup since automatic backups began: Nov 03", text)
+
+    def test_no_backups(self):
+        tz = DEPLOYMENT_MANAGER.ZoneInfo("America/Los_Angeles")
+        now = DEPLOYMENT_MANAGER.datetime(2026, 11, 5, tzinfo=DEPLOYMENT_MANAGER.timezone.utc)
+        self.assertEqual(DEPLOYMENT_MANAGER.summarize_backups([], now, tz), ["❌ No backups found."])
