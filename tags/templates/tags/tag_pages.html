@@ -17,6 +17,17 @@
 .topic-summary { color: #555; margin: 0 0 1em 0; }
 .topic-summary a { color: #3498db; }
 .topic-note { background: #fff8e1; border: 1px solid #f0d78c; border-radius: 6px; padding: 0.6em 0.9em; margin: 0 0 1em 0; }
+{% if show_link_tools %}
+.related-links-panel { position: sticky; top: 0; z-index: 5; background: #eef6fc; border: 1px solid #b9d9f0; border-radius: 6px; padding: 0.6em 0.9em; margin: 0 0 1em 0; font-size: 11pt; }
+.related-links-panel button { margin-left: 0.5em; cursor: pointer; }
+.related-links-status { margin-left: 0.5em; color: #2e7d32; }
+.related-links-list { margin: 0.4em 0 0 0; padding-left: 1.6em; max-height: 9em; overflow-y: auto; }
+.related-links-list:empty { display: none; }
+.related-links-remove { border: none; background: none; color: #c0392b; padding: 0 0.3em; }
+.compact-list li.has-link-tool { display: flex; align-items: flex-start; gap: 0.6em; margin: 4px 0; }
+.markdown-link-button { flex: none; width: 8.5em; font-size: 10pt; cursor: pointer; }
+.markdown-link-button[aria-pressed="true"] { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -35,11 +46,168 @@
 </p>
 {% endif %}
 
+{% if show_link_tools %}
+<div class="related-links-panel">
+    <strong>Related links: <span id="related-links-count">0</span></strong>
+    <button type="button" id="related-links-copy" disabled>Copy all</button>
+    <button type="button" id="related-links-clear" disabled>Clear</button>
+    <span class="related-links-status" id="related-links-status" role="status"></span>
+    <ol class="related-links-list" id="related-links-list"></ol>
+</div>
+{% endif %}
+
 <ul class="compact-list">
     {% for page in pages %}
+        {% if show_link_tools %}
+        <li class="has-link-tool">
+            <button type="button" class="markdown-link-button" aria-pressed="false" data-title="{{ page.title }}" data-markdown="[{{ page.title }}]({{ page.url }})">Markdown link</button>
+            <a href="{{ page.url }}">{{ page.title }}</a>
+        </li>
+        {% else %}
         <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+        {% endif %}
     {% empty %}
         <li>No published pages {% if is_combination %}have all of these topics{% else %}with this tag yet{% endif %}.</li>
     {% endfor %}
 </ul>
+{% endblock %}
+
+{% block extra_js %}
+{% if show_link_tools %}
+<script>
+(function () {
+    // Click a row's button to copy that link and add it to the list; "Copy all" copies the
+    // list in click order as "* " bullets. Kept for this browser tab, so links can be
+    // gathered from several topic pages.
+    var STORAGE_KEY = 'vdwRelatedLinks';
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('.markdown-link-button'));
+    var countEl = document.getElementById('related-links-count');
+    var listEl = document.getElementById('related-links-list');
+    var copyAllButton = document.getElementById('related-links-copy');
+    var clearButton = document.getElementById('related-links-clear');
+    var statusEl = document.getElementById('related-links-status');
+    var items = load();
+
+    function load() {
+        try {
+            var saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY));
+            return Array.isArray(saved) ? saved : [];
+        } catch (err) {
+            return [];
+        }
+    }
+
+    function save() {
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        } catch (err) { /* the list still works until the page changes */ }
+    }
+
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-1000px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } finally {
+            document.body.removeChild(textarea);
+        }
+        return copied ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+    }
+
+    function copyText(text, message) {
+        var attempt = navigator.clipboard && navigator.clipboard.writeText
+            ? navigator.clipboard.writeText(text).catch(function () { return fallbackCopy(text); })
+            : fallbackCopy(text);
+        return attempt.then(function () {
+            statusEl.style.color = '';
+            statusEl.textContent = message;
+        }, function () {
+            statusEl.style.color = '#c0392b';
+            statusEl.textContent = 'Copy failed';
+        });
+    }
+
+    function indexOf(markdown) {
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].markdown === markdown) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function render() {
+        countEl.textContent = items.length;
+        copyAllButton.disabled = clearButton.disabled = items.length === 0;
+        listEl.textContent = '';
+        items.forEach(function (item, position) {
+            var row = document.createElement('li');
+            row.textContent = item.title;
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'related-links-remove';
+            remove.textContent = '×';
+            remove.setAttribute('aria-label', 'Remove ' + item.title);
+            remove.addEventListener('click', function () {
+                items.splice(position, 1);
+                update();
+            });
+            row.appendChild(remove);
+            listEl.appendChild(row);
+        });
+        buttons.forEach(function (button) {
+            var added = indexOf(button.dataset.markdown) !== -1;
+            button.setAttribute('aria-pressed', added ? 'true' : 'false');
+            button.textContent = added ? '✓ Added' : 'Markdown link';
+        });
+    }
+
+    function update() {
+        save();
+        render();
+    }
+
+    buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var markdown = button.dataset.markdown;
+            var position = indexOf(markdown);
+            if (position !== -1) {
+                items.splice(position, 1);
+                statusEl.textContent = '';
+            } else {
+                items.push({ title: button.dataset.title, markdown: markdown });
+                copyText(markdown, 'Link copied');
+            }
+            update();
+        });
+    });
+
+    copyAllButton.addEventListener('click', function () {
+        var text = items.map(function (item) { return '* ' + item.markdown; }).join('\n');
+        copyText(text, 'Copied ' + items.length + ' link' + (items.length === 1 ? '' : 's'));
+    });
+
+    clearButton.addEventListener('click', function () {
+        items = [];
+        statusEl.textContent = '';
+        update();
+    });
+
+    // Stay visible just below the fixed search bar while scrolling a long list.
+    function positionPanel() {
+        var searchBar = document.getElementById('global-search-bar');
+        document.querySelector('.related-links-panel').style.top = (searchBar ? searchBar.getBoundingClientRect().bottom : 0) + 'px';
+    }
+    window.addEventListener('resize', positionPanel);
+    positionPanel();
+
+    render();
+})();
+</script>
+{% endif %}
 {% endblock %}

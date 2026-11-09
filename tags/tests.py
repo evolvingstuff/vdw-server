@@ -1,6 +1,7 @@
 from datetime import datetime, timezone as datetime_timezone
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -75,6 +76,24 @@ class TopicBrowserTests(TestCase):
         self.assertNotContains(response, 'noindex')
         self.assertContains(response, self.title_only.title)
         self.assertNotContains(response, self.draft.title)
+
+    def test_markdown_link_tools_are_for_staff_only(self):
+        quoted = self._page('Bone "quoted" study', [self.bone], 2021)
+        url = '/tags/bone/'
+
+        self.assertNotContains(self.client.get(url), 'data-markdown')
+
+        user_model = get_user_model()
+        self.client.force_login(user_model.objects.create_user('reader'))
+        self.assertNotContains(self.client.get(url), 'data-markdown')
+
+        self.client.force_login(user_model.objects.create_user('editor', is_staff=True))
+        response = self.client.get(url)
+        self.assertContains(response, 'id="related-links-copy"')
+        self.assertContains(
+            response,
+            f'data-markdown="[Bone &quot;quoted&quot; study](/pages/{quoted.slug}/)"',
+        )
 
     def test_combination_page_is_noindex(self):
         response = self.client.get('/tags/bone/?and=infant-child')

@@ -33,6 +33,7 @@ def tag_pages(request, tag_slug):
         'is_truncated': total > TAG_PAGE_LIST_LIMIT,
         'list_limit': TAG_PAGE_LIST_LIMIT,
         'selected_slugs': ','.join(t.slug for t in tags),
+        'show_link_tools': request.user.is_staff,  # "related pages" helper for editors
     })
 
 
