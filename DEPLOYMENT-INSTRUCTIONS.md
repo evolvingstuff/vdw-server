@@ -193,7 +193,7 @@ python deployment-manager.py
 ### 23. Check Backups
 - Lists backups in `s3://<bucket>/db_backups/manual_backups/`: how many, the newest one and how long ago,
   backups per day for the last week, and any day with no backup since automatic backups began.
-- Then shows the `backup-scheduler` container status and its log for the last 3 days.
+- Then shows the `backup-scheduler` container status and its log for the last 3 days, without the "postponed" lines.
 
 ### 24. Exit
 - Leaves the tool

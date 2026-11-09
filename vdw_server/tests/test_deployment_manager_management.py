@@ -228,3 +228,26 @@ class BackupSummaryTests(TestCase):
         tz = DEPLOYMENT_MANAGER.ZoneInfo("America/Los_Angeles")
         now = DEPLOYMENT_MANAGER.datetime(2026, 11, 5, tzinfo=DEPLOYMENT_MANAGER.timezone.utc)
         self.assertEqual(DEPLOYMENT_MANAGER.summarize_backups([], now, tz), ["❌ No backups found."])
+
+
+class BackupStatusLogTests(TestCase):
+    def test_log_covers_three_days_without_postponed_checks(self):
+        deployer = DEPLOYMENT_MANAGER.DockerDeployment.__new__(DEPLOYMENT_MANAGER.DockerDeployment)
+        deployer.config = {"app_path": "/app"}
+        deployer.prompt_host_for_operation = MagicMock(return_value="1.2.3.4")
+        deployer.connect = MagicMock(return_value=True)
+        deployer.disconnect = MagicMock()
+        deployer.execute_command = MagicMock(return_value=(True, "", ""))
+
+        with (
+            patch.dict(DEPLOYMENT_MANAGER.os.environ, {"AWS_STORAGE_BUCKET_NAME": "bucket"}),
+            patch.object(DEPLOYMENT_MANAGER.boto3, "client"),
+            patch("builtins.print"),
+        ):
+            self.assertTrue(deployer.show_backup_status())
+
+        log_command = deployer.execute_command.call_args_list[-1].args[0]
+        self.assertIn("--since=72h", log_command)
+        self.assertNotIn("--tail", log_command)
+        self.assertIn("2>&1 | grep -v 'Backup check: postponed'", log_command)
+        deployer.disconnect.assert_called_once()

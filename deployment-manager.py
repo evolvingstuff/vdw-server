@@ -2304,9 +2304,11 @@ class DockerDeployment:
             app_path = shlex.quote(self.config['app_path'])
             print("\n🐳 Backup scheduler container:")
             self.execute_command(f"cd {app_path} && sudo docker compose ps backup-scheduler")
-            print("\n📜 Backup scheduler log (last 3 days, newest at the bottom):")
+            print("\n📜 Backup scheduler log (last 3 days, postponed checks hidden, newest at the bottom):")
+            # 2>&1 because Python logs to stderr, which compose may keep separate from stdout
             self.execute_command(
-                f"cd {app_path} && sudo docker compose logs backup-scheduler --since=72h --tail=40 --no-log-prefix"
+                f"cd {app_path} && sudo docker compose logs backup-scheduler --since=72h --no-log-prefix 2>&1 "
+                "| grep -v 'Backup check: postponed' | tail -n 100"
             )
             return True
         finally:
