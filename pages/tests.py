@@ -1141,13 +1141,22 @@ class PageDetailPrintTemplateTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<meta name="viewport" content="width=device-width, initial-scale=1.0">')
         self.assertContains(response, 'max-width: 800px;')
-        self.assertContains(response, 'width: 200vw;')
+        self.assertNotContains(response, 'width: 200vw;')  # phones get a page as wide as the screen
         self.assertContains(response, 'overflow-wrap: anywhere;')
         self.assertContains(response, 'word-wrap: break-word;')
         self.assertContains(response, '@media (max-width: 768px)')
         self.assertContains(response, 'max-width: none;')
         self.assertContains(response, 'font-size: 18px;')
         self.assertContains(response, 'padding-right: 8px;')
+
+    def test_header_lists_topics_before_recent(self):
+        page = Page.objects.create(title="Header Page", content_md="Body", status="published")
+
+        html = self.client.get(reverse('page_detail', args=[page.slug])).content.decode()
+
+        topics = html.index(f'href="{reverse("tag_list")}" class="nav-link"')
+        recent = html.index(f'href="{reverse("recent_page_list")}" class="nav-link"')
+        self.assertLess(topics, recent)
 
 
 class RecentPageCacheTests(TestCase):

@@ -13,8 +13,8 @@
         <!-- Commented out per request: hide All Pages/All Tags from header -->
         <!-- <a href="{% url 'page_list' %}" class="nav-link">All Pages</a> -->
         <!-- <a href="{% url 'tag_list' %}" class="nav-link">All Tags</a> -->
-        <a href="{% url 'recent_page_list' %}" class="nav-link">Most Recent</a>
-        <a href="{% url 'tag_list' %}" class="nav-link">Topics/Subjects</a>
+        <a href="{% url 'tag_list' %}" class="nav-link">Topics<span class="nav-link-long">/Subjects</span></a>
+        <a href="{% url 'recent_page_list' %}" class="nav-link"><span class="nav-link-long">Most </span>Recent</a>
     </div>
     
     <!-- Center Search -->
@@ -103,6 +103,12 @@
 .nav-link:hover {
     color: #2580d0;
     text-decoration: underline;
+}
+
+/* Main site links: bolder and darker than the Admin link so they stand out */
+.nav-left .nav-link {
+    font-weight: 600;
+    color: #1a5c96;
 }
 
 /* Center Search */
@@ -268,63 +274,94 @@
     text-decoration: underline;
 }
 
-/* Add top padding to body to account for fixed search bar */
+/* Keep page content below the fixed search bar; the script below measures the bar,
+   so this still holds when it wraps or the phone is rotated. */
 body {
-    padding-top: 70px !important;
+    padding-top: calc(var(--global-search-bar-height, 63px) + 8px) !important;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
+/* Phones and narrow tablets: one row of links, then the search box across the full width
+   (860px, not 768px: the one-row header needs about 780px) */
+@media (max-width: 860px) {
     .global-search-bar {
         display: flex;
-        padding: 8px 12px;
         flex-wrap: wrap;
+        padding: 6px 10px 8px;
+        column-gap: 12px;
+        row-gap: 6px;
     }
-    
+
     .nav-left {
-        gap: 15px;
         flex: 1;
-        flex-wrap: wrap;  /* logo + two links may not fit on one line on phones */
-        row-gap: 4px;
+        gap: 16px;
+        min-width: auto;  /* never squeeze the links into Admin */
     }
-    
+
     .nav-brand {
+        padding-right: 10px;
+        margin-right: 0;
+    }
+
+    .nav-logo {
+        height: 30px;
+    }
+
+    .nav-left .nav-link {
         font-size: 16px;
-        padding-right: 8px;
-        margin-right: 8px;
+        padding: 6px 0;  /* bigger tap target */
     }
-    
-    .nav-link {
-        font-size: 13px;
+
+    .nav-right .nav-link {
+        color: #5f6f7e;
     }
-    
+
     .search-container {
         order: 3;
         flex: 1 1 100%;
-        margin: 10px 0 0 0;
     }
-    
+
     .nav-right {
         order: 2;
     }
-    
+
     #global-search-input {
         font-size: 16px; /* Prevents zoom on iOS */
         padding: 10px 42px 10px 12px;
     }
-    
-    body {
-        padding-top: 100px !important; /* More space for wrapped search */
+}
+
+/* Phones (either way up): while searching, give the results the room the links and
+   scroll buttons would take */
+@media (max-width: 860px), (max-height: 500px) {
+    .global-search-bar.searching .nav-left,
+    .global-search-bar.searching .nav-right,
+    body.global-searching .scroll-controls {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
-    .nav-link {
-        font-size: 12px;
+    .nav-link-long {
+        display: none;
     }
-    
+}
+
+/* Smallest phones (320-380px wide) */
+@media (max-width: 380px) {
+    .global-search-bar {
+        column-gap: 10px;
+    }
+
     .nav-left {
-        gap: 10px;
+        gap: 12px;
+    }
+
+    .nav-logo {
+        height: 26px;
+    }
+
+    .nav-left .nav-link {
+        font-size: 15px;
     }
 }
 
@@ -709,6 +746,61 @@ body {
             sessionStorage.removeItem('lastSearchOffset');
         }
     } catch (e) {}
+})();
+
+
+// Phone layout: keep content below the bar, and while searching hide the links and
+// let the results fill the screen down to the on-screen keyboard.
+(function() {
+    const bar = document.getElementById('global-search-bar');
+    const input = document.getElementById('global-search-input');
+    const dropdown = document.getElementById('search-dropdown');
+    const phone = window.matchMedia('(max-width: 860px), (max-height: 500px)');
+
+    function updateBarHeight() {
+        // The bar shrinks while searching; don't make the page jump under it.
+        if (bar.classList.contains('searching')) {
+            return;
+        }
+        document.body.style.setProperty('--global-search-bar-height', `${bar.offsetHeight}px`);
+    }
+
+    function fitDropdown() {
+        if (!phone.matches || !dropdown.classList.contains('show')) {
+            dropdown.style.maxHeight = '';
+            return;
+        }
+        const viewport = window.visualViewport;
+        const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+        const room = visibleBottom - dropdown.getBoundingClientRect().top - 8;
+        dropdown.style.maxHeight = `${Math.max(room, 120)}px`;
+    }
+
+    function updateSearching() {
+        const searching = document.activeElement === input || dropdown.classList.contains('show');
+        bar.classList.toggle('searching', searching);
+        document.body.classList.toggle('global-searching', searching);
+        if (!searching) {
+            updateBarHeight();
+        }
+        fitDropdown();
+    }
+
+    updateBarHeight();
+    if (window.ResizeObserver) {
+        new ResizeObserver(updateBarHeight).observe(bar);
+    }
+    window.addEventListener('load', updateBarHeight);
+    window.addEventListener('resize', updateBarHeight);
+    input.addEventListener('focus', updateSearching);
+    input.addEventListener('blur', updateSearching);
+    // Results open and close from several places; watch the class instead.
+    new MutationObserver(updateSearching).observe(dropdown, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', fitDropdown);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', fitDropdown);
+        window.visualViewport.addEventListener('scroll', fitDropdown);
+    }
 })();
 
 
