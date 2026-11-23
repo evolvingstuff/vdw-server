@@ -60,6 +60,12 @@ ROOT_CODE_UPLOAD_PATTERNS = (
     '.dockerignore',
     'google*.html',
 )
+# Top-level folders upload_code never sends to the server. tutorial_videos holds the
+# tutorial video scripts and their builds (hundreds of MB), which the site doesn't use.
+UPLOAD_SKIPPED_DIRS = frozenset({
+    '.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode',
+    'data', 'data.ms', 'tutorial_videos',
+})
 
 
 class DockerDeployment:
@@ -216,9 +222,11 @@ class DockerDeployment:
                 print("⚠️  Could not determine whether the working tree has uncommitted changes")
                 return True
 
+            # Only changes the upload sends count: "XY path" lines, skipping skipped folders.
             changed_entries = [
                 line for line in status_result.stdout.splitlines()
                 if line.strip()
+                and line[3:].strip('"').split('/')[0] not in UPLOAD_SKIPPED_DIRS
             ]
             if changed_entries:
                 print("\n⚠️  WARNING: You have uncommitted local changes on this machine.")
@@ -1985,7 +1993,7 @@ class DockerDeployment:
                 
                 # Upload directories (pages, templates, static, etc.)
                 for dir_path in Path('.').iterdir():
-                    if dir_path.is_dir() and dir_path.name not in ['.git', '__pycache__', '.venv', 'venv', '.pytest_cache', '.idea', '.vscode', 'data', 'data.ms']:
+                    if dir_path.is_dir() and dir_path.name not in UPLOAD_SKIPPED_DIRS:
                         print(f"   Uploading directory {dir_path}...")
                         scp.put(str(dir_path), app_path, recursive=True)
             
