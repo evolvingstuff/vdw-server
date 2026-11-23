@@ -21,3 +21,6 @@ docs/AI-SUMMARY.md
 # Generated sitemap
 sitemap.xml
 data/topic_index_version
+
+# Tutorial video builds (MP4s, cached narration audio)
+tutorial_videos/output/
