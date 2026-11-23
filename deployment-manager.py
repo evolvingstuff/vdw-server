@@ -3507,6 +3507,19 @@ class DockerDeployment:
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Editor uploads (up to client_max_body_size): passing a large file on to S3 can take
+    # longer than nginx's default 60-second wait for Django's answer.
+    location = /admin/upload-media/ {
+        proxy_read_timeout 300s;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location / {
         proxy_intercept_errors on;
         error_page 502 503 504 /maintenance.html;

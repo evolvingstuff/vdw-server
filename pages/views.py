@@ -174,9 +174,9 @@ def upload_media(request):
     
     uploaded_file = request.FILES['file']
     
-    # Validate file size (10MB limit)
-    if uploaded_file.size > 10 * 1024 * 1024:
-        return JsonResponse({'success': False, 'error': 'File too large (max 10MB)'}, status=400)
+    # Validate file size (100MB limit, the same as nginx's client_max_body_size)
+    if uploaded_file.size > 100 * 1024 * 1024:
+        return JsonResponse({'success': False, 'error': 'File too large (max 100MB)'}, status=400)
     
     # Validate and map file type to folder
     content_type_map = {
