@@ -42,6 +42,7 @@ urlpatterns = [
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('llms.txt', llms_txt, name='llms_txt'),
+    path('api/', include('wiki_api.urls')),  # read-only JSON for AI assistants
     re_path(r'^google(?P<token>[A-Za-z0-9]+)\.html$', google_site_verification, name='google_site_verification'),
     path('pages/', page_list, name='page_list'),
     path('pages/recent/', recent_page_list, name='recent_page_list'),

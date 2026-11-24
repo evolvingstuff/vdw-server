@@ -3515,6 +3515,31 @@ class DockerDeployment:
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    location ^~ /search/api/ {
+        limit_req zone=search_api burst=10 nodelay;
+        limit_req_status 429;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # JSON API for AI assistants: one chat answer makes several quick calls, hence the burst.
+    location ^~ /api/ {
+        limit_req zone=wiki_api burst=20 nodelay;
+        limit_req_status 429;
+        proxy_intercept_errors on;
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     # Editor uploads (up to client_max_body_size): passing a large file on to S3 can take
     # longer than nginx's default 60-second wait for Django's answer.
     location = /admin/upload-media/ {
@@ -3568,6 +3593,8 @@ server {{
 """
 
         return f"""limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
+limit_req_zone $binary_remote_addr zone=search_api:10m rate=5r/s;
+limit_req_zone $binary_remote_addr zone=wiki_api:10m rate=5r/s;
 
 server {{
     listen 80;

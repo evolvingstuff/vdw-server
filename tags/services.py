@@ -19,10 +19,12 @@ Keeping it fresh:
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, FrozenSet, List, Optional, Sequence, Tuple
 
@@ -37,6 +39,7 @@ from tags.models import Tag
 logger = logging.getLogger(__name__)
 
 TAG_PAGE_LIST_LIMIT = 1000
+WORD_SPLIT_RE = re.compile(r'[^\w]+')
 SIGNATURE_CHECK_SECONDS = 10
 MAX_INDEX_AGE_SECONDS = 3600
 
@@ -53,6 +56,9 @@ class TopicPage:
     id: int
     title: str
     url: str
+    slug: str
+    priority: int  # search priority bucket (search.search.SEARCH_PRIORITY_*)
+    updated: Optional[datetime]  # public_modified_date
 
 
 @dataclass(frozen=True)
@@ -103,9 +109,20 @@ class TopicIndex:
                 [self.tags[t].name for t in tids], [self.tags[t].slug for t in tids], title
             )
             sort_keys[page_id] = (priority, modified.timestamp() if modified else 0)
-            self.pages[page_id] = TopicPage(page_id, title, page_url.replace('SLUG', slug))
+            self.pages[page_id] = TopicPage(
+                page_id, title, page_url.replace('SLUG', slug), slug, priority, modified
+            )
         ordered = sorted(sort_keys, key=sort_keys.__getitem__, reverse=True)
         self.rank: Dict[int, int] = {page_id: i for i, page_id in enumerate(ordered)}
+        # Newest first, by public_modified_date (ties: higher id first, so the order is stable).
+        self.recent_rank: Dict[int, int] = {
+            page_id: i
+            for i, page_id in enumerate(sorted(
+                self.pages,
+                key=lambda pid: (sort_keys[pid][1], pid),
+                reverse=True,
+            ))
+        }
 
         self.topic_counts: List[TopicCount] = sorted(
             (TopicCount(self.tags[tid].name, self.tags[tid].slug, len(pids)) for tid, pids in self.tag_pages.items()),
@@ -131,11 +148,15 @@ class TopicIndex:
             result = result & other
         return result
 
-    def ordered_page_ids(self, tags: Sequence[TopicTag]) -> List[int]:
-        key = tuple(sorted(t.id for t in tags))
+    def ordered_page_ids(self, tags: Sequence[TopicTag], sort: str = 'important') -> List[int]:
+        """Pages having every tag: most important first ('important') or newest first ('recent')."""
+        ranks = {'important': self.rank, 'recent': self.recent_rank}
+        if sort not in ranks:
+            raise ValueError(f"sort must be one of {sorted(ranks)}, got {sort!r}")
+        key = (sort, *sorted(t.id for t in tags))
         cached = self._ordered_cache.get(key)
         if cached is None:
-            cached = sorted(self._page_ids_with_all(tags), key=self.rank.__getitem__)
+            cached = sorted(self._page_ids_with_all(tags), key=ranks[sort].__getitem__)
             with self._cache_lock:
                 if len(self._ordered_cache) > 2000:  # combinations are endless; keep memory bounded
                     self._ordered_cache.clear()
@@ -146,6 +167,31 @@ class TopicIndex:
         """(pages in search order, up to limit), total count)."""
         ids = self.ordered_page_ids(tags)
         return [self.pages[pid] for pid in ids[:limit]], len(ids)
+
+    def recent_page_ids(self) -> List[int]:
+        """Every published page, newest first."""
+        return sorted(self.recent_rank, key=self.recent_rank.__getitem__)
+
+    def topics_matching(self, text: str) -> List[TopicCount]:
+        """Topics whose name contains text (any case): exact name, then names starting with
+        it, then a word starting with it, then the rest; within each, most pages first."""
+        needle = text.strip().casefold()
+        if not needle:
+            return list(self.topic_counts)
+
+        def closeness(name: str) -> int:
+            name = name.casefold()
+            if name == needle:
+                return 0
+            if name.startswith(needle):
+                return 1
+            if any(word.startswith(needle) for word in WORD_SPLIT_RE.split(name)):
+                return 2
+            return 3
+
+        matches = [c for c in self.topic_counts if needle in c.name.casefold()]
+        # topic_counts is already most-pages-first, and sorted() keeps that order within a group.
+        return sorted(matches, key=lambda c: closeness(c.name))
 
     def combined_counts(self, tags: Sequence[TopicTag]) -> Tuple[int, Dict[str, int]]:
         """(pages having every tag, {slug: count among those pages})."""

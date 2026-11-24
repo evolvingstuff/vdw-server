@@ -56,6 +56,14 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 del _extra_csrf_trusted_origins
 
+# Origins whose pages may call /api/ from the browser (the AI chat's subdomain, e.g.
+# https://chat.vitamindwiki.com). Comma-separated in WIKI_API_CORS_ORIGINS; none by default.
+WIKI_API_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('WIKI_API_CORS_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
 
 # Application definition
 
@@ -72,6 +80,7 @@ INSTALLED_APPS = [
     'site_pages.apps.SitePagesConfig',
     'search',
     'tags',
+    'wiki_api.apps.WikiApiConfig',
     'markdownx',
 ]
 
