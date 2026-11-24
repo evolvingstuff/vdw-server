@@ -64,6 +64,14 @@ WIKI_API_CORS_ORIGINS = [
     if origin.strip()
 ]
 
+# Browser origins allowed to call the MCP connector at /mcp (e.g. a local MCP Inspector,
+# http://localhost:6274). ChatGPT and Claude call it from their servers, which send no Origin.
+MCP_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('MCP_ALLOWED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
 
 # Application definition
 

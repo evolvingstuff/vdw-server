@@ -169,7 +169,7 @@ class WikiApiTests(TestCase):
                       'search_priority': 7, 'modified_date': 1704067200}],
             'totalHits': 41,
         }
-        with patch('wiki_api.views.search_pages', return_value=hits) as search_pages:
+        with patch('wiki_api.queries.search_pages', return_value=hits) as search_pages:
             response, data = self._get('/api/search/?q=bone&limit=5&offset=10')
         search_pages.assert_called_once_with('bone', limit=5, offset=10)
         self.assertEqual(response.status_code, 200)

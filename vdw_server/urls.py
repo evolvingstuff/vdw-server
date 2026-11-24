@@ -24,6 +24,7 @@ from site_pages.views import homepage, site_page_detail
 from search.views import search_api, search_page
 from vdw_server.admin_views import code_search, manual_backup, manual_restore, refresh_sitemap
 from vdw_server.llms_txt import llms_txt
+from wiki_api.mcp import mcp_endpoint
 from vdw_server.views import google_site_verification, page_detail_fallback, robots_txt, sitemap_xml
 
 handler404 = 'vdw_server.views.custom_page_not_found'
@@ -43,6 +44,8 @@ urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
     path('llms.txt', llms_txt, name='llms_txt'),
     path('api/', include('wiki_api.urls')),  # read-only JSON for AI assistants
+    path('mcp', mcp_endpoint, name='mcp'),  # connector for people's own ChatGPT/Claude apps
+    path('mcp/', mcp_endpoint),
     re_path(r'^google(?P<token>[A-Za-z0-9]+)\.html$', google_site_verification, name='google_site_verification'),
     path('pages/', page_list, name='page_list'),
     path('pages/recent/', recent_page_list, name='recent_page_list'),
