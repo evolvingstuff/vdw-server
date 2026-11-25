@@ -16,6 +16,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      # The AI chat's subdomain; the deploy sets it once that subdomain has HTTPS.
+      - CHAT_ORIGIN=${CHAT_ORIGIN:-}
     depends_on:
       - meilisearch
     healthcheck:

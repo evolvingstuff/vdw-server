@@ -167,6 +167,35 @@ class DockerDeployment:
         domains.extend(d for d in cfg['alts'] if d)
         return domains
 
+    def _chat_domain(self) -> str:
+        """The AI chat's own subdomain (config: chat_domain), or '' when none is configured."""
+        return (self._get_provisioning().get('chat_domain') or '').strip()
+
+    def _certificate_domains(self) -> List[str]:
+        """Every name the HTTPS certificate must cover: the site's domains and the chat subdomain."""
+        domains = self._all_domains()
+        chat_domain = self._chat_domain()
+        if chat_domain and chat_domain not in domains:
+            domains.append(chat_domain)
+        return domains
+
+    def _chat_certificate_ready(self) -> bool:
+        """Whether the server's certificate covers the chat subdomain (needs an open connection).
+
+        Until it does, the chat stays off: no HTTPS server for the subdomain and no CHAT_ORIGIN,
+        so wiki pages don't show a chat button that would open a broken frame.
+        """
+        chat_domain = self._chat_domain()
+        if not chat_domain:
+            return False
+        cert_path = self._ssl_paths()['cert']
+        covered, _, _ = self.execute_command(
+            f"sudo openssl x509 -in {shlex.quote(cert_path)} -noout -ext subjectAltName "
+            f"| grep -qF {shlex.quote('DNS:' + chat_domain)}",
+            show_output=False,
+        )
+        return bool(covered)
+
     def _ssl_paths(self) -> Dict[str, str]:
         config = self._get_provisioning()
         cfg = self._domain_config()
@@ -2955,15 +2984,18 @@ class DockerDeployment:
         return host
 
     def _run_certbot_dns01(self, host: str) -> bool:
-        domains = self._all_domains()
+        domains = self._certificate_domains()
         cfg = self._domain_config()
         if not domains or not cfg['email']:
             raise ValueError("primary_domain and certbot_email must be set in config/provisioning.json")
 
         domain_args = ' '.join(f"-d {shlex.quote(domain)}" for domain in domains)
+        # --cert-name/--expand: adding a name (e.g. the chat subdomain) replaces the existing
+        # certificate in place instead of stopping to ask, or creating a second one.
         command = (
             "sudo certbot certonly --manual --preferred-challenges dns "
             "--manual-public-ip-logging-ok --agree-tos --no-eff-email "
+            f"--cert-name {shlex.quote(cfg['primary'])} --expand "
             f"-m {shlex.quote(cfg['email'])} {domain_args}"
         )
 
@@ -3206,7 +3238,7 @@ class DockerDeployment:
                 if not self.configure_nginx_proxy():
                     return False
 
-            domains = self._all_domains()
+            domains = self._certificate_domains()
             if not domains:
                 print("❌ No domains configured. Set primary_domain (and optional alt_domains).")
                 return False
@@ -3221,6 +3253,7 @@ class DockerDeployment:
                 "sudo certbot certonly --webroot "
                 f"-w {shlex.quote(ACME_WEBROOT)} --agree-tos --no-eff-email "
                 "--non-interactive --force-renewal "
+                f"--cert-name {shlex.quote(cfg['primary'])} --expand "
                 f"-m {shlex.quote(cfg['email'])} {domain_args}"
             )
             print("ℹ️  Cert issuance can take 1–5 minutes; it's normal for this step to be quiet.")
@@ -3471,7 +3504,12 @@ class DockerDeployment:
         print("✅ nginx reverse proxy configured")
         return True
 
-    def _render_https_nginx(self) -> str:
+    def _render_https_nginx(self, chat_ready: Optional[bool] = None) -> str:
+        """The HTTPS nginx config. chat_ready: whether to serve the chat subdomain over HTTPS;
+        by default, whether the server's certificate covers it."""
+        chat_domain = self._chat_domain()
+        if chat_ready is None:
+            chat_ready = self._chat_certificate_ready()
         domains = self._all_domains()
         server_names = ' '.join(domains) if domains else '_'
         primary_domain = self._domain_config()['primary']
@@ -3607,6 +3645,56 @@ server {{
 }}
 """
 
+        # The AI chat's subdomain serves only the chat app (Django picks it by Host, see
+        # ai_chat.middleware). Port 80 always answers for it, so an HTTP-01 certificate can be
+        # issued; the HTTPS server appears once the certificate covers the name.
+        chat_block = ""
+        if chat_domain:
+            chat_block = f"""
+server {{
+    listen 80;
+    server_name {chat_domain};
+{acme_block}
+    location / {{
+        return 301 https://{chat_domain}$request_uri;
+    }}
+}}
+"""
+        if chat_domain and chat_ready:
+            chat_block += f"""
+server {{
+    listen 443 ssl http2;
+    server_name {chat_domain};
+    client_max_body_size 16k;
+    ssl_certificate {paths['cert']};
+    ssl_certificate_key {paths['key']};
+{ssl_directives}
+    location /static/ {{
+        alias /app/static/;
+        add_header Cache-Control "public, max-age=86400";
+    }}
+
+    location = /maintenance.html {{
+        root /var/www/vdw;
+        internal;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+    }}
+
+    # The chat page, its settings and its wiki tools; one answer makes several quick tool calls.
+    location / {{
+        limit_req zone=wiki_api burst=20 nodelay;
+        limit_req_status 429;
+        # No proxy_intercept_errors: the chat reads Django's JSON errors itself.
+        error_page 502 503 504 /maintenance.html;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }}
+}}
+"""
+
         return f"""limit_req_zone $binary_remote_addr zone=tiki_legacy:10m rate=3r/s;
 limit_req_zone $binary_remote_addr zone=search_api:10m rate=5r/s;
 limit_req_zone $binary_remote_addr zone=wiki_api:10m rate=5r/s;
@@ -3628,7 +3716,7 @@ server {{
     ssl_certificate_key {paths['key']};
 {ssl_directives}
 {static_block}}}
-"""
+{chat_block}"""
 
     def _render_maintenance_page(self) -> str:
         return """<!doctype html>
@@ -3709,10 +3797,33 @@ server {{
             with SCPClient(self.ssh_client.get_transport()) as scp:
                 scp.put(str(local_env), f"{self.config['app_path']}/.env")
             print("✅ Environment file uploaded!")
-            return True
         except Exception as e:
             print(f"❌ Failed to upload .env: {e}")
             return False
+        return self._set_chat_origin()
+
+    def _set_chat_origin(self) -> bool:
+        """Turn the AI chat on (CHAT_ORIGIN in the server's .env) once its subdomain has HTTPS.
+
+        The local .env is for local development, so any CHAT_ORIGIN in it is dropped here.
+        """
+        env_path = shlex.quote(f"{self.config['app_path']}/.env")
+        commands = [f"sed -i '/^CHAT_ORIGIN=/d' {env_path}"]
+        chat_domain = self._chat_domain()
+        if not chat_domain:
+            print("   AI chat: no chat_domain in config/provisioning.json, so the chat stays off.")
+        elif not self._chat_certificate_ready():
+            print(f"   ⚠️  AI chat stays off: the HTTPS certificate doesn't cover {chat_domain} yet.")
+            print("      Point its DNS at this server, issue the certificate again (option 10 or 15), then deploy.")
+        else:
+            # A newline first, in case the uploaded file doesn't end with one.
+            commands.append(f"printf '\\nCHAT_ORIGIN=https://%s\\n' {shlex.quote(chat_domain)} >> {env_path}")
+            print(f"   AI chat: on at https://{chat_domain}")
+        success, _, error = self.execute_command(' && '.join(commands), show_output=False)
+        if not success:
+            print(f"❌ Failed to set CHAT_ORIGIN in the server's .env: {error}")
+            return False
+        return True
     
     def prepare_data_volume(self) -> bool:
         data_volume_gb = int(self._get_provisioning().get('data_volume_gb') or 0)

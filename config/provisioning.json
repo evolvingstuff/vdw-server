@@ -24,6 +24,7 @@
   "alt_domains": [
     "www.vitamindwiki.com"
   ],
+  "chat_domain": "chat.vitamindwiki.com",
   "certbot_email": "hlahore@gmail.com",
   "management_alert_emails": [
     "tom.lahore@gmail.com",
