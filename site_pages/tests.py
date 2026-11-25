@@ -89,3 +89,17 @@ class SitePageDetailPrintTemplateTests(TestCase):
         self.assertContains(response, 'class="print-page-metadata"')
         self.assertContains(response, 'class="post-footer print-only-footer"')
         self.assertContains(response, f'URL: http://testserver/{page.slug}/')
+
+
+class AiConnectorHelpPageTests(TestCase):
+    """The page is created by migration 0003, so it exists in the test database too."""
+
+    def test_help_page_is_published_with_the_connector_address(self):
+        response = self.client.get('/use-with-ai/', HTTP_HOST='localhost')
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn('Use VitaminDWiki in ChatGPT or Claude', html)
+        self.assertIn('https://vitamindwiki.com/mcp', html)
+        self.assertIn('No sign in', html)
+        self.assertIn('<h3>Claude</h3>', html)
+        self.assertIn('<h3>ChatGPT</h3>', html)
