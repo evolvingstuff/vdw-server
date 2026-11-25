@@ -1,0 +1,70 @@
+{% load static static_version %}<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Ask VitaminDWiki</title>
+    <link rel="stylesheet" href="{% versioned_static 'ai_chat/chat.css' %}">
+</head>
+<body>
+    <header class="bar">
+        <h1>Ask VitaminDWiki</h1>
+        <div class="bar-buttons">
+            <button type="button" id="new-chat" hidden>New chat</button>
+            <button type="button" id="open-settings" hidden>Settings</button>
+            <button type="button" id="close" hidden aria-label="Close chat">✕</button>
+        </div>
+    </header>
+
+    <p id="loading" class="notice">Loading…</p>
+    <p id="unavailable" class="notice" hidden></p>
+
+    <form id="setup" class="setup" hidden autocomplete="off">
+        <h2>Connect your AI</h2>
+        <p>This chat runs on your own AI account. Choose a provider and paste an API key from it.
+            You pay the provider for what you use.</p>
+
+        <fieldset>
+            <legend>Provider</legend>
+            <label><input type="radio" name="provider" value="anthropic"> Claude <span class="muted">(Anthropic)</span></label>
+            <label><input type="radio" name="provider" value="openai"> ChatGPT models <span class="muted">(OpenAI)</span></label>
+            <label><input type="radio" name="provider" value="gemini"> Gemini <span class="muted">(Google)</span></label>
+        </fieldset>
+
+        <label class="field" for="key">API key</label>
+        <input type="password" id="key" name="key" spellcheck="false" autocomplete="off">
+        <p class="hint"><a id="key-link" target="_blank" rel="noopener noreferrer" href="#">Get an API key</a></p>
+
+        <div id="model-row" hidden>
+            <label class="field" for="model">Model</label>
+            <select id="model" name="model"></select>
+            <p class="hint">Smaller models (such as Sonnet, Haiku, mini or Flash) cost less per question.</p>
+        </div>
+
+        <label class="check"><input type="checkbox" id="remember" checked> Remember the key on this device</label>
+
+        <p class="privacy">Your key is stored only in this browser and is sent only to the provider you choose.
+            VitaminDWiki never receives your key or your conversation.</p>
+
+        <p id="setup-error" class="error" role="alert" hidden></p>
+
+        <div class="setup-buttons">
+            <button type="submit" id="save" class="primary">Save and chat</button>
+            <button type="button" id="cancel-setup" hidden>Cancel</button>
+            <button type="button" id="forget" hidden>Forget this key</button>
+        </div>
+    </form>
+
+    <section id="chat" class="chat" hidden>
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <form id="composer" class="composer">
+            <textarea id="input" rows="2" placeholder="Ask about vitamin D research…" aria-label="Your question"></textarea>
+            <button type="submit" id="send" class="primary">Send</button>
+        </form>
+        <p class="footnote">Answers summarize research on VitaminDWiki. They are not medical advice. <span id="model-name"></span></p>
+    </section>
+
+    <script src="{% versioned_static 'ai_chat/chat.js' %}" defer></script>
+</body>
+</html>

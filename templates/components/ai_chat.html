@@ -1,0 +1,145 @@
+{% comment %}
+The "Ask AI" button and chat panel. The chat itself is a separate small app loaded in a frame
+from its own subdomain (ai_chat app), so the API keys readers save for it can't be read by
+scripts on wiki pages. Shown only when the chat subdomain is configured and the chat is
+switched on in the admin.
+{% endcomment %}
+{% if ai_chat_origin %}
+<button type="button" id="ai-chat-toggle" class="ai-chat-toggle" aria-expanded="false" aria-controls="ai-chat-panel">Ask AI</button>
+<div id="ai-chat-panel" class="ai-chat-panel" data-origin="{{ ai_chat_origin }}" hidden></div>
+<style>
+    .ai-chat-toggle {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1100;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 20px;
+        background: #2c3e50;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .ai-chat-toggle:hover,
+    .ai-chat-toggle:focus-visible {
+        background: #3498db;
+        outline: none;
+    }
+
+    .ai-chat-panel {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 1100;
+        width: min(420px, calc(100vw - 32px));
+        height: min(680px, calc(100vh - 32px));
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .ai-chat-panel[hidden],
+    .ai-chat-toggle[hidden] {
+        display: none;
+    }
+
+    .ai-chat-panel iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    @media (max-width: 600px) {
+        .ai-chat-panel {
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            border-radius: 0;
+        }
+    }
+
+    @media print {
+        .ai-chat-toggle,
+        .ai-chat-panel {
+            display: none !important;
+        }
+    }
+</style>
+<script>
+(function() {
+    const toggle = document.getElementById('ai-chat-toggle');
+    const panel = document.getElementById('ai-chat-panel');
+    const chatOrigin = panel.dataset.origin;
+    const OPEN_KEY = 'vdw-ai-chat-open';
+    let frame = null;
+
+    function remember(isOpen) {
+        try { localStorage.setItem(OPEN_KEY, isOpen ? '1' : '0'); } catch (error) { /* storage blocked */ }
+    }
+
+    function wasOpen() {
+        try { return localStorage.getItem(OPEN_KEY) === '1'; } catch (error) { return false; }
+    }
+
+    // What the chat is told about this page, so "summarize this page" works.
+    function pageInfo() {
+        const pageMatch = /^\/pages\/([^\/]+)\/$/.exec(window.location.pathname);
+        const canonical = document.querySelector('link[rel=canonical]');
+        return {
+            type: 'vdw-chat-page',
+            title: document.title,
+            url: canonical ? canonical.href : window.location.href,
+            slug: pageMatch ? decodeURIComponent(pageMatch[1]) : '',
+        };
+    }
+
+    function openChat() {
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.title = 'Ask VitaminDWiki: AI chat';
+            frame.src = chatOrigin + '/';
+            panel.appendChild(frame);
+        }
+        panel.hidden = false;
+        toggle.hidden = true;
+        toggle.setAttribute('aria-expanded', 'true');
+        remember(true);
+    }
+
+    function closeChat() {
+        panel.hidden = true;
+        toggle.hidden = false;
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.focus();
+        remember(false);
+    }
+
+    window.addEventListener('message', function(event) {
+        if (event.origin !== chatOrigin || !frame || event.source !== frame.contentWindow || !event.data) {
+            return;
+        }
+        if (event.data.type === 'vdw-chat-ready') {
+            frame.contentWindow.postMessage(pageInfo(), chatOrigin);
+        } else if (event.data.type === 'vdw-chat-close') {
+            closeChat();
+        }
+    });
+
+    toggle.addEventListener('click', openChat);
+
+    // Following a link to another wiki page keeps the chat open, except on phones, where the
+    // chat covers the whole screen and would hide the page just opened.
+    if (wasOpen() && !window.matchMedia('(max-width: 600px)').matches) {
+        openChat();
+    }
+})();
+</script>
+{% endif %}

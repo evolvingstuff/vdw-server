@@ -72,6 +72,23 @@ MCP_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+# The on-page AI chat is served from its own subdomain, so the API keys readers save in the
+# browser are out of reach of scripts on wiki pages. CHAT_ORIGIN is that subdomain (e.g.
+# https://chat.vitamindwiki.com); wiki pages show the chat only when it is set. In local
+# development it defaults to http://chat.localhost:8000 (browsers send *.localhost here).
+CHAT_ORIGIN = os.getenv('CHAT_ORIGIN', 'http://chat.localhost:8000' if DEBUG else '').strip().rstrip('/')
+
+# Sites allowed to show the chat in a frame: the wiki itself (comma-separated in CHAT_EMBED_ORIGINS).
+CHAT_EMBED_ORIGINS = [
+    origin.strip().rstrip('/')
+    for origin in os.getenv(
+        'CHAT_EMBED_ORIGINS',
+        'https://vitamindwiki.com,https://www.vitamindwiki.com'
+        + (',http://localhost:8000,http://127.0.0.1:8000' if DEBUG else ''),
+    ).split(',')
+    if origin.strip()
+]
+
 
 # Application definition
 
@@ -89,11 +106,13 @@ INSTALLED_APPS = [
     'search',
     'tags',
     'wiki_api.apps.WikiApiConfig',
+    'ai_chat.apps.AiChatConfig',
     'markdownx',
 ]
 
 MIDDLEWARE = [
     'vdw_server.middleware.RequestLoggingMiddleware',
+    'ai_chat.middleware.ChatHostMiddleware',  # the chat subdomain serves only the chat app
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,6 +139,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'vdw_server.context_processors.search_preferences',
                 'vdw_server.context_processors.seo',
+                'ai_chat.context_processors.ai_chat',
             ],
         },
     },
