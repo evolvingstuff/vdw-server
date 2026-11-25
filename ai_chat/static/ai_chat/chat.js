@@ -259,7 +259,22 @@
 
     // --- talking to the AI providers --------------------------------------------------
 
-    async function requestJson(url, options, who) {
+    function statusError(status, data, who) {
+        if (Array.isArray(data)) data = data[0];
+        let detail = data && data.error;
+        if (detail && typeof detail === 'object') detail = detail.message;
+        detail = typeof detail === 'string' && detail ? ` ${who} said: “${detail}”` : '';
+        if (status === 401 || status === 403) {
+            return new Error(`${who} did not accept the API key. Check the key in Settings.${detail}`);
+        }
+        if (status === 429) {
+            return new Error(`${who} is limiting your requests, or your account is out of credit.${detail}`);
+        }
+        if (!status) return new Error(`${who} reported a problem while answering.${detail}`);
+        return new Error(`${who} returned an error (${status}).${detail}`);
+    }
+
+    async function request(url, options, who) {
         let response;
         try {
             response = await fetch(url, options);
@@ -267,27 +282,55 @@
             if (error.name === 'AbortError') throw error;
             throw new Error(`Could not reach ${who}. Check your internet connection and try again.`);
         }
+        if (response.ok) return response;
         let data = null;
         try { data = await response.json(); } catch (error) { /* not JSON */ }
-        if (response.ok && data) return data;
-        let detail = data && data.error;
-        if (detail && typeof detail === 'object') detail = detail.message;
-        detail = typeof detail === 'string' && detail ? ` ${who} said: “${detail}”` : '';
-        if (response.status === 401 || response.status === 403) {
-            throw new Error(`${who} did not accept the API key. Check the key in Settings.${detail}`);
-        }
-        if (response.status === 429) {
-            throw new Error(`${who} is limiting your requests, or your account is out of credit.${detail}`);
-        }
-        throw new Error(`${who} returned an error (${response.status}).${detail}`);
+        throw statusError(response.status, data, who);
     }
 
-    const postJson = (url, headers, body, signal, who) => requestJson(url, {
-        method: 'POST',
-        headers: Object.assign({'content-type': 'application/json'}, headers),
-        body: JSON.stringify(body),
-        signal,
-    }, who);
+    async function requestJson(url, options, who) {
+        const response = await request(url, options, who);
+        try { return await response.json(); } catch (error) { throw new Error(`${who} sent an answer that could not be read.`); }
+    }
+
+    /* POST and read the reply as a stream of server-sent events, giving each event's JSON. */
+    async function* streamJson(url, headers, body, signal, who) {
+        const response = await request(url, {
+            method: 'POST',
+            headers: Object.assign({'content-type': 'application/json'}, headers),
+            body: JSON.stringify(body),
+            signal,
+        }, who);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        const events = function* (final) {
+            for (;;) {
+                const end = /\r?\n\r?\n/.exec(buffer);
+                if (!end && !(final && buffer.trim())) return;
+                const raw = end ? buffer.slice(0, end.index) : buffer;
+                buffer = end ? buffer.slice(end.index + end[0].length) : '';
+                const data = raw.split(/\r?\n/).filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('\n');
+                if (!data || data === '[DONE]') continue;
+                let event;
+                try { event = JSON.parse(data); } catch (error) { continue; }
+                yield event;
+            }
+        };
+        for (;;) {
+            let chunk;
+            try {
+                chunk = await reader.read();
+            } catch (error) {
+                if (error.name === 'AbortError') throw error;
+                throw new Error(`The connection to ${who} was lost while it was answering. Try again.`);
+            }
+            if (chunk.done) break;
+            buffer += decoder.decode(chunk.value, {stream: true});
+            yield* events(false);
+        }
+        yield* events(true);
+    }
 
     function parseArguments(text) {
         try { const value = JSON.parse(text || '{}'); return value && typeof value === 'object' ? value : {}; } catch (error) { return {}; }
@@ -296,7 +339,8 @@
     /* Each adapter:
          models(key, signal)      -> [{id, name}], best first
          start(turns, context)    -> the provider's own message list
-         send(context, messages)  -> {text, calls: [{id, name, args}], note}; adds the reply to messages
+         send(context, messages, onText)  -> {text, calls: [{id, name, args}], note}; adds the reply to
+                                  messages, and calls onText(text so far) as the answer streams in
          addResults(messages, results)   results: [{id, name, text, isError}]
        context: {key, model, system, tools, signal, final}; final means "answer now, no more tools". */
     const ADAPTERS = {
@@ -318,22 +362,45 @@
             start(turns) {
                 return turns.map((turn) => ({role: turn.role, content: turn.text}));
             },
-            async send(context, messages) {
+            async send(context, messages, onText) {
                 const body = {
                     model: context.model,
                     max_tokens: MAX_ANSWER_TOKENS,
+                    stream: true,
                     system: [{type: 'text', text: context.system, cache_control: {type: 'ephemeral'}}],
                     tools: context.tools.map((tool) => ({name: tool.name, description: tool.description, input_schema: tool.parameters})),
                     messages,
                 };
                 if (context.final) body.tool_choice = {type: 'none'};
-                const data = await postJson('https://api.anthropic.com/v1/messages', this.headers(context.key), body, context.signal, 'Anthropic');
-                const blocks = data.content || [];
-                messages.push({role: 'assistant', content: blocks});
+                const blocks = [];
+                const partialInput = {};   // tool arguments arrive as pieces of JSON text
+                let stopReason = '';
+                const textSoFar = () => blocks.filter((block) => block && block.type === 'text').map((block) => block.text).join('');
+                for await (const event of streamJson('https://api.anthropic.com/v1/messages', this.headers(context.key), body, context.signal, 'Anthropic')) {
+                    if (event.type === 'content_block_start') {
+                        blocks[event.index] = Object.assign({}, event.content_block);
+                        if (event.content_block.type === 'tool_use') partialInput[event.index] = '';
+                    } else if (event.type === 'content_block_delta' && blocks[event.index]) {
+                        const block = blocks[event.index];
+                        const delta = event.delta || {};
+                        if (delta.type === 'text_delta') { block.text = (block.text || '') + delta.text; onText(textSoFar()); }
+                        else if (delta.type === 'input_json_delta') partialInput[event.index] += delta.partial_json;
+                        else if (delta.type === 'thinking_delta') block.thinking = (block.thinking || '') + delta.thinking;
+                        else if (delta.type === 'signature_delta') block.signature = delta.signature;
+                    } else if (event.type === 'content_block_stop' && event.index in partialInput) {
+                        blocks[event.index].input = parseArguments(partialInput[event.index]);
+                    } else if (event.type === 'message_delta' && event.delta && event.delta.stop_reason) {
+                        stopReason = event.delta.stop_reason;
+                    } else if (event.type === 'error') {
+                        throw statusError(0, event, 'Anthropic');
+                    }
+                }
+                const content = blocks.filter(Boolean);
+                messages.push({role: 'assistant', content});
                 return {
-                    text: blocks.filter((block) => block.type === 'text').map((block) => block.text).join(''),
-                    calls: blocks.filter((block) => block.type === 'tool_use').map((block) => ({id: block.id, name: block.name, args: block.input})),
-                    note: data.stop_reason === 'max_tokens' ? 'cut' : data.stop_reason === 'refusal' ? 'declined' : '',
+                    text: textSoFar(),
+                    calls: content.filter((block) => block.type === 'tool_use').map((block) => ({id: block.id, name: block.name, args: block.input})),
+                    note: stopReason === 'max_tokens' ? 'cut' : stopReason === 'refusal' ? 'declined' : '',
                 };
             },
             addResults(messages, results) {
@@ -361,24 +428,41 @@
             start(turns, context) {
                 return [{role: 'system', content: context.system}].concat(turns.map((turn) => ({role: turn.role, content: turn.text})));
             },
-            async send(context, messages) {
+            async send(context, messages, onText) {
                 const body = {
                     model: context.model,
+                    stream: true,
                     messages,
                     tools: context.tools.map((tool) => ({type: 'function', function: {name: tool.name, description: tool.description, parameters: tool.parameters}})),
                 };
                 if (context.final) body.tool_choice = 'none';
-                const data = await postJson('https://api.openai.com/v1/chat/completions', this.headers(context.key), body, context.signal, 'OpenAI');
-                const choice = (data.choices || [])[0];
-                if (!choice || !choice.message) throw new Error('OpenAI returned no answer.');
-                const calls = (choice.message.tool_calls || []).filter((call) => call.type === 'function');
-                const reply = {role: 'assistant', content: choice.message.content || ''};
-                if (calls.length) reply.tool_calls = calls;
+                let text = '';
+                let refusal = '';
+                let finishReason = '';
+                const calls = [];   // pieces of each tool call arrive by index
+                for await (const event of streamJson('https://api.openai.com/v1/chat/completions', this.headers(context.key), body, context.signal, 'OpenAI')) {
+                    if (event.error) throw statusError(0, event, 'OpenAI');
+                    const choice = (event.choices || [])[0];
+                    if (!choice) continue;
+                    if (choice.finish_reason) finishReason = choice.finish_reason;
+                    const delta = choice.delta || {};
+                    if (delta.content) { text += delta.content; onText(text); }
+                    if (delta.refusal) refusal += delta.refusal;
+                    (delta.tool_calls || []).forEach((piece) => {
+                        const call = calls[piece.index] || (calls[piece.index] = {id: '', type: 'function', function: {name: '', arguments: ''}});
+                        if (piece.id) call.id = piece.id;
+                        if (piece.function && piece.function.name) call.function.name += piece.function.name;
+                        if (piece.function && piece.function.arguments) call.function.arguments += piece.function.arguments;
+                    });
+                }
+                const toolCalls = calls.filter(Boolean);
+                const reply = {role: 'assistant', content: text};
+                if (toolCalls.length) reply.tool_calls = toolCalls;
                 messages.push(reply);
                 return {
-                    text: choice.message.content || choice.message.refusal || '',
-                    calls: calls.map((call) => ({id: call.id, name: call.function.name, args: parseArguments(call.function.arguments)})),
-                    note: choice.finish_reason === 'length' ? 'cut' : choice.finish_reason === 'content_filter' ? 'declined' : '',
+                    text: text || refusal,
+                    calls: toolCalls.map((call) => ({id: call.id, name: call.function.name, args: parseArguments(call.function.arguments)})),
+                    note: finishReason === 'length' ? 'cut' : finishReason === 'content_filter' ? 'declined' : '',
                 };
             },
             addResults(messages, results) {
@@ -418,29 +502,39 @@
             start(turns) {
                 return turns.map((turn) => ({role: turn.role === 'assistant' ? 'model' : 'user', parts: [{text: turn.text}]}));
             },
-            async send(context, messages) {
+            async send(context, messages, onText) {
                 const body = {
                     systemInstruction: {parts: [{text: context.system}]},
                     contents: messages,
                     tools: [{functionDeclarations: context.tools.map((tool) => ({name: tool.name, description: tool.description, parameters: this.schema(tool.parameters)}))}],
                 };
                 if (context.final) body.toolConfig = {functionCallingConfig: {mode: 'NONE'}};
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(context.model)}:generateContent`;
-                const data = await postJson(url, this.headers(context.key), body, context.signal, 'Google');
-                const candidate = (data.candidates || [])[0];
-                if (!candidate || !candidate.content) {
-                    const reason = (candidate && candidate.finishReason) || (data.promptFeedback && data.promptFeedback.blockReason);
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(context.model)}:streamGenerateContent?alt=sse`;
+                const parts = [];
+                let finishReason = '';
+                let blockReason = '';
+                const textSoFar = () => parts.filter((part) => typeof part.text === 'string' && !part.thought).map((part) => part.text).join('');
+                for await (const event of streamJson(url, this.headers(context.key), body, context.signal, 'Google')) {
+                    if (event.error) throw statusError(0, event, 'Google');
+                    if (event.promptFeedback && event.promptFeedback.blockReason) blockReason = event.promptFeedback.blockReason;
+                    const candidate = (event.candidates || [])[0];
+                    if (!candidate) continue;
+                    if (candidate.finishReason) finishReason = candidate.finishReason;
+                    const fresh = (candidate.content && candidate.content.parts) || [];
+                    if (fresh.length) { parts.push(...fresh); onText(textSoFar()); }
+                }
+                if (!parts.length) {
+                    const reason = blockReason || (finishReason !== 'STOP' && finishReason);
                     throw new Error(`Gemini returned no answer${reason ? ` (${reason})` : ''}.`);
                 }
-                const parts = candidate.content.parts || [];
                 // The reply goes back unchanged: newer Gemini models need the signatures on its parts.
                 messages.push({role: 'model', parts});
                 return {
-                    text: parts.filter((part) => typeof part.text === 'string' && !part.thought).map((part) => part.text).join(''),
+                    text: textSoFar(),
                     calls: parts.filter((part) => part.functionCall).map((part) => ({
                         id: part.functionCall.id || '', name: part.functionCall.name, args: part.functionCall.args || {},
                     })),
-                    note: candidate.finishReason === 'MAX_TOKENS' ? 'cut' : candidate.finishReason === 'SAFETY' ? 'declined' : '',
+                    note: finishReason === 'MAX_TOKENS' ? 'cut' : finishReason === 'SAFETY' ? 'declined' : '',
                 };
             },
             addResults(messages, results) {
@@ -502,7 +596,7 @@
     }
 
     /* Answer the last message in `turns`, letting the model use the wiki tools. */
-    async function answer(turns, signal, onStep) {
+    async function answer(turns, signal, onStep, onText) {
         const provider = prefs.provider;
         const adapter = ADAPTERS[provider];
         const context = {
@@ -512,13 +606,14 @@
         for (let round = 0; ; round += 1) {
             context.final = round >= MAX_TOOL_ROUNDS;
             onStep(round === 0 ? 'Thinking' : 'Reading what it found');
-            const reply = await adapter.send(context, messages);
+            const reply = await adapter.send(context, messages, onText);
             if (!reply.calls.length || reply.note || context.final) {
                 let text = reply.text.trim();
                 if (reply.note === 'cut') text += '\n\n*(The answer was cut off because it got too long.)*';
                 if (reply.note === 'declined' && !text) text = 'The AI model declined to answer this.';
                 return text || 'The AI model gave no answer. Try asking in a different way.';
             }
+            onText('');   // what it said before using a tool ("Let me search…") is not the answer
             const results = [];
             for (const call of reply.calls) {
                 onStep(describeCall(call));
@@ -585,25 +680,48 @@
         const working = el('div', 'working');
         const steps = working.appendChild(el('ul'));
         $('messages').appendChild(working);
+        const live = $('messages').appendChild(el('div', 'message assistant'));   // the answer as it arrives
+        const messages = $('messages');
+        const followed = () => messages.scrollHeight - messages.scrollTop - messages.clientHeight < 80;
         const onStep = (label) => {
+            const follow = followed();
             steps.querySelectorAll('.current').forEach((node) => node.classList.remove('current'));
             steps.appendChild(el('li', 'current', label));
-            scrollToEnd();
+            if (follow) scrollToEnd();
+        };
+        let pending = null;   // newest text waiting for the next screen refresh
+        const onText = (soFar) => {
+            const idle = pending === null;
+            pending = soFar;
+            if (!idle) return;
+            window.requestAnimationFrame(() => {
+                if (pending === null) return;
+                const follow = followed();
+                live.replaceChildren();
+                renderMarkdown(pending, live);
+                pending = null;
+                if (follow) scrollToEnd();   // keeps up with the answer unless the reader scrolled up
+            });
         };
 
         const controller = new AbortController();
         setRunning(controller);
         try {
-            const reply = await answer(history.slice(-HISTORY_SENT), controller.signal, onStep);
+            const reply = await answer(history.slice(-HISTORY_SENT), controller.signal, onStep, onText);
             history.push({role: 'assistant', text: reply});
             saveHistory();
+            const follow = followed();
+            pending = null;
             working.remove();
-            const node = addMessage('assistant', reply);
-            node.scrollIntoView({block: 'start'});
+            live.replaceChildren();
+            renderMarkdown(reply, live);
+            if (follow) scrollToEnd();
         } catch (error) {
             // The question goes back into the box so it can be sent again.
             history.pop();
+            pending = null;
             working.remove();
+            live.remove();
             question.remove();
             $('input').value = text;
             if (error.name !== 'AbortError') {
